@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+             http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+             http://www.springframework.org/schema/security
+             http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+    <!-- Enable the @Secured annotation to secure service layer methods   -->
+    <global-method-security secured-annotations="enabled"/>
+
+    <http security="none" pattern="/favicon.ico"/>
+
+    <http auto-config='true' authentication-manager-ref="am">
+        <intercept-url pattern="/login/" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/**" access="ROLE_USER, ROLE_ADMIN" />
+        <form-login login-page="/login/" authentication-failure-url="/login/?error=true"/>
+    </http>
+
+    <authentication-manager id="am">
+        <authentication-provider user-service-ref="customUserDetailService">
+            <password-encoder ref="encoder" />
+        </authentication-provider>
+    </authentication-manager>
+    
+    <beans:bean id="customUserDetailService" class="org.esn.esobase.security.EsnUserDetailsService"/>
+    <beans:bean id="encoder"  class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder">  
+        <beans:constructor-arg name="strength" value="10" />  
+    </beans:bean>  
+
+</beans:beans>
