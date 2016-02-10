@@ -721,6 +721,75 @@ public class GoogleDocsService {
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public void uploadLocationNames(List<GSpreadSheetsLocationName> names) {
+        try {
+
+            Credential authorize = authorize();
+
+            SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
+            spreadsheetService.setOAuth2Credentials(authorize);
+            SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);
+            List<SpreadsheetEntry> feedEntries = feed.getEntries();
+            SpreadsheetEntry entry = null;
+            for (SpreadsheetEntry spreadsheetEntry : feedEntries) {
+                if (spreadsheetEntry.getKey().equals(LOCATION_NAMES_SPREADSHEET_ID)) {
+                    entry = spreadsheetEntry;
+                }
+            }
+
+            WorksheetEntry defaultWorksheet = entry.getDefaultWorksheet();
+            for (GSpreadSheetsLocationName name : names) {
+                URL cellFeedUrl = new URI(defaultWorksheet.getCellFeedUrl().toString()
+                        + "?min-row=" + name.getRowNum().intValue() + "&max-row=" + name.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
+                CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
+                List<CellEntry> entries = feedc.getEntries();
+                for (CellEntry cellEntry : entries) {
+                    Cell cell = cellEntry.getCell();
+
+                    switch (cell.getCol()) {
+                        case 1:
+
+                            break;
+                        case 2:
+                            String textRu=name.getTextRu();
+                            cellEntry.changeInputValueLocal(textRu);
+                            cellEntry.update();
+                            break;
+                        case 3:
+                            cellEntry.changeInputValueLocal(name.getTranslator());
+                            cellEntry.update();
+                            break;
+                        case 6:
+                            if (name.getChangeTime() != null) {
+                                cellEntry.changeInputValueLocal(dateFormat.format(name.getChangeTime()));
+                                cellEntry.update();
+                            }
+                            break;
+                    }
+                }
+                if (entries.size() < 3) {
+                    CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 3, name.getTranslator());
+                    feedc.insert(cellEntry);
+                }
+                if (entries.size() < 6 && name.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 6, dateFormat.format(name.getChangeTime()));
+                    feedc.insert(cellEntry);
+                }
+            }
+
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (AuthenticationException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ServiceException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     private static Credential authorize() throws Exception {
         // load client secrets

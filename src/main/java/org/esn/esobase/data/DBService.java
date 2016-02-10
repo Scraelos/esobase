@@ -233,6 +233,9 @@ public class DBService {
                                 if (subtitleResult == null) {
                                     persistCounter++;
                                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist subtitle. Total persists: {0}", Integer.toString(persistCounter));
+                                    if(subtitle.getText()!=null) {
+                                        subtitle.setExtNpcPhrase(getNpcPharse(subtitle.getText()));
+                                    }
                                     em.persist(subtitle);
                                 }
                             }
@@ -242,13 +245,14 @@ public class DBService {
                                 greetingCriteria.setMaxResults(1);
                                 if (greeting.getText() != null) {
                                     greetingCriteria.add(Restrictions.eq("text", greeting.getText()));
-                                } else {
-                                    greetingCriteria.add(Restrictions.eq("textRu", greeting.getTextRu()));
                                 }
                                 Greeting greetingResult = (Greeting) greetingCriteria.uniqueResult();
                                 if (greetingResult == null) {
                                     persistCounter++;
                                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist greeting. Total persists: {0}", Integer.toString(persistCounter));
+                                    if(greeting.getText()!=null) {
+                                    greeting.setExtNpcPhrase(getNpcPharse(greeting.getText()));
+                                    }
                                     em.persist(greeting);
                                 }
                             }
@@ -270,6 +274,12 @@ public class DBService {
                                 if (topicResult == null) {
                                     persistCounter++;
                                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist topic. Total persists: {0}", Integer.toString(persistCounter));
+                                    if(topic.getNpcText()!=null) {
+                                    topic.setExtNpcPhrase(getNpcPharse(topic.getNpcText()));
+                                    }
+                                    if(topic.getPlayerText()!=null) {
+                                    topic.setExtPlayerPhrase(getPlayerPharse(topic.getPlayerText()));
+                                    }
                                     em.persist(topic);
                                 }
                             }
@@ -721,6 +731,56 @@ public class DBService {
             }
         }
         for (NpcNameDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+    
+    @Transactional
+    public HierarchicalContainer getLocationNamesDiff(List<GSpreadSheetsLocationName> names, HierarchicalContainer hc) {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<LocationsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsLocationName.class);
+        Map<Long, GSpreadSheetsLocationName> namesMap = new HashMap<>();
+        List<GSpreadSheetsLocationName> allNames = crit.list();
+        for (GSpreadSheetsLocationName name : allNames) {
+            namesMap.put(name.getRowNum(), name);
+        }
+        for (GSpreadSheetsLocationName name : names) {
+            GSpreadSheetsLocationName result = namesMap.get(name.getRowNum());
+            if (result != null) {
+                if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new LocationsDiff(name, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new LocationsDiff(name, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && name.getChangeTime() == null) {
+                    diffs.add(new LocationsDiff(name, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && name.getChangeTime() != null) {
+                    diffs.add(new LocationsDiff(name, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && name.getChangeTime() == null && (name.getTextRu() != null) && (result.getTextRu() != null) && !name.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new LocationsDiff(name, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (LocationsDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -1405,6 +1465,24 @@ public class DBService {
                     npc.setSex(name.getSex());
                     em.merge(npc);
                 }
+            }
+        }
+    }
+    
+    @Transactional
+    public void saveLocationNames(List<GSpreadSheetsLocationName> names) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsLocationName name : names) {
+            Criteria crit = session.createCriteria(GSpreadSheetsLocationName.class);
+            crit.add(Restrictions.eq("rowNum", name.getRowNum()));
+            GSpreadSheetsLocationName result = (GSpreadSheetsLocationName) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(name.getChangeTime());
+                result.setTextRu(name.getTextRu());
+                result.setTranslator(name.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(name);
             }
         }
     }

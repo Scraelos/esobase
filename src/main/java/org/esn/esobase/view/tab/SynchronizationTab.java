@@ -19,10 +19,12 @@ import java.util.Date;
 import java.util.List;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
+import org.esn.esobase.data.LocationsDiff;
 import org.esn.esobase.data.NpcNameDiff;
 import org.esn.esobase.data.NpcPhraseDiff;
 import org.esn.esobase.data.PlayerPhraseDiff;
 import org.esn.esobase.data.SYNC_TYPE;
+import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
@@ -52,6 +54,13 @@ public class SynchronizationTab extends VerticalLayout {
     private Button saveNpcNamesButton;
     private Table npcNamesDiffTable;
     private HierarchicalContainer npcNamesDiffContainer;
+    
+    private VerticalLayout locationsLayout;
+    private HorizontalLayout syncLocationsActions;
+    private Button syncLocationsButton;
+    private Button saveLocationsButton;
+    private Table locationsDiffTable;
+    private HierarchicalContainer locationsDiffContainer;
 
     private static final String[] columnHeaders = {"Перевод в таблицах", "Переводчик в таблицах", "Дата в таблицах", "Перевод в базе", "Переводчик в базе", "Дата в базе", "Действие"};
     private static final Object[] columns = {"shText", "shNic", "shDate", "dbText", "dbNic", "dbDate", "syncType"};
@@ -229,6 +238,63 @@ public class SynchronizationTab extends VerticalLayout {
         npcNamesDiffTable.setColumnHeaders(columnHeaders);
         npcNamesLayout.addComponent(npcNamesDiffTable);
         tabs.addTab(npcNamesLayout, "Имена персонажей");
+        
+        locationsLayout = new VerticalLayout();
+        syncLocationsActions = new HorizontalLayout();
+        syncLocationsButton = new Button("Сверка");
+        syncLocationsButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                GoogleDocsService docsService = new GoogleDocsService();
+                List<GSpreadSheetsLocationName> locationNames = docsService.getLocationsNames(service);
+                locationsDiffContainer = service.getLocationNamesDiff(locationNames, locationsDiffContainer);
+            }
+        });
+        syncLocationsActions.addComponent(syncLocationsButton);
+        saveLocationsButton = new Button("Синхронизировать");
+        saveLocationsButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                List<LocationsDiff> diffs = (List<LocationsDiff>) locationsDiffContainer.getItemIds();
+                List<GSpreadSheetsLocationName> namesToSh = new ArrayList<>();
+                List<GSpreadSheetsLocationName> namesToDb = new ArrayList<>();
+                for (LocationsDiff diff : diffs) {
+                    if (diff.getSyncType() == SYNC_TYPE.TO_SPREADSHEET) {
+                        namesToSh.add(diff.getDbName());
+                    } else if (diff.getSyncType() == SYNC_TYPE.TO_DB) {
+                        namesToDb.add(diff.getSpreadsheetsName());
+                    }
+                }
+                GoogleDocsService docsService = new GoogleDocsService();
+                docsService.uploadLocationNames(namesToSh);
+                service.saveLocationNames(namesToDb);
+                locationsDiffContainer.removeAllItems();
+            }
+        });
+        syncLocationsActions.addComponent(saveLocationsButton);
+        locationsLayout.addComponent(syncLocationsActions);
+        locationsDiffTable = new Table();
+        locationsDiffTable.setSizeFull();
+        locationsDiffContainer = new HierarchicalContainer();
+        locationsDiffContainer.addContainerProperty("shText", String.class, null);
+        locationsDiffContainer.addContainerProperty("shNic", String.class, null);
+        locationsDiffContainer.addContainerProperty("shDate", Date.class, null);
+        locationsDiffContainer.addContainerProperty("dbText", String.class, null);
+        locationsDiffContainer.addContainerProperty("dbNic", String.class, null);
+        locationsDiffContainer.addContainerProperty("dbDate", Date.class, null);
+        locationsDiffContainer.addContainerProperty("syncType", String.class, null);
+        locationsDiffTable.setContainerDataSource(locationsDiffContainer);
+        locationsDiffTable.removeGeneratedColumn("shText");
+        locationsDiffTable.addGeneratedColumn("shText", textColumnGenerator);
+        locationsDiffTable.removeGeneratedColumn("dbText");
+        locationsDiffTable.addGeneratedColumn("dbText", textColumnGenerator);
+        locationsDiffTable.setVisibleColumns(columns);
+        locationsDiffTable.setColumnHeaders(columnHeaders);
+        locationsLayout.addComponent(locationsDiffTable);
+        tabs.addTab(locationsLayout, "Названия локаций");
+        
         this.addComponent(tabs);
         
     }

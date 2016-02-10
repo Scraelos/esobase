@@ -148,7 +148,6 @@ public class ImportTab extends VerticalLayout {
                 String text = new String(toByteArray);
                 List<Location> locations = LuaDecoder.decode(text);
                 service.importFromLua(locations);
-                service.assignToSpreadSheetPhrases();
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
