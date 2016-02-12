@@ -142,9 +142,11 @@ public class DBService {
             }
             List<GSpreadSheetsNpcName> npcList = gsNpcCrit.list();
             for (GSpreadSheetsNpcName gnpc : npcList) {
+                if (npc.getSex() == null || npc.getSex() == NPC_SEX.U) {
+                    npc.setSex(gnpc.getSex());
+                }
                 npc.setName(gnpc.getTextEn());
                 npc.setNameRu(gnpc.getTextRu());
-                npc.setSex(gnpc.getSex());
                 em.merge(npc);
             }
         }
@@ -176,9 +178,11 @@ public class DBService {
                 }
                 List<GSpreadSheetsNpcName> npcList = gsNpcCrit.list();
                 for (GSpreadSheetsNpcName gnpc : npcList) {
-                    npc.setName(gnpc.getTextEn());
-                    npc.setNameRu(gnpc.getTextRu());
-                    npc.setSex(gnpc.getSex());
+                    if ((npc.getSex() == null) || (npc.getSex() == NPC_SEX.U)) {
+                        npc.setName(gnpc.getTextEn());
+                        npc.setNameRu(gnpc.getTextRu());
+                        npc.setSex(gnpc.getSex());
+                    }
                     break;
                 }
             }
@@ -233,7 +237,7 @@ public class DBService {
                                 if (subtitleResult == null) {
                                     persistCounter++;
                                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist subtitle. Total persists: {0}", Integer.toString(persistCounter));
-                                    if(subtitle.getText()!=null) {
+                                    if (subtitle.getText() != null) {
                                         subtitle.setExtNpcPhrase(getNpcPharse(subtitle.getText()));
                                     }
                                     em.persist(subtitle);
@@ -250,8 +254,8 @@ public class DBService {
                                 if (greetingResult == null) {
                                     persistCounter++;
                                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist greeting. Total persists: {0}", Integer.toString(persistCounter));
-                                    if(greeting.getText()!=null) {
-                                    greeting.setExtNpcPhrase(getNpcPharse(greeting.getText()));
+                                    if (greeting.getText() != null) {
+                                        greeting.setExtNpcPhrase(getNpcPharse(greeting.getText()));
                                     }
                                     em.persist(greeting);
                                 }
@@ -274,11 +278,11 @@ public class DBService {
                                 if (topicResult == null) {
                                     persistCounter++;
                                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist topic. Total persists: {0}", Integer.toString(persistCounter));
-                                    if(topic.getNpcText()!=null) {
-                                    topic.setExtNpcPhrase(getNpcPharse(topic.getNpcText()));
+                                    if (topic.getNpcText() != null) {
+                                        topic.setExtNpcPhrase(getNpcPharse(topic.getNpcText()));
                                     }
-                                    if(topic.getPlayerText()!=null) {
-                                    topic.setExtPlayerPhrase(getPlayerPharse(topic.getPlayerText()));
+                                    if (topic.getPlayerText() != null) {
+                                        topic.setExtPlayerPhrase(getPlayerPharse(topic.getPlayerText()));
                                     }
                                     em.persist(topic);
                                 }
@@ -743,7 +747,7 @@ public class DBService {
         }
         return hc;
     }
-    
+
     @Transactional
     public HierarchicalContainer getLocationNamesDiff(List<GSpreadSheetsLocationName> names, HierarchicalContainer hc) {
         if (hc == null) {
@@ -1468,7 +1472,7 @@ public class DBService {
             }
         }
     }
-    
+
     @Transactional
     public void saveLocationNames(List<GSpreadSheetsLocationName> names) {
         Session session = (Session) em.getDelegate();
