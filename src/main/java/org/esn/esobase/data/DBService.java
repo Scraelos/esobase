@@ -1756,7 +1756,7 @@ public class DBService {
         hc.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria locationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
-        locationCrit.add(Restrictions.or(Restrictions.like("textEn", "%" + search + "%"), Restrictions.like("textRu", "%" + search + "%")));
+        locationCrit.add(Restrictions.or(Restrictions.ilike("textEn", "%" + search + "%"), Restrictions.ilike("textRu", "%" + search + "%")));
         List<GSpreadSheetsLocationName> locationList = locationCrit.list();
         for (GSpreadSheetsLocationName loc : locationList) {
             Item item = hc.addItem(loc);
@@ -1766,7 +1766,7 @@ public class DBService {
             item.getItemProperty("catalogType").setValue("Локация");
         }
         Criteria npcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-        npcCrit.add(Restrictions.or(Restrictions.like("textEn", "%" + search + "%"), Restrictions.like("textRu", "%" + search + "%")));
+        npcCrit.add(Restrictions.or(Restrictions.ilike("textEn", "%" + search + "%"), Restrictions.ilike("textRu", "%" + search + "%")));
         List<GSpreadSheetsNpcName> npcList = npcCrit.list();
         for (GSpreadSheetsNpcName npc : npcList) {
             Item item = hc.addItem(npc);
@@ -1776,7 +1776,7 @@ public class DBService {
             item.getItemProperty("catalogType").setValue("NPC");
         }
         Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
-        npcPhraseCrit.add(Restrictions.or(Restrictions.like("textEn", "%" + search + "%"), Restrictions.like("textRu", "%" + search + "%")));
+        npcPhraseCrit.add(Restrictions.or(Restrictions.ilike("textEn", "%" + search + "%"), Restrictions.ilike("textRu", "%" + search + "%")));
         List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseCrit.list();
         for (GSpreadSheetsNpcPhrase gSpreadSheetsNpcPhrase : npcPhraseList) {
             Item item = hc.addItem(gSpreadSheetsNpcPhrase);
@@ -1786,7 +1786,7 @@ public class DBService {
             item.getItemProperty("catalogType").setValue("Фраза NPC");
         }
         Criteria playerPhraseCrit = session.createCriteria(GSpreadSheetsPlayerPhrase.class);
-        playerPhraseCrit.add(Restrictions.or(Restrictions.like("textEn", "%" + search + "%"), Restrictions.like("textRu", "%" + search + "%")));
+        playerPhraseCrit.add(Restrictions.or(Restrictions.ilike("textEn", "%" + search + "%"), Restrictions.ilike("textRu", "%" + search + "%")));
         List<GSpreadSheetsPlayerPhrase> playerPhraseList = playerPhraseCrit.list();
         for (GSpreadSheetsPlayerPhrase gSpreadSheetsPlayerPhrase : playerPhraseList) {
             Item item = hc.addItem(gSpreadSheetsPlayerPhrase);
