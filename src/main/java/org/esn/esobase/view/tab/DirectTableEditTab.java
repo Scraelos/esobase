@@ -121,15 +121,22 @@ public class DirectTableEditTab extends VerticalLayout {
         npcNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
         npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
         npcNameTable.setColumnHeaders(new String[]{"Номер строки", "Пол", "Текст", "Перевод", "Переводчик", "Время", ""});
+        npcNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         npcNameTable.setColumnExpandRatio("rowNum", 1.5f);
+        npcNameTable.setColumnWidth("rowNum", 100);
         npcNameTable.setColumnExpandRatio("sex", 1.5f);
-        npcNameTable.setColumnExpandRatio("textEn", 3f);
-        npcNameTable.setColumnExpandRatio("textRu", 3f);
-        npcNameTable.setColumnExpandRatio("translator", 2f);
-        npcNameTable.setColumnExpandRatio("changeTime", 2f);
-        npcNameTable.setColumnExpandRatio("saveColumn", 1.5f);
+        npcNameTable.setColumnWidth("sex", 110);
+        npcNameTable.setColumnExpandRatio("textEn", 5f);
+        npcNameTable.setColumnExpandRatio("textRu", 5f);
+        npcNameTable.setColumnExpandRatio("translator", 1f);
+        npcNameTable.setColumnWidth("translator", 131);
+        npcNameTable.setColumnExpandRatio("changeTime", 1.7f);
+        npcNameTable.setColumnWidth("changeTime", 190);
+        npcNameTable.setColumnExpandRatio("saveColumn", 1.1f);
+        npcNameTable.setColumnWidth("saveColumn", 115);
         npcNameTable.setEditable(true);
         npcNameTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        npcNameTable.setSortEnabled(false);
         tableTabs.addTab(npcNameTable, "NPC");
 
         locationNameTable = new Table();
@@ -141,14 +148,20 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
         locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
         locationNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Переводчик", "Время", ""});
+        locationNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         locationNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        locationNameTable.setColumnExpandRatio("textEn", 3f);
-        locationNameTable.setColumnExpandRatio("textRu", 3f);
-        locationNameTable.setColumnExpandRatio("translator", 2f);
-        locationNameTable.setColumnExpandRatio("changeTime", 2f);
-        locationNameTable.setColumnExpandRatio("saveColumn", 1.5f);
+        locationNameTable.setColumnWidth("rowNum", 100);
+        locationNameTable.setColumnExpandRatio("textEn", 5f);
+        locationNameTable.setColumnExpandRatio("textRu", 5f);
+        locationNameTable.setColumnExpandRatio("translator", 1f);
+        locationNameTable.setColumnWidth("translator", 131);
+        locationNameTable.setColumnExpandRatio("changeTime", 1.7f);
+        locationNameTable.setColumnWidth("changeTime", 190);
+        locationNameTable.setColumnExpandRatio("saveColumn", 1.1f);
+        locationNameTable.setColumnWidth("saveColumn", 115);
         locationNameTable.setEditable(true);
         locationNameTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        locationNameTable.setSortEnabled(false);
         tableTabs.addTab(locationNameTable, "Локации");
 
         playerPhraseTable = new Table();
@@ -160,14 +173,20 @@ public class DirectTableEditTab extends VerticalLayout {
         playerPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
         playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
         playerPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Переводчик", "Время", ""});
+        playerPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         playerPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
-        playerPhraseTable.setColumnExpandRatio("textEn", 3f);
-        playerPhraseTable.setColumnExpandRatio("textRu", 3f);
-        playerPhraseTable.setColumnExpandRatio("translator", 2f);
-        playerPhraseTable.setColumnExpandRatio("changeTime", 2f);
-        playerPhraseTable.setColumnExpandRatio("saveColumn", 1.5f);
+        playerPhraseTable.setColumnWidth("rowNum", 100);
+        playerPhraseTable.setColumnExpandRatio("textEn", 5f);
+        playerPhraseTable.setColumnExpandRatio("textRu", 5f);
+        playerPhraseTable.setColumnExpandRatio("translator", 1f);
+        playerPhraseTable.setColumnWidth("translator", 131);
+        playerPhraseTable.setColumnExpandRatio("changeTime", 1.7f);
+        playerPhraseTable.setColumnWidth("changeTime", 190);
+        playerPhraseTable.setColumnExpandRatio("saveColumn", 1.1f);
+        playerPhraseTable.setColumnWidth("saveColumn", 115);
         playerPhraseTable.setEditable(true);
         playerPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        playerPhraseTable.setSortEnabled(false);
         tableTabs.addTab(playerPhraseTable, "Фразы игрока");
 
         npcPhraseTable = new Table();
@@ -179,14 +198,20 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
         npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
         npcPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Переводчик", "Время", ""});
+        npcPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         npcPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
-        npcPhraseTable.setColumnExpandRatio("textEn", 3f);
-        npcPhraseTable.setColumnExpandRatio("textRu", 3f);
-        npcPhraseTable.setColumnExpandRatio("translator", 2f);
-        npcPhraseTable.setColumnExpandRatio("changeTime", 2f);
-        npcPhraseTable.setColumnExpandRatio("saveColumn", 1.5f);
+        npcPhraseTable.setColumnWidth("rowNum", 100);
+        npcPhraseTable.setColumnExpandRatio("textEn", 5f);
+        npcPhraseTable.setColumnExpandRatio("textRu", 5f);
+        npcPhraseTable.setColumnExpandRatio("translator", 1f);
+        npcPhraseTable.setColumnWidth("translator", 131);
+        npcPhraseTable.setColumnExpandRatio("changeTime", 1.7f);
+        npcPhraseTable.setColumnWidth("changeTime", 190);
+        npcPhraseTable.setColumnExpandRatio("saveColumn", 1.1f);
+        npcPhraseTable.setColumnWidth("saveColumn", 115);
         npcPhraseTable.setEditable(true);
         npcPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        npcPhraseTable.setSortEnabled(false);
         tableTabs.addTab(npcPhraseTable, "Фразы NPC");
 
         this.addComponent(tableTabs);
@@ -241,6 +266,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 dateField.addStyleName(ValoTheme.DATEFIELD_TINY);
                 dateField.setResolution(Resolution.SECOND);
                 dateField.setReadOnly(true);
+                dateField.setWidth(170f, Unit.PIXELS);
                 result = dateField;
             } else if (propertyId.equals("sex")) {
                 ComboBox comboBox = new ComboBox();
@@ -248,6 +274,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 comboBox.addStyleName(ValoTheme.COMBOBOX_TINY);
                 comboBox.addItems(NPC_SEX.values());
                 comboBox.setReadOnly(true);
+                comboBox.setWidth(100f, Unit.PIXELS);
                 result = comboBox;
             }
             return result;
@@ -302,23 +329,24 @@ public class DirectTableEditTab extends VerticalLayout {
         public void itemClick(ItemClickEvent event) {
             DAO entity = (DAO) event.getItemId();
             Table targetTable = null;
+            Integer rowNum = 1;
             if (entity instanceof GSpreadSheetsNpcName) {
                 targetTable = npcNameTable;
+                rowNum = ((GSpreadSheetsNpcName) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsLocationName) {
                 targetTable = locationNameTable;
+                rowNum = ((GSpreadSheetsLocationName) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsPlayerPhrase) {
                 targetTable = playerPhraseTable;
+                rowNum = ((GSpreadSheetsPlayerPhrase) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsNpcPhrase) {
                 targetTable = npcPhraseTable;
+                rowNum = ((GSpreadSheetsNpcPhrase) entity).getRowNum().intValue();
             }
+            rowNum--;
             if (targetTable != null) {
                 tableTabs.setSelectedTab(targetTable);
-                Collection<Object> itemIds = (Collection<Object>) targetTable.getItemIds();
-                for (Object itemId : itemIds) {
-                    if (entity.getId().equals(itemId)) {
-                        targetTable.setCurrentPageFirstItemId(itemId);
-                    }
-                }
+                targetTable.setCurrentPageFirstItemIndex(rowNum);
             }
         }
 
