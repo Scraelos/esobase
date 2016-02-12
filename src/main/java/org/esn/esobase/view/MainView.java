@@ -18,6 +18,7 @@ import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.view.tab.ChangePasswordTab;
+import org.esn.esobase.view.tab.DirectTableEditTab;
 import org.esn.esobase.view.tab.ImportTab;
 import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
@@ -56,6 +57,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem changePasswordMenuItem;
     private MenuBar.MenuItem questsMenuItem;
     private MenuBar.MenuItem searchInCatalogsMenuItem;
+    private MenuBar.MenuItem directTableEditMenuItem;
 
     private ImportTab importTabContent;
     private TranslateTab translateTabContent;
@@ -64,6 +66,7 @@ public class MainView extends Panel implements View, Command {
     private QuestsTab questsTabContent;
     private SearchInCatalogsTab searchInCatalogsTabContent;
     private ChangePasswordTab changePasswordTabContent;
+    private DirectTableEditTab directTableEditTabContent;
 
     @PostConstruct
     public void PostConstruct() {
@@ -86,6 +89,7 @@ public class MainView extends Panel implements View, Command {
         mainMenu.setWidth(100f, Unit.PERCENTAGE);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
             translateMenuItem = mainMenu.addItem("Перевод", this);
+            directTableEditMenuItem = mainMenu.addItem("Таблицы", this);
             questsMenuItem = mainMenu.addItem("Квесты", this);
             searchInCatalogsMenuItem = mainMenu.addItem("Поиск в справочниках", this);
             importMenuItem = mainMenu.addItem("Импорт", this);
@@ -134,8 +138,19 @@ public class MainView extends Panel implements View, Command {
             } else {
                 translateTabContent = new TranslateTab(service);
             }
-
             TabSheet.Tab tab = tabs.addTab(translateTabContent, selectedItem.getText());
+            tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        } else if (selectedItem == directTableEditMenuItem) {
+            if (directTableEditTabContent != null) {
+                TabSheet.Tab tab = tabs.getTab(directTableEditTabContent);
+                if (tab == null) {
+                    directTableEditTabContent = new DirectTableEditTab(service);
+                }
+            } else {
+                directTableEditTabContent = new DirectTableEditTab(service);
+            }
+            TabSheet.Tab tab = tabs.addTab(directTableEditTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == questsMenuItem) {

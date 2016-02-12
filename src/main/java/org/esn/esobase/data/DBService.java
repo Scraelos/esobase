@@ -5,6 +5,9 @@
  */
 package org.esn.esobase.data;
 
+import com.vaadin.addon.jpacontainer.EntityItem;
+import com.vaadin.addon.jpacontainer.JPAContainer;
+import com.vaadin.addon.jpacontainer.JPAContainerFactory;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -41,6 +44,7 @@ import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.Topic;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
+import org.esn.esobase.security.SpringSecurityHelper;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
@@ -64,6 +68,7 @@ public class DBService {
         roles.add(new SysAccountRole(2L, "ROLE_ADMIN", "Администрирование"));
         roles.add(new SysAccountRole(3L, "ROLE_TRANSLATE", "Перевод"));
         roles.add(new SysAccountRole(4L, "ROLE_APPROVE", "Вычитка"));
+        roles.add(new SysAccountRole(5L, "ROLE_DIRECT_ACCESS", "Прямое редактирование таблиц"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -1801,5 +1806,19 @@ public class DBService {
         String hashedPassword = passwordEncoder.encode(newPassword);
         a.setPassword(hashedPassword);
         em.merge(a);
+    }
+
+    @Transactional
+    public JPAContainer getJPAContainerContainerForClass(Class c) {
+        return JPAContainerFactory.makeBatchable(c, em);
+    }
+    
+    @Transactional
+    public void commitTableEntityItem(EntityItem item) {
+        if((item.getEntity() instanceof GSpreadSheetsNpcName)||(item.getEntity() instanceof GSpreadSheetsLocationName)||(item.getEntity() instanceof GSpreadSheetsNpcPhrase)||(item.getEntity() instanceof GSpreadSheetsPlayerPhrase)) {
+            item.getItemProperty("changeTime").setValue(new Date());
+            item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
+        }
+        em.merge(item.getEntity());
     }
 }

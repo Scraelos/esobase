@@ -264,6 +264,11 @@
             <artifactId>google-api-services-drive</artifactId>
             <version>v2-rev70-1.14.1-beta</version>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin.addon</groupId>
+            <artifactId>jpacontainer</artifactId>
+            <version>3.2.0</version>
+        </dependency>
     </dependencies>
 
     <build>
