@@ -67,6 +67,7 @@ public class QuestsTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 LoadTable();
+                CloseForm();
             }
         });
         actions.addComponent(refreshButton);
@@ -88,6 +89,7 @@ public class QuestsTab extends VerticalLayout {
         table.setContainerDataSource(container);
 
         table.setVisibleColumns(new Object[]{"name", "nameRu", "progress"});
+        table.setColumnHeaders(new String[]{"Название", "Перевод названия", "Готовность диалогов"});
         table.setConverter("progress", new Converter<String, BigDecimal>() {
 
             @Override
