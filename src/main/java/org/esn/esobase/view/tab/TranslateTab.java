@@ -27,6 +27,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.Greeting;
 import org.esn.esobase.model.Location;
@@ -500,7 +501,7 @@ public class TranslateTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
             final VerticalLayout vl = new VerticalLayout();
             vl.setSizeFull();
-            List<TranslatedText> list = (List<TranslatedText>) source.getItem(itemId).getItemProperty(columnId).getValue();
+            Set<TranslatedText> list = (Set<TranslatedText>) source.getItem(itemId).getItemProperty(columnId).getValue();
             List<SysAccount> accounts = new ArrayList<>();
             if (list != null) {
                 for (TranslatedText t : list) {

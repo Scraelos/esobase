@@ -6,6 +6,7 @@
 package org.esn.esobase.model;
 
 import java.util.List;
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,6 +20,8 @@ import javax.persistence.OneToOne;
 import org.esn.esobase.model.lib.DAO;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  *
@@ -51,11 +54,13 @@ public class Topic extends DAO {
     @ManyToOne
     private GSpreadSheetsNpcPhrase extNpcPhrase;
     @Fetch(value = FetchMode.SELECT)
+    @LazyCollection(LazyCollectionOption.FALSE)
     @OneToMany(mappedBy = "playerTopic", fetch = FetchType.EAGER)
-    private List<TranslatedText> playerTranslations;
+    private Set<TranslatedText> playerTranslations;
     @Fetch(value = FetchMode.SELECT)
+    @LazyCollection(LazyCollectionOption.FALSE)
     @OneToMany(mappedBy = "npcTopic", fetch = FetchType.EAGER)
-    private List<TranslatedText> npcTranslations;
+    private Set<TranslatedText> npcTranslations;
     private Integer weight;
 
     public Topic() {
@@ -151,19 +156,19 @@ public class Topic extends DAO {
         this.playerTextRawRu = playerTextRawRu;
     }
 
-    public List<TranslatedText> getPlayerTranslations() {
+    public Set<TranslatedText> getPlayerTranslations() {
         return playerTranslations;
     }
 
-    public void setPlayerTranslations(List<TranslatedText> playerTranslations) {
+    public void setPlayerTranslations(Set<TranslatedText> playerTranslations) {
         this.playerTranslations = playerTranslations;
     }
 
-    public List<TranslatedText> getNpcTranslations() {
+    public Set<TranslatedText> getNpcTranslations() {
         return npcTranslations;
     }
 
-    public void setNpcTranslations(List<TranslatedText> npcTranslations) {
+    public void setNpcTranslations(Set<TranslatedText> npcTranslations) {
         this.npcTranslations = npcTranslations;
     }
 

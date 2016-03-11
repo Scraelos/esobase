@@ -6,6 +6,7 @@
 package org.esn.esobase.model;
 
 import java.util.List;
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -43,7 +44,7 @@ public class Subtitle extends DAO {
     private GSpreadSheetsNpcPhrase extNpcPhrase;
     @Fetch(value = FetchMode.SELECT)
     @OneToMany(mappedBy = "subtitle", fetch = FetchType.EAGER)
-    private List<TranslatedText> translations;
+    private Set<TranslatedText> translations;
     private Integer weight;
 
     public Subtitle() {
@@ -105,11 +106,11 @@ public class Subtitle extends DAO {
         this.textRawRu = textRawRu;
     }
 
-    public List<TranslatedText> getTranslations() {
+    public Set<TranslatedText> getTranslations() {
         return translations;
     }
 
-    public void setTranslations(List<TranslatedText> translations) {
+    public void setTranslations(Set<TranslatedText> translations) {
         this.translations = translations;
     }
 

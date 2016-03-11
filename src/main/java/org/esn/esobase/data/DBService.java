@@ -1238,11 +1238,13 @@ public class DBService {
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
         if (withNewTranslations) {
-            crit.add(Restrictions.or(Restrictions.sizeGt("playerTranslations", 0), Restrictions.sizeGt("npcTranslations", 0)));
-            crit.createAlias("playerTranslations", "playerTranslations");
-
-            crit.createAlias("npcTranslations", "npcTranslations");
-            crit.add(Restrictions.or(Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW), Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)));
+            crit.createAlias("playerTranslations", "playerTranslations",JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("npcTranslations", "npcTranslations",JoinType.LEFT_OUTER_JOIN);
+            crit.add(Restrictions.or(
+                    Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
+                    Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)
+            )
+            );
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Topic> list = crit.list();
@@ -1634,22 +1636,22 @@ public class DBService {
         List<TranslatedText> list1 = npcCrit.list();
         for (TranslatedText t : list1) {
             if (t.getGreeting() != null) {
-                Npc npc=t.getGreeting().getNpc();
+                Npc npc = t.getGreeting().getNpc();
                 npc.setHasNewTranslations(Boolean.TRUE);
                 em.merge(npc);
             }
             if (t.getSubtitle() != null) {
-                Npc npc=t.getSubtitle().getNpc();
+                Npc npc = t.getSubtitle().getNpc();
                 npc.setHasNewTranslations(Boolean.TRUE);
                 em.merge(npc);
             }
             if (t.getNpcTopic() != null) {
-                Npc npc=t.getNpcTopic().getNpc();
+                Npc npc = t.getNpcTopic().getNpc();
                 npc.setHasNewTranslations(Boolean.TRUE);
                 em.merge(npc);
             }
             if (t.getPlayerTopic() != null) {
-                Npc npc=t.getPlayerTopic().getNpc();
+                Npc npc = t.getPlayerTopic().getNpc();
                 npc.setHasNewTranslations(Boolean.TRUE);
                 em.merge(npc);
             }
