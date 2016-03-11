@@ -51,6 +51,7 @@ public class Npc extends DAO {
     @ManyToMany(mappedBy = "npcs")
     private List<Quest> quests;
     private BigDecimal progress;
+    private Boolean hasNewTranslations;
 
     public Npc() {
     }
@@ -172,6 +173,14 @@ public class Npc extends DAO {
 
     public void setQuests(List<Quest> quests) {
         this.quests = quests;
+    }
+
+    public Boolean getHasNewTranslations() {
+        return hasNewTranslations;
+    }
+
+    public void setHasNewTranslations(Boolean hasNewTranslations) {
+        this.hasNewTranslations = hasNewTranslations;
     }
 
 }

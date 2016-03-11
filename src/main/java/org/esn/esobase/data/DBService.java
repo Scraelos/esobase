@@ -49,6 +49,7 @@ import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1236,33 +1237,16 @@ public class DBService {
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
+        if (withNewTranslations) {
+            crit.add(Restrictions.or(Restrictions.sizeGt("playerTranslations", 0), Restrictions.sizeGt("npcTranslations", 0)));
+            crit.createAlias("playerTranslations", "playerTranslations");
+
+            crit.createAlias("npcTranslations", "npcTranslations");
+            crit.add(Restrictions.or(Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW), Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)));
+        }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Topic> list = crit.list();
-        if (withNewTranslations) {
-            for (Topic topic : list) {
-                boolean hasNewTranslation = false;
-                if (topic.getNpcTranslations() != null) {
-                    for (TranslatedText tt : topic.getNpcTranslations()) {
-                        if (tt.getStatus() != null && tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                            hasNewTranslation = true;
-                            break;
-                        }
-                    }
-                    for (TranslatedText tt : topic.getPlayerTranslations()) {
-                        if (tt.getStatus() != null && tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                            hasNewTranslation = true;
-                            break;
-                        }
-                    }
-                }
-                if (hasNewTranslation) {
-                    container.addBean(topic);
-                }
-            }
-        } else {
-            container.addAll(list);
-        }
-
+        container.addAll(list);
         return container;
     }
 
@@ -1274,26 +1258,15 @@ public class DBService {
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
+        if (withNewTranslations) {
+            crit.add(Restrictions.sizeGt("translations", 0));
+            crit.createAlias("translations", "translations");
+            crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+        }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Greeting> list = crit.list();
-        if (withNewTranslations) {
-            for (Greeting g : list) {
-                boolean hasNewTranslation = false;
-                if (g.getTranslations() != null) {
-                    for (TranslatedText tt : g.getTranslations()) {
-                        if (tt.getStatus() != null && tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                            hasNewTranslation = true;
-                            break;
-                        }
-                    }
-                }
-                if (hasNewTranslation) {
-                    container.addBean(g);
-                }
-            }
-        } else {
-            container.addAll(list);
-        }
+
+        container.addAll(list);
         return container;
     }
 
@@ -1305,26 +1278,14 @@ public class DBService {
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
+        if (withNewTranslations) {
+            crit.add(Restrictions.sizeGt("translations", 0));
+            crit.createAlias("translations", "translations");
+            crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+        }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Subtitle> list = crit.list();
-        if (withNewTranslations) {
-            for (Subtitle s : list) {
-                boolean hasNewTranslation = false;
-                if (s.getTranslations() != null) {
-                    for (TranslatedText tt : s.getTranslations()) {
-                        if (tt.getStatus() != null && tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                            hasNewTranslation = true;
-                            break;
-                        }
-                    }
-                }
-                if (hasNewTranslation) {
-                    container.addBean(s);
-                }
-            }
-        } else {
-            container.addAll(list);
-        }
+        container.addAll(list);
         return container;
     }
 
@@ -1333,30 +1294,33 @@ public class DBService {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
 
+        /*if (withNewTranslations) {
+         List<Npc> npcWithTranslations = new ArrayList<>();
+         Criteria translationsCrit = session.createCriteria(TranslatedText.class);
+         translationsCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
+         List<TranslatedText> translationsList = translationsCrit.list();
+         for (TranslatedText translatedText : translationsList) {
+         if (translatedText.getGreeting() != null) {
+         npcWithTranslations.add(translatedText.getGreeting().getNpc());
+         } else if (translatedText.getSubtitle() != null) {
+         npcWithTranslations.add(translatedText.getSubtitle().getNpc());
+         } else if (translatedText.getNpcTopic() != null) {
+         npcWithTranslations.add(translatedText.getNpcTopic().getNpc());
+         } else if (translatedText.getPlayerTopic() != null) {
+         npcWithTranslations.add(translatedText.getPlayerTopic().getNpc());
+         }
+         }
+         container.addAll(npcWithTranslations);
+         } else {*/
+        Criteria crit = session.createCriteria(Npc.class);
+        crit.setFetchMode("location", FetchMode.JOIN);
         if (withNewTranslations) {
-            List<Npc> npcWithTranslations = new ArrayList<>();
-            Criteria translationsCrit = session.createCriteria(TranslatedText.class);
-            translationsCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
-            List<TranslatedText> translationsList = translationsCrit.list();
-            for (TranslatedText translatedText : translationsList) {
-                if (translatedText.getGreeting() != null) {
-                    npcWithTranslations.add(translatedText.getGreeting().getNpc());
-                } else if (translatedText.getSubtitle() != null) {
-                    npcWithTranslations.add(translatedText.getSubtitle().getNpc());
-                } else if (translatedText.getNpcTopic() != null) {
-                    npcWithTranslations.add(translatedText.getNpcTopic().getNpc());
-                } else if (translatedText.getPlayerTopic() != null) {
-                    npcWithTranslations.add(translatedText.getPlayerTopic().getNpc());
-                }
-            }
-            container.addAll(npcWithTranslations);
-        } else {
-            Criteria crit = session.createCriteria(Npc.class);
-            crit.setFetchMode("location", FetchMode.JOIN);
-            crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-            List<Npc> list = crit.list();
-            container.addAll(list);
+            crit.add(Restrictions.eq("hasNewTranslations", true));
         }
+        crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        List<Npc> list = crit.list();
+        container.addAll(list);
+        //}
 
         return container;
     }
@@ -1390,7 +1354,6 @@ public class DBService {
             } else {
                 em.merge(entity);
             }
-
         }
     }
 
@@ -1406,6 +1369,18 @@ public class DBService {
                 em.merge(entity);
             }
 
+        }
+        if (entity.getGreeting() != null) {
+            updateNpcHasTranslated(entity.getGreeting().getNpc());
+        }
+        if (entity.getSubtitle() != null) {
+            updateNpcHasTranslated(entity.getSubtitle().getNpc());
+        }
+        if (entity.getNpcTopic() != null) {
+            updateNpcHasTranslated(entity.getNpcTopic().getNpc());
+        }
+        if (entity.getPlayerTopic() != null) {
+            updateNpcHasTranslated(entity.getPlayerTopic().getNpc());
         }
     }
 
@@ -1500,6 +1475,18 @@ public class DBService {
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
         em.merge(entity);
+        if (entity.getGreeting() != null) {
+            updateNpcHasTranslated(entity.getGreeting().getNpc());
+        }
+        if (entity.getSubtitle() != null) {
+            updateNpcHasTranslated(entity.getSubtitle().getNpc());
+        }
+        if (entity.getNpcTopic() != null) {
+            updateNpcHasTranslated(entity.getNpcTopic().getNpc());
+        }
+        if (entity.getPlayerTopic() != null) {
+            updateNpcHasTranslated(entity.getPlayerTopic().getNpc());
+        }
     }
 
     @Transactional
@@ -1515,6 +1502,7 @@ public class DBService {
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
+                updateNpcHasTranslated(greeting.getNpc());
             }
 
         }
@@ -1528,6 +1516,7 @@ public class DBService {
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
+                updateNpcHasTranslated(subtitle.getNpc());
             }
 
         }
@@ -1541,6 +1530,7 @@ public class DBService {
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
+                updateNpcHasTranslated(topic.getNpc());
             }
 
         }
@@ -1554,6 +1544,7 @@ public class DBService {
                 em.merge(playerPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
+                updateNpcHasTranslated(topic.getNpc());
             }
 
         }
@@ -1636,6 +1627,32 @@ public class DBService {
             }
 
             em.merge(q);
+        }
+
+        Criteria npcCrit = session.createCriteria(TranslatedText.class);
+        npcCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
+        List<TranslatedText> list1 = npcCrit.list();
+        for (TranslatedText t : list1) {
+            if (t.getGreeting() != null) {
+                Npc npc=t.getGreeting().getNpc();
+                npc.setHasNewTranslations(Boolean.TRUE);
+                em.merge(npc);
+            }
+            if (t.getSubtitle() != null) {
+                Npc npc=t.getSubtitle().getNpc();
+                npc.setHasNewTranslations(Boolean.TRUE);
+                em.merge(npc);
+            }
+            if (t.getNpcTopic() != null) {
+                Npc npc=t.getNpcTopic().getNpc();
+                npc.setHasNewTranslations(Boolean.TRUE);
+                em.merge(npc);
+            }
+            if (t.getPlayerTopic() != null) {
+                Npc npc=t.getPlayerTopic().getNpc();
+                npc.setHasNewTranslations(Boolean.TRUE);
+                em.merge(npc);
+            }
         }
 
     }
@@ -1812,13 +1829,67 @@ public class DBService {
     public JPAContainer getJPAContainerContainerForClass(Class c) {
         return JPAContainerFactory.makeBatchable(c, em);
     }
-    
+
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if((item.getEntity() instanceof GSpreadSheetsNpcName)||(item.getEntity() instanceof GSpreadSheetsLocationName)||(item.getEntity() instanceof GSpreadSheetsNpcPhrase)||(item.getEntity() instanceof GSpreadSheetsPlayerPhrase)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
         }
         em.merge(item.getEntity());
+    }
+
+    @Transactional
+    public void updateNpcHasTranslated(Npc n) {
+        Npc npc = em.find(Npc.class, n.getId());
+        boolean hasNewTranslations = false;
+        for (Topic t : npc.getTopics()) {
+            for (TranslatedText tr : t.getNpcTranslations()) {
+                if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
+                    hasNewTranslations = true;
+                    break;
+                }
+            }
+            if (!hasNewTranslations) {
+                for (TranslatedText tr : t.getPlayerTranslations()) {
+                    if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
+                        hasNewTranslations = true;
+                        break;
+                    }
+                }
+            }
+            if (hasNewTranslations) {
+                break;
+            }
+
+        }
+        if (!hasNewTranslations) {
+            for (Greeting g : npc.getGreetings()) {
+                for (TranslatedText tr : g.getTranslations()) {
+                    if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
+                        hasNewTranslations = true;
+                        break;
+                    }
+                }
+                if (hasNewTranslations) {
+                    break;
+                }
+            }
+        }
+        if (!hasNewTranslations) {
+            for (Subtitle s : npc.getSubtitles()) {
+                for (TranslatedText tr : s.getTranslations()) {
+                    if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
+                        hasNewTranslations = true;
+                        break;
+                    }
+                }
+                if (hasNewTranslations) {
+                    break;
+                }
+            }
+        }
+        npc.setHasNewTranslations(hasNewTranslations);
+        em.merge(npc);
     }
 }
