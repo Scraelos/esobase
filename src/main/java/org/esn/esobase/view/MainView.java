@@ -20,6 +20,7 @@ import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.view.tab.ChangePasswordTab;
 import org.esn.esobase.view.tab.DirectTableEditTab;
 import org.esn.esobase.view.tab.ImportTab;
+import org.esn.esobase.view.tab.PortalInfoTab;
 import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
 import org.esn.esobase.view.tab.SynchronizationTab;
@@ -58,6 +59,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem questsMenuItem;
     private MenuBar.MenuItem searchInCatalogsMenuItem;
     private MenuBar.MenuItem directTableEditMenuItem;
+    private MenuBar.MenuItem portalInfoMenuItem;
 
     private ImportTab importTabContent;
     private TranslateTab translateTabContent;
@@ -67,6 +69,7 @@ public class MainView extends Panel implements View, Command {
     private SearchInCatalogsTab searchInCatalogsTabContent;
     private ChangePasswordTab changePasswordTabContent;
     private DirectTableEditTab directTableEditTabContent;
+    private PortalInfoTab portalInfoTabContent;
 
     @PostConstruct
     public void PostConstruct() {
@@ -99,6 +102,7 @@ public class MainView extends Panel implements View, Command {
             usersMenuItem = mainMenu.addItem("Пользователи", this);
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
+        portalInfoMenuItem = mainMenu.addItem("Инфо", this);
     }
 
     private void buildHeader() {
@@ -187,9 +191,6 @@ public class MainView extends Panel implements View, Command {
             subWindow.setSizeFull();
             subWindow.setContent(searchInCatalogsTabContent);
             searchInCatalogsTabContent.setWidth();
-            //TabSheet.Tab tab = tabs.addTab(searchInCatalogsTabContent, selectedItem.getText());
-            //tab.setClosable(true);
-            //tabs.setSelectedTab(tab);
         } else if (selectedItem == changePasswordMenuItem) {
             if (changePasswordTabContent != null) {
                 TabSheet.Tab tab = tabs.getTab(changePasswordTabContent);
@@ -199,6 +200,17 @@ public class MainView extends Panel implements View, Command {
             }
             changePasswordTabContent = new ChangePasswordTab(service);
             TabSheet.Tab tab = tabs.addTab(changePasswordTabContent, selectedItem.getText());
+            tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        }else if (selectedItem == portalInfoMenuItem) {
+            if (portalInfoTabContent != null) {
+                TabSheet.Tab tab = tabs.getTab(portalInfoTabContent);
+                if (tab != null) {
+                    tabs.removeTab(tabs.getTab(portalInfoTabContent));
+                }
+            }
+            portalInfoTabContent = new PortalInfoTab(service);
+            TabSheet.Tab tab = tabs.addTab(portalInfoTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         }

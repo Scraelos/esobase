@@ -1787,6 +1787,32 @@ public class DBService {
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
         }
         em.merge(item.getEntity());
+        if (item.getEntity() instanceof GSpreadSheetsLocationName) {
+            GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) item.getEntity();
+            Session session = (Session) em.getDelegate();
+            Criteria crit = session.createCriteria(Location.class);
+            crit.add(Restrictions.eq("name", locationName.getTextEn()));
+            List<Location> list = crit.list();
+            for (Location l : list) {
+                l.setNameRu(locationName.getTextRu());
+                em.merge(l);
+            }
+        }
+        if (item.getEntity() instanceof GSpreadSheetsNpcName) {
+            GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) item.getEntity();
+            Session session = (Session) em.getDelegate();
+            Criteria crit = session.createCriteria(Npc.class);
+            crit.add(Restrictions.eq("name", npcName.getTextEn()));
+            List<Npc> list = crit.list();
+            for (Npc n : list) {
+                if (n.getSex() == null || n.getSex() == NPC_SEX.U) {
+                    n.setSex(npcName.getSex());
+                }
+                n.setName(npcName.getTextEn());
+                n.setNameRu(npcName.getTextRu());
+                em.merge(n);
+            }
+        }
     }
 
     @Transactional
@@ -1840,6 +1866,33 @@ public class DBService {
         }
         npc.setHasNewTranslations(hasNewTranslations);
         em.merge(npc);
+    }
+
+    public HierarchicalContainer getStatistics() {
+        HierarchicalContainer result = new HierarchicalContainer();
+        result.addContainerProperty("name", String.class, null);
+        result.addContainerProperty("value", String.class, null);
+        Query gdpreadsheetsStatsQuery = em.createNativeQuery("select 'Перевод названий локаций', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetslocationname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetslocationname) as qres union all\n"
+                + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
+                + "select 'Перевод реплик NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcphrase) as qres union all\n"
+                + "select 'Перевод реплик игрока', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsplayerphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsplayerphrase) as qres;");
+        List<Object[]> gspreadsheetResult = gdpreadsheetsStatsQuery.getResultList();
+        for (Object[] row : gspreadsheetResult) {
+            Item item = result.addItem(row);
+            item.getItemProperty("name").setValue(row[0]);
+            BigDecimal translated = (BigDecimal) row[1];
+            BigDecimal total = (BigDecimal) row[2];
+            BigDecimal progress = translated.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100L)).setScale(2, RoundingMode.HALF_UP);
+            String progressString = progress.toString() + "%";
+            item.getItemProperty("value").setValue(progressString);
+        }
+        Query newTranslationsQuery = em.createNativeQuery("select count(*) from translatedtext where status='NEW'");
+        newTranslationsQuery.setMaxResults(1);
+        BigInteger newTranslationCount = (BigInteger) newTranslationsQuery.getSingleResult();
+        Item item = result.addItem(newTranslationCount);
+        item.getItemProperty("name").setValue("Строк на вычитку");
+        item.getItemProperty("value").setValue(Long.toString(newTranslationCount.longValue()));
+        return result;
     }
 
 }
