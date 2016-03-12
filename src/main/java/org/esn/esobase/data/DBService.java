@@ -1238,8 +1238,8 @@ public class DBService {
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
         if (withNewTranslations) {
-            crit.createAlias("playerTranslations", "playerTranslations",JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("npcTranslations", "npcTranslations",JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
             crit.add(Restrictions.or(
                     Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
                     Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)
@@ -1350,12 +1350,10 @@ public class DBService {
         entity.setStatus(TRANSLATE_STATUS.DIRTY);
         if (entity.getId() == null) {
             em.persist(entity);
+        } else if (entity.getText() == null || entity.getText().isEmpty()) {
+            em.remove(em.find(TranslatedText.class, entity.getId()));
         } else {
-            if (entity.getText() == null || entity.getText().isEmpty()) {
-                em.remove(em.find(TranslatedText.class, entity.getId()));
-            } else {
-                em.merge(entity);
-            }
+            em.merge(entity);
         }
     }
 
@@ -1364,25 +1362,10 @@ public class DBService {
         entity.setStatus(TRANSLATE_STATUS.NEW);
         if (entity.getId() == null) {
             em.persist(entity);
+        } else if (entity.getText() == null || entity.getText().isEmpty()) {
+            em.remove(em.find(TranslatedText.class, entity.getId()));
         } else {
-            if (entity.getText() == null || entity.getText().isEmpty()) {
-                em.remove(em.find(TranslatedText.class, entity.getId()));
-            } else {
-                em.merge(entity);
-            }
-
-        }
-        if (entity.getGreeting() != null) {
-            updateNpcHasTranslated(entity.getGreeting().getNpc());
-        }
-        if (entity.getSubtitle() != null) {
-            updateNpcHasTranslated(entity.getSubtitle().getNpc());
-        }
-        if (entity.getNpcTopic() != null) {
-            updateNpcHasTranslated(entity.getNpcTopic().getNpc());
-        }
-        if (entity.getPlayerTopic() != null) {
-            updateNpcHasTranslated(entity.getPlayerTopic().getNpc());
+            em.merge(entity);
         }
     }
 
@@ -1477,18 +1460,6 @@ public class DBService {
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
         em.merge(entity);
-        if (entity.getGreeting() != null) {
-            updateNpcHasTranslated(entity.getGreeting().getNpc());
-        }
-        if (entity.getSubtitle() != null) {
-            updateNpcHasTranslated(entity.getSubtitle().getNpc());
-        }
-        if (entity.getNpcTopic() != null) {
-            updateNpcHasTranslated(entity.getNpcTopic().getNpc());
-        }
-        if (entity.getPlayerTopic() != null) {
-            updateNpcHasTranslated(entity.getPlayerTopic().getNpc());
-        }
     }
 
     @Transactional
@@ -1504,7 +1475,6 @@ public class DBService {
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
-                updateNpcHasTranslated(greeting.getNpc());
             }
 
         }
@@ -1518,7 +1488,6 @@ public class DBService {
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
-                updateNpcHasTranslated(subtitle.getNpc());
             }
 
         }
@@ -1532,7 +1501,6 @@ public class DBService {
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
-                updateNpcHasTranslated(topic.getNpc());
             }
 
         }
@@ -1546,7 +1514,6 @@ public class DBService {
                 em.merge(playerPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
                 em.merge(entity);
-                updateNpcHasTranslated(topic.getNpc());
             }
 
         }
@@ -1631,6 +1598,8 @@ public class DBService {
             em.merge(q);
         }
 
+        Query updateNpcQuery = em.createQuery("update Npc set hasNewTranslations=false");
+        updateNpcQuery.executeUpdate();
         Criteria npcCrit = session.createCriteria(TranslatedText.class);
         npcCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
         List<TranslatedText> list1 = npcCrit.list();
@@ -1893,5 +1862,21 @@ public class DBService {
         }
         npc.setHasNewTranslations(hasNewTranslations);
         em.merge(npc);
+    }
+
+    @Transactional
+    public void updateNpcHasTranslated(TranslatedText t) {
+        if (t.getGreeting() != null) {
+            updateNpcHasTranslated(t.getGreeting().getNpc());
+        }
+        if (t.getSubtitle() != null) {
+            updateNpcHasTranslated(t.getSubtitle().getNpc());
+        }
+        if (t.getNpcTopic() != null) {
+            updateNpcHasTranslated(t.getNpcTopic().getNpc());
+        }
+        if (t.getPlayerTopic() != null) {
+            updateNpcHasTranslated(t.getPlayerTopic().getNpc());
+        }
     }
 }

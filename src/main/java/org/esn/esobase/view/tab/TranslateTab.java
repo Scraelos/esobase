@@ -210,7 +210,6 @@ public class TranslateTab extends VerticalLayout {
         questContainer = service.loadBeanItems(questContainer);
         questContainer.sort(new Object[]{"name"}, new boolean[]{true});
 
-        
     }
 
     private void LoadNpcContent() {
@@ -284,7 +283,7 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//"Текст в таблицах"
                 if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от "+topic.getExtNpcPhrase().getTranslator());
+                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getExtNpcPhrase().getTranslator());
                     textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
@@ -334,7 +333,7 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtPlayerPhrase().getTextRu() != null && !topic.getExtPlayerPhrase().getTextRu().equals(topic.getExtPlayerPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от "+topic.getExtPlayerPhrase().getTranslator());
+                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getExtPlayerPhrase().getTranslator());
                     textRuRawArea.setValue(topic.getExtPlayerPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
@@ -386,7 +385,7 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от "+topic.getExtNpcPhrase().getTranslator());
+                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getExtNpcPhrase().getTranslator());
                     textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
@@ -439,7 +438,7 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (subtitle.getExtNpcPhrase().getTextRu() != null && !subtitle.getExtNpcPhrase().getTextRu().equals(subtitle.getExtNpcPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от "+subtitle.getExtNpcPhrase().getTranslator());
+                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + subtitle.getExtNpcPhrase().getTranslator());
                     textRuRawArea.setValue(subtitle.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
@@ -510,19 +509,19 @@ public class TranslateTab extends VerticalLayout {
                 }
             }
 
-            String text=null;
+            String text = null;
             if (itemId instanceof Greeting) {
-                    text=((Greeting) itemId).getText();
-                } else if (itemId instanceof Subtitle) {
-                    text=((Subtitle) itemId).getText();
-                } else if (itemId instanceof Topic) {
-                    if (columnId.equals("playerTranslations")) {
-                        text=((Topic) itemId).getPlayerText();
-                    } else if (columnId.equals("npcTranslations")) {
-                        text=((Topic) itemId).getNpcText();
-                    }
+                text = ((Greeting) itemId).getText();
+            } else if (itemId instanceof Subtitle) {
+                text = ((Subtitle) itemId).getText();
+            } else if (itemId instanceof Topic) {
+                if (columnId.equals("playerTranslations")) {
+                    text = ((Topic) itemId).getPlayerText();
+                } else if (columnId.equals("npcTranslations")) {
+                    text = ((Topic) itemId).getNpcText();
                 }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount())&&text!=null&&!text.isEmpty()) {
+            }
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty()) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Greeting) {
@@ -613,6 +612,7 @@ public class TranslateTab extends VerticalLayout {
                 public void buttonClick(Button.ClickEvent event) {
                     translatedText.setText(translation.getValue());
                     service.saveTranslatedText(translatedText);
+                    service.updateNpcHasTranslated(translatedText);
                     LoadNpcContent();
                 }
             });
@@ -628,6 +628,7 @@ public class TranslateTab extends VerticalLayout {
                         public void buttonClick(Button.ClickEvent event) {
                             translatedText.setText(translation.getValue());
                             service.acceptTranslatedText(translatedText);
+                            service.updateNpcHasTranslated(translatedText);
                             service.calculateNpcProgress(currentNpc);
                             service.calculateQuestProgressByNpc(currentNpc);
                             LoadNpcContent();
@@ -635,13 +636,14 @@ public class TranslateTab extends VerticalLayout {
                         }
                     });
                     this.addComponent(accept);
-                    reject=new Button("Отклонить эту версию");
-                    reject.addClickListener( new Button.ClickListener() {
+                    reject = new Button("Отклонить эту версию");
+                    reject.addClickListener(new Button.ClickListener() {
 
                         @Override
                         public void buttonClick(Button.ClickEvent event) {
                             translatedText.setText(translation.getValue());
                             service.rejectTranslatedText(translatedText);
+                            service.updateNpcHasTranslated(translatedText);
                             LoadNpcContent();
                             LoadFilters();
                         }
