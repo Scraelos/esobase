@@ -1295,25 +1295,6 @@ public class DBService {
     public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
-
-        /*if (withNewTranslations) {
-         List<Npc> npcWithTranslations = new ArrayList<>();
-         Criteria translationsCrit = session.createCriteria(TranslatedText.class);
-         translationsCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
-         List<TranslatedText> translationsList = translationsCrit.list();
-         for (TranslatedText translatedText : translationsList) {
-         if (translatedText.getGreeting() != null) {
-         npcWithTranslations.add(translatedText.getGreeting().getNpc());
-         } else if (translatedText.getSubtitle() != null) {
-         npcWithTranslations.add(translatedText.getSubtitle().getNpc());
-         } else if (translatedText.getNpcTopic() != null) {
-         npcWithTranslations.add(translatedText.getNpcTopic().getNpc());
-         } else if (translatedText.getPlayerTopic() != null) {
-         npcWithTranslations.add(translatedText.getPlayerTopic().getNpc());
-         }
-         }
-         container.addAll(npcWithTranslations);
-         } else {*/
         Criteria crit = session.createCriteria(Npc.class);
         crit.setFetchMode("location", FetchMode.JOIN);
         if (withNewTranslations) {
@@ -1322,8 +1303,6 @@ public class DBService {
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Npc> list = crit.list();
         container.addAll(list);
-        //}
-
         return container;
     }
 
@@ -1814,49 +1793,48 @@ public class DBService {
     public void updateNpcHasTranslated(Npc n) {
         Npc npc = em.find(Npc.class, n.getId());
         boolean hasNewTranslations = false;
-        for (Topic t : npc.getTopics()) {
-            for (TranslatedText tr : t.getNpcTranslations()) {
-                if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
+        Session session = (Session) em.getDelegate();
+        Criteria gCrit = session.createCriteria(Greeting.class);
+        gCrit.add(Restrictions.eq("npc", npc));
+        gCrit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
+        gCrit.setFetchMode("translations", FetchMode.SELECT);
+        gCrit.add(Restrictions.sizeGt("translations", 0));
+        gCrit.createAlias("translations", "translations");
+        gCrit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+        gCrit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        List<Greeting> gList = gCrit.list();
+        if (gList != null && gList.size() > 0) {
+            hasNewTranslations = true;
+        } else {
+            Criteria sCrit = session.createCriteria(Subtitle.class);
+            sCrit.add(Restrictions.eq("npc", npc));
+            sCrit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
+            sCrit.setFetchMode("translations", FetchMode.SELECT);
+            sCrit.add(Restrictions.sizeGt("translations", 0));
+            sCrit.createAlias("translations", "translations");
+            sCrit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+            sCrit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+            List<Subtitle> sList = sCrit.list();
+            if (sList != null && sList.size() > 0) {
+                hasNewTranslations = true;
+            } else {
+                Criteria tCrit = session.createCriteria(Topic.class);
+                tCrit.add(Restrictions.eq("npc", npc));
+                tCrit.setFetchMode("extPlayerPhrase", FetchMode.JOIN);
+                tCrit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
+                tCrit.setFetchMode("playerTranslations", FetchMode.SELECT);
+                tCrit.setFetchMode("npcTranslations", FetchMode.SELECT);
+                tCrit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
+                tCrit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
+                tCrit.add(Restrictions.or(
+                        Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
+                        Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)
+                )
+                );
+                tCrit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+                List<Topic> tList = tCrit.list();
+                if (tList != null && tList.size() > 0) {
                     hasNewTranslations = true;
-                    break;
-                }
-            }
-            if (!hasNewTranslations) {
-                for (TranslatedText tr : t.getPlayerTranslations()) {
-                    if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
-                        hasNewTranslations = true;
-                        break;
-                    }
-                }
-            }
-            if (hasNewTranslations) {
-                break;
-            }
-
-        }
-        if (!hasNewTranslations) {
-            for (Greeting g : npc.getGreetings()) {
-                for (TranslatedText tr : g.getTranslations()) {
-                    if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
-                        hasNewTranslations = true;
-                        break;
-                    }
-                }
-                if (hasNewTranslations) {
-                    break;
-                }
-            }
-        }
-        if (!hasNewTranslations) {
-            for (Subtitle s : npc.getSubtitles()) {
-                for (TranslatedText tr : s.getTranslations()) {
-                    if (tr.getStatus() == TRANSLATE_STATUS.NEW) {
-                        hasNewTranslations = true;
-                        break;
-                    }
-                }
-                if (hasNewTranslations) {
-                    break;
                 }
             }
         }
@@ -1864,19 +1842,4 @@ public class DBService {
         em.merge(npc);
     }
 
-    @Transactional
-    public void updateNpcHasTranslated(TranslatedText t) {
-        if (t.getGreeting() != null) {
-            updateNpcHasTranslated(t.getGreeting().getNpc());
-        }
-        if (t.getSubtitle() != null) {
-            updateNpcHasTranslated(t.getSubtitle().getNpc());
-        }
-        if (t.getNpcTopic() != null) {
-            updateNpcHasTranslated(t.getNpcTopic().getNpc());
-        }
-        if (t.getPlayerTopic() != null) {
-            updateNpcHasTranslated(t.getPlayerTopic().getNpc());
-        }
-    }
 }

@@ -613,7 +613,7 @@ public class TranslateTab extends VerticalLayout {
                 public void buttonClick(Button.ClickEvent event) {
                     translatedText.setText(translation.getValue());
                     service.saveTranslatedText(translatedText);
-                    service.updateNpcHasTranslated(translatedText);
+                    service.updateNpcHasTranslated(currentNpc);
                     LoadNpcContent();
                 }
             });
@@ -629,9 +629,9 @@ public class TranslateTab extends VerticalLayout {
                         public void buttonClick(Button.ClickEvent event) {
                             translatedText.setText(translation.getValue());
                             service.acceptTranslatedText(translatedText);
-                            service.updateNpcHasTranslated(translatedText);
                             service.calculateNpcProgress(currentNpc);
                             service.calculateQuestProgressByNpc(currentNpc);
+                            service.updateNpcHasTranslated(currentNpc);
                             LoadNpcContent();
                             LoadFilters();
                         }
@@ -644,7 +644,7 @@ public class TranslateTab extends VerticalLayout {
                         public void buttonClick(Button.ClickEvent event) {
                             translatedText.setText(translation.getValue());
                             service.rejectTranslatedText(translatedText);
-                            service.updateNpcHasTranslated(translatedText);
+                            service.updateNpcHasTranslated(currentNpc);
                             LoadNpcContent();
                             LoadFilters();
                         }
