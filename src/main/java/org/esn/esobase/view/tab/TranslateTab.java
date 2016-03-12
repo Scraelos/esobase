@@ -122,6 +122,7 @@ public class TranslateTab extends VerticalLayout {
 
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
+                locationTable.setValue(null);
                 LoadFilters();
                 LoadNpcContent();
             }
