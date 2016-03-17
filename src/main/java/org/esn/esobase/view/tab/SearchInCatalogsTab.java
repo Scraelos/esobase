@@ -74,6 +74,7 @@ public class SearchInCatalogsTab extends VerticalLayout {
         hc.addContainerProperty("textRu", String.class, null);
         hc.addContainerProperty("catalogType", String.class, null);
         hc.addContainerProperty("translator", String.class, null);
+        hc.addContainerProperty("weight", Integer.class, null);
         resultTable.setContainerDataSource(hc);
         resultTable.setVisibleColumns(new Object[]{"textEn","textRu","catalogType","translator"});
         resultTable.setColumnHeaders(new String[]{"Текст","Русский текст","Тип","Переводчик"});

@@ -5,29 +5,29 @@
  */
 package org.esn.esobase.data;
 
-import org.esn.esobase.model.GSpreadSheetsLocationName;
+import org.esn.esobase.model.GSpreadSheetsQuestName;
 
 /**
  *
  * @author scraelos
  */
-public class LocationsDiff {
+public class QuestNamesDiff {
 
-    private final GSpreadSheetsLocationName spreadsheetsName;
-    private final GSpreadSheetsLocationName dbName;
+    private final GSpreadSheetsQuestName spreadsheetsName;
+    private final GSpreadSheetsQuestName dbName;
     private final SYNC_TYPE syncType;
 
-    public LocationsDiff(GSpreadSheetsLocationName spreadsheetsPhrase, GSpreadSheetsLocationName dbPhrase, SYNC_TYPE syncType) {
+    public QuestNamesDiff(GSpreadSheetsQuestName spreadsheetsPhrase, GSpreadSheetsQuestName dbPhrase, SYNC_TYPE syncType) {
         this.spreadsheetsName = spreadsheetsPhrase;
         this.dbName = dbPhrase;
         this.syncType = syncType;
     }
 
-    public GSpreadSheetsLocationName getSpreadsheetsName() {
+    public GSpreadSheetsQuestName getSpreadsheetsName() {
         return spreadsheetsName;
     }
 
-    public GSpreadSheetsLocationName getDbName() {
+    public GSpreadSheetsQuestName getDbName() {
         return dbName;
     }
 

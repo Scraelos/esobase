@@ -36,6 +36,8 @@ import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
+import org.esn.esobase.model.GSpreadSheetsQuestDescription;
+import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -63,6 +65,12 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table npcPhraseTable;
     private JPAContainer<GSpreadSheetsNpcPhrase> npcPhraseContainer;
+    
+    private Table questNameTable;
+    private JPAContainer<GSpreadSheetsNpcPhrase> questNameContainer;
+    
+    private Table questDescriptionTable;
+    private JPAContainer<GSpreadSheetsNpcPhrase> questDescriptionContainer;
 
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
@@ -103,6 +111,7 @@ public class DirectTableEditTab extends VerticalLayout {
         hc.addContainerProperty("textRu", String.class, null);
         hc.addContainerProperty("catalogType", String.class, null);
         hc.addContainerProperty("translator", String.class, null);
+        hc.addContainerProperty("weight", Integer.class, null);
         resultTable.setContainerDataSource(hc);
         resultTable.setVisibleColumns(new Object[]{"textEn", "textRu", "catalogType", "translator"});
         resultTable.setColumnHeaders(new String[]{"Текст", "Русский текст", "Тип", "Переводчик"});
@@ -119,8 +128,8 @@ public class DirectTableEditTab extends VerticalLayout {
         npcNameContainer.setBuffered(true);
         npcNameTable.setContainerDataSource(npcNameContainer);
         npcNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
-        npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
-        npcNameTable.setColumnHeaders(new String[]{"Номер строки", "Пол", "Текст", "Перевод", "Переводчик", "Время", ""});
+        npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        npcNameTable.setColumnHeaders(new String[]{"Номер строки", "Пол", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         npcNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         npcNameTable.setColumnExpandRatio("rowNum", 1.5f);
         npcNameTable.setColumnWidth("rowNum", 100);
@@ -146,8 +155,8 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameContainer.setBuffered(true);
         locationNameTable.setContainerDataSource(locationNameContainer);
         locationNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
-        locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
-        locationNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Переводчик", "Время", ""});
+        locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        locationNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         locationNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         locationNameTable.setColumnExpandRatio("rowNum", 1.5f);
         locationNameTable.setColumnWidth("rowNum", 100);
@@ -171,8 +180,8 @@ public class DirectTableEditTab extends VerticalLayout {
         playerPhraseContainer.setBuffered(true);
         playerPhraseTable.setContainerDataSource(playerPhraseContainer);
         playerPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
-        playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
-        playerPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Переводчик", "Время", ""});
+        playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        playerPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         playerPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         playerPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
         playerPhraseTable.setColumnWidth("rowNum", 100);
@@ -196,8 +205,8 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseContainer.setBuffered(true);
         npcPhraseTable.setContainerDataSource(npcPhraseContainer);
         npcPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
-        npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "translator", "changeTime", "saveColumn"});
-        npcPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Переводчик", "Время", ""});
+        npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        npcPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         npcPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         npcPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
         npcPhraseTable.setColumnWidth("rowNum", 100);
@@ -214,6 +223,56 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseTable.setSortEnabled(false);
         tableTabs.addTab(npcPhraseTable, "Фразы NPC");
 
+        questNameTable = new Table();
+        questNameTable.setSizeFull();
+        questNameTable.setHeight(500f, Unit.PIXELS);
+        questNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestName.class);
+        questNameContainer.setBuffered(true);
+        questNameTable.setContainerDataSource(questNameContainer);
+        questNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        questNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        questNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        questNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        questNameTable.setColumnExpandRatio("rowNum", 1.5f);
+        questNameTable.setColumnWidth("rowNum", 100);
+        questNameTable.setColumnExpandRatio("textEn", 5f);
+        questNameTable.setColumnExpandRatio("textRu", 5f);
+        questNameTable.setColumnExpandRatio("translator", 1f);
+        questNameTable.setColumnWidth("translator", 131);
+        questNameTable.setColumnExpandRatio("changeTime", 1.7f);
+        questNameTable.setColumnWidth("changeTime", 190);
+        questNameTable.setColumnExpandRatio("saveColumn", 1.1f);
+        questNameTable.setColumnWidth("saveColumn", 115);
+        questNameTable.setEditable(true);
+        questNameTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        questNameTable.setSortEnabled(false);
+        tableTabs.addTab(questNameTable, "Названия квестов");
+        
+        questDescriptionTable = new Table();
+        questDescriptionTable.setSizeFull();
+        questDescriptionTable.setHeight(500f, Unit.PIXELS);
+        questDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDescription.class);
+        questDescriptionContainer.setBuffered(true);
+        questDescriptionTable.setContainerDataSource(questDescriptionContainer);
+        questDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        questDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        questDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        questDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        questDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
+        questDescriptionTable.setColumnWidth("rowNum", 100);
+        questDescriptionTable.setColumnExpandRatio("textEn", 5f);
+        questDescriptionTable.setColumnExpandRatio("textRu", 5f);
+        questDescriptionTable.setColumnExpandRatio("translator", 1f);
+        questDescriptionTable.setColumnWidth("translator", 131);
+        questDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
+        questDescriptionTable.setColumnWidth("changeTime", 190);
+        questDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
+        questDescriptionTable.setColumnWidth("saveColumn", 115);
+        questDescriptionTable.setEditable(true);
+        questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        questDescriptionTable.setSortEnabled(false);
+        tableTabs.addTab(questDescriptionTable, "Описания квестов");
+        
         this.addComponent(tableTabs);
         this.setExpandRatio(resultTable, 10f);
         this.setExpandRatio(tableTabs, 90f);
@@ -221,7 +280,7 @@ public class DirectTableEditTab extends VerticalLayout {
     }
 
     private void search() {
-        if (searchField.getValue() != null && searchField.getValue().length() > 2) {
+        if (searchField.getValue() != null && searchField.getValue().length() > 0) {
             hc = service.searchInCatalogs(searchField.getValue(), hc);
         }
     }
@@ -342,6 +401,12 @@ public class DirectTableEditTab extends VerticalLayout {
             } else if (entity instanceof GSpreadSheetsNpcPhrase) {
                 targetTable = npcPhraseTable;
                 rowNum = ((GSpreadSheetsNpcPhrase) entity).getRowNum().intValue();
+            } else if (entity instanceof GSpreadSheetsQuestName) {
+                targetTable = questNameTable;
+                rowNum = ((GSpreadSheetsQuestName) entity).getRowNum().intValue();
+            }else if (entity instanceof GSpreadSheetsQuestDescription) {
+                targetTable = questDescriptionTable;
+                rowNum = ((GSpreadSheetsQuestDescription) entity).getRowNum().intValue();
             }
             rowNum--;
             if (targetTable != null) {

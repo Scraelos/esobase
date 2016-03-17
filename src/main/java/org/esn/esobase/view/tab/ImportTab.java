@@ -22,6 +22,8 @@ import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
+import org.esn.esobase.model.GSpreadSheetsQuestDescription;
+import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.LuaDecoder;
@@ -37,6 +39,8 @@ public class ImportTab extends VerticalLayout {
     private Button importPlayerPhrasesFromG;
     private Button importNpcPhrasesFromG;
     private Button importLocationNamesFromG;
+    private Button importQuestNamesFromG;
+    private Button importQuestDescriptionsFromG;
     private Button importNpcNamesFromG;
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
@@ -84,6 +88,31 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importLocationNamesFromG);
+            
+            importQuestNamesFromG = new Button("Импорт названий квестов из гугл-таблиц");
+            importQuestNamesFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsQuestName> items = docsService.getQuestNames(service);
+                    service.loadQuestNamesFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importQuestNamesFromG);
+            
+            importQuestDescriptionsFromG = new Button("Импорт описаний квестов из гугл-таблиц");
+            importQuestDescriptionsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions(service);
+                    service.loadQuestDesciptionsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importQuestDescriptionsFromG);
+            
             importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
             importNpcNamesFromG.addClickListener(new Button.ClickListener() {
 

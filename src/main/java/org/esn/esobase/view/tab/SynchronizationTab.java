@@ -23,11 +23,15 @@ import org.esn.esobase.data.LocationsDiff;
 import org.esn.esobase.data.NpcNameDiff;
 import org.esn.esobase.data.NpcPhraseDiff;
 import org.esn.esobase.data.PlayerPhraseDiff;
+import org.esn.esobase.data.QuestDescriptionsDiff;
+import org.esn.esobase.data.QuestNamesDiff;
 import org.esn.esobase.data.SYNC_TYPE;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
+import org.esn.esobase.model.GSpreadSheetsQuestDescription;
+import org.esn.esobase.model.GSpreadSheetsQuestName;
 
 /**
  *
@@ -61,6 +65,20 @@ public class SynchronizationTab extends VerticalLayout {
     private Button saveLocationsButton;
     private Table locationsDiffTable;
     private HierarchicalContainer locationsDiffContainer;
+    
+    private VerticalLayout questNamesLayout;
+    private HorizontalLayout syncQuestNamesActions;
+    private Button syncQuestNamesButton;
+    private Button saveQuestNamesButton;
+    private Table questNamesDiffTable;
+    private HierarchicalContainer questNamesDiffContainer;
+    
+    private VerticalLayout questDescriptionsLayout;
+    private HorizontalLayout syncQuestDescriptionsActions;
+    private Button syncQuestDescriptionsButton;
+    private Button saveQuestDescriptionsButton;
+    private Table questDescriptionsDiffTable;
+    private HierarchicalContainer questDescriptionsDiffContainer;
 
     private static final String[] columnHeaders = {"Перевод в таблицах", "Переводчик в таблицах", "Дата в таблицах", "Перевод в базе", "Переводчик в базе", "Дата в базе", "Действие"};
     private static final Object[] columns = {"shText", "shNic", "shDate", "dbText", "dbNic", "dbDate", "syncType"};
@@ -294,6 +312,118 @@ public class SynchronizationTab extends VerticalLayout {
         locationsDiffTable.setColumnHeaders(columnHeaders);
         locationsLayout.addComponent(locationsDiffTable);
         tabs.addTab(locationsLayout, "Названия локаций");
+        
+        questNamesLayout = new VerticalLayout();
+        syncQuestNamesActions = new HorizontalLayout();
+        syncQuestNamesButton = new Button("Сверка");
+        syncQuestNamesButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                GoogleDocsService docsService = new GoogleDocsService();
+                List<GSpreadSheetsQuestName> items = docsService.getQuestNames(service);
+                questNamesDiffContainer = service.getQuestNamesDiff(items, questNamesDiffContainer);
+            }
+        });
+        syncQuestNamesActions.addComponent(syncQuestNamesButton);
+        saveQuestNamesButton = new Button("Синхронизировать");
+        saveQuestNamesButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                List<QuestNamesDiff> diffs = (List<QuestNamesDiff>) questNamesDiffContainer.getItemIds();
+                List<GSpreadSheetsQuestName> itemsToSh = new ArrayList<>();
+                List<GSpreadSheetsQuestName> itemsToDb = new ArrayList<>();
+                for (QuestNamesDiff diff : diffs) {
+                    if (diff.getSyncType() == SYNC_TYPE.TO_SPREADSHEET) {
+                        itemsToSh.add(diff.getDbName());
+                    } else if (diff.getSyncType() == SYNC_TYPE.TO_DB) {
+                        itemsToDb.add(diff.getSpreadsheetsName());
+                    }
+                }
+                GoogleDocsService docsService = new GoogleDocsService();
+                docsService.uploadQuestNames(itemsToSh);
+                service.saveQuestNames(itemsToDb);
+                questNamesDiffContainer.removeAllItems();
+            }
+        });
+        syncQuestNamesActions.addComponent(saveQuestNamesButton);
+        questNamesLayout.addComponent(syncQuestNamesActions);
+        questNamesDiffTable = new Table();
+        questNamesDiffTable.setSizeFull();
+        questNamesDiffContainer = new HierarchicalContainer();
+        questNamesDiffContainer.addContainerProperty("shText", String.class, null);
+        questNamesDiffContainer.addContainerProperty("shNic", String.class, null);
+        questNamesDiffContainer.addContainerProperty("shDate", Date.class, null);
+        questNamesDiffContainer.addContainerProperty("dbText", String.class, null);
+        questNamesDiffContainer.addContainerProperty("dbNic", String.class, null);
+        questNamesDiffContainer.addContainerProperty("dbDate", Date.class, null);
+        questNamesDiffContainer.addContainerProperty("syncType", String.class, null);
+        questNamesDiffTable.setContainerDataSource(questNamesDiffContainer);
+        questNamesDiffTable.removeGeneratedColumn("shText");
+        questNamesDiffTable.addGeneratedColumn("shText", textColumnGenerator);
+        questNamesDiffTable.removeGeneratedColumn("dbText");
+        questNamesDiffTable.addGeneratedColumn("dbText", textColumnGenerator);
+        questNamesDiffTable.setVisibleColumns(columns);
+        questNamesDiffTable.setColumnHeaders(columnHeaders);
+        questNamesLayout.addComponent(questNamesDiffTable);
+        tabs.addTab(questNamesLayout, "Названия квестов");
+        
+        questDescriptionsLayout = new VerticalLayout();
+        syncQuestDescriptionsActions = new HorizontalLayout();
+        syncQuestDescriptionsButton = new Button("Сверка");
+        syncQuestDescriptionsButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                GoogleDocsService docsService = new GoogleDocsService();
+                List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions(service);
+                questDescriptionsDiffContainer = service.getQuestDescriptionsDiff(items, questDescriptionsDiffContainer);
+            }
+        });
+        syncQuestDescriptionsActions.addComponent(syncQuestDescriptionsButton);
+        saveQuestDescriptionsButton = new Button("Синхронизировать");
+        saveQuestDescriptionsButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                List<QuestDescriptionsDiff> diffs = (List<QuestDescriptionsDiff>) questDescriptionsDiffContainer.getItemIds();
+                List<GSpreadSheetsQuestDescription> itemsToSh = new ArrayList<>();
+                List<GSpreadSheetsQuestDescription> itemsToDb = new ArrayList<>();
+                for (QuestDescriptionsDiff diff : diffs) {
+                    if (diff.getSyncType() == SYNC_TYPE.TO_SPREADSHEET) {
+                        itemsToSh.add(diff.getDbName());
+                    } else if (diff.getSyncType() == SYNC_TYPE.TO_DB) {
+                        itemsToDb.add(diff.getSpreadsheetsName());
+                    }
+                }
+                GoogleDocsService docsService = new GoogleDocsService();
+                docsService.uploadQuestDescriptions(itemsToSh);
+                service.saveQuestDescriptions(itemsToDb);
+                questDescriptionsDiffContainer.removeAllItems();
+            }
+        });
+        syncQuestDescriptionsActions.addComponent(saveQuestDescriptionsButton);
+        questDescriptionsLayout.addComponent(syncQuestDescriptionsActions);
+        questDescriptionsDiffTable = new Table();
+        questDescriptionsDiffTable.setSizeFull();
+        questDescriptionsDiffContainer = new HierarchicalContainer();
+        questDescriptionsDiffContainer.addContainerProperty("shText", String.class, null);
+        questDescriptionsDiffContainer.addContainerProperty("shNic", String.class, null);
+        questDescriptionsDiffContainer.addContainerProperty("shDate", Date.class, null);
+        questDescriptionsDiffContainer.addContainerProperty("dbText", String.class, null);
+        questDescriptionsDiffContainer.addContainerProperty("dbNic", String.class, null);
+        questDescriptionsDiffContainer.addContainerProperty("dbDate", Date.class, null);
+        questDescriptionsDiffContainer.addContainerProperty("syncType", String.class, null);
+        questDescriptionsDiffTable.setContainerDataSource(questDescriptionsDiffContainer);
+        questDescriptionsDiffTable.removeGeneratedColumn("shText");
+        questDescriptionsDiffTable.addGeneratedColumn("shText", textColumnGenerator);
+        questDescriptionsDiffTable.removeGeneratedColumn("dbText");
+        questDescriptionsDiffTable.addGeneratedColumn("dbText", textColumnGenerator);
+        questDescriptionsDiffTable.setVisibleColumns(columns);
+        questDescriptionsDiffTable.setColumnHeaders(columnHeaders);
+        questDescriptionsLayout.addComponent(questDescriptionsDiffTable);
+        tabs.addTab(questDescriptionsLayout, "Описания квестов");
         
         this.addComponent(tabs);
         

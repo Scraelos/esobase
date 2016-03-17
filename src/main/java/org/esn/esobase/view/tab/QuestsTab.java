@@ -53,6 +53,7 @@ public class QuestsTab extends VerticalLayout {
     private TwinColSelect npcs;
     BeanItemContainer<Npc> npcsContainer;
     private Button saveButton;
+    private Button cancelButton;
 
     private BeanItem currentItem;
 
@@ -100,8 +101,8 @@ public class QuestsTab extends VerticalLayout {
             @Override
             public String convertToPresentation(BigDecimal value, Class<? extends String> targetType, Locale locale) throws Converter.ConversionException {
                 String r = "";
-                if(value!=null) {
-                    r=value.multiply(BigDecimal.valueOf(100L).setScale(2,RoundingMode.HALF_DOWN)).setScale(0, RoundingMode.HALF_UP).toString()+"%";
+                if (value != null) {
+                    r = value.multiply(BigDecimal.valueOf(100L).setScale(2, RoundingMode.HALF_DOWN)).setScale(0, RoundingMode.HALF_UP).toString() + "%";
                 }
                 return r;
             }
@@ -172,7 +173,17 @@ public class QuestsTab extends VerticalLayout {
                 SaveForm();
             }
         });
-        form.addComponent(saveButton);
+        cancelButton = new Button("Отмена");
+        cancelButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                CloseForm();
+                LoadTable();
+            }
+        });
+        HorizontalLayout actions = new HorizontalLayout(cancelButton,saveButton);
+        form.addComponent(actions);
         form.setVisible(false);
         tableAndForm.addComponent(form);
         tableAndForm.setExpandRatio(form, 0.75f);
