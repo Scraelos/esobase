@@ -16,6 +16,7 @@ import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TabSheet;
@@ -47,9 +48,8 @@ import org.esn.esobase.security.SpringSecurityHelper;
 public class TranslateTab extends VerticalLayout {
 
     private final DBService service;
-    private HorizontalLayout actionsLayout;
     private VerticalLayout contentLayout;
-    private GridLayout npcListlayout;
+    private HorizontalLayout npcListlayout;
     private VerticalLayout npcContentLayout;
     private ComboBox locationTable;
     private ComboBox questTable;
@@ -85,24 +85,29 @@ public class TranslateTab extends VerticalLayout {
         FilterChangeListener filterChangeListener = new FilterChangeListener();
         this.setWidth(100f, Unit.PERCENTAGE);
         this.service = service;
-        actionsLayout = new HorizontalLayout();
         contentLayout = new VerticalLayout();
         contentLayout.setWidth(100f, Unit.PERCENTAGE);
-        npcListlayout = new GridLayout(3, 2);
+        npcListlayout = new HorizontalLayout();
         npcListlayout.setWidth(100f, Unit.PERCENTAGE);
+        npcListlayout.setHeight(80f, Unit.PIXELS);
         npcTable = new ComboBox("NPC");
-        npcTable.addStyleName(ValoTheme.TABLE_COMPACT);
+        //npcTable.addStyleName(ValoTheme.COMBOBOX_TINY);
+        //npcTable.addStyleName(ValoTheme.COMBOBOX_SMALL);
         npcTable.setWidth(100f, Unit.PERCENTAGE);
         npcTable.addValueChangeListener(new NpcSelectListener());
         npcTable.setFilteringMode(FilteringMode.CONTAINS);
         locationContainer = new BeanItemContainer<>(Location.class);
         locationTable = new ComboBox("Локация");
+        //locationTable.addStyleName(ValoTheme.COMBOBOX_TINY);
+        //locationTable.addStyleName(ValoTheme.COMBOBOX_SMALL);
         locationTable.setWidth(100f, Unit.PERCENTAGE);
         locationTable.addValueChangeListener(filterChangeListener);
         locationTable.setContainerDataSource(locationContainer);
         locationTable.setFilteringMode(FilteringMode.CONTAINS);
         questContainer = new BeanItemContainer<>(Quest.class);
         questTable = new ComboBox("Квест");
+        //questTable.addStyleName(ValoTheme.COMBOBOX_TINY);
+        //questTable.addStyleName(ValoTheme.COMBOBOX_SMALL);
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.addValueChangeListener(filterChangeListener);
         questTable.setContainerDataSource(questContainer);
@@ -113,9 +118,11 @@ public class TranslateTab extends VerticalLayout {
         npcContainer.addNestedContainerProperty("location.name");
         npcContainer.addNestedContainerProperty("location.nameRu");
 
-        npcListlayout.addComponent(locationTable, 0, 0);
-        npcListlayout.addComponent(questTable, 1, 0);
-        npcListlayout.addComponent(npcTable, 0, 1);
+        FormLayout locationAndNpc=new FormLayout(locationTable,npcTable);
+        locationAndNpc.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
+        locationAndNpc.setWidth(95f, Unit.PERCENTAGE);
+        
+        npcListlayout.addComponent(locationAndNpc);
         onlyWithTranslations = new CheckBox("С новыми переводами");
         onlyWithTranslations.setValue(Boolean.FALSE);
         onlyWithTranslations.addValueChangeListener(new Property.ValueChangeListener() {
@@ -127,9 +134,11 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
-        npcListlayout.addComponent(onlyWithTranslations, 2, 0);
-        contentLayout.addComponent(npcListlayout);
-        contentLayout.setExpandRatio(npcListlayout, 0.2f);
+        
+        FormLayout questAndWithNewTranslations=new FormLayout(questTable,onlyWithTranslations);
+        questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
+        questAndWithNewTranslations.setWidth(95f, Unit.PERCENTAGE);
+        npcListlayout.addComponent(questAndWithNewTranslations);
         npcContentLayout = new VerticalLayout();
         npcContentLayout.setWidth(100, Unit.PERCENTAGE);
         npcTabSheet = new TabSheet();
@@ -162,6 +171,10 @@ public class TranslateTab extends VerticalLayout {
         npcTopicsTable.addGeneratedColumn("npcTranslations", translationColumnGenerator);
         npcTopicsTable.setVisibleColumns(new Object[]{"playerTextG", "playerTranslations", "npcTextG", "npcTranslations"});
         npcTopicsTable.setColumnHeaders(new String[]{"Реплика игрока", "Перевод", "Реплика NPC", "Перевод"});
+        npcTopicsTable.setColumnExpandRatio("playerTextG", 1f);
+        npcTopicsTable.setColumnExpandRatio("playerTranslations", 1f);
+        npcTopicsTable.setColumnExpandRatio("npcTextG", 1f);
+        npcTopicsTable.setColumnExpandRatio("npcTranslations", 1f);
         npcTopicsTable.setColumnWidth("actions", 150);
         npcSubtitlesTable = new Table();
         npcSubtitlesTable.addStyleName(ValoTheme.TABLE_COMPACT);
@@ -174,6 +187,8 @@ public class TranslateTab extends VerticalLayout {
         npcSubtitlesTable.addGeneratedColumn("translations", translationColumnGenerator);
         npcSubtitlesTable.setVisibleColumns(new Object[]{"textG", "translations"});
         npcSubtitlesTable.setColumnHeaders(new String[]{"Реплика", "Перевод"});
+        npcSubtitlesTable.setColumnExpandRatio("textG", 1f);
+        npcSubtitlesTable.setColumnExpandRatio("translations", 1f);
         npcSubtitlesTable.setColumnWidth("actions", 150);
         npcGreetingsTable = new Table();
         npcGreetingsTable.addStyleName(ValoTheme.TABLE_COMPACT);
@@ -186,14 +201,17 @@ public class TranslateTab extends VerticalLayout {
         npcGreetingsTable.addGeneratedColumn("translations", translationColumnGenerator);
         npcGreetingsTable.setVisibleColumns(new Object[]{"textG", "translations"});
         npcGreetingsTable.setColumnHeaders(new String[]{"Реплика", "Перевод"});
+        npcGreetingsTable.setColumnExpandRatio("textG", 1f);
+        npcGreetingsTable.setColumnExpandRatio("translations", 1f);
         npcGreetingsTable.setColumnWidth("actions", 150);
         npcTopicsTab = npcTabSheet.addTab(npcTopicsTable, "Диалоги");
         npcSubtitlesTab = npcTabSheet.addTab(npcSubtitlesTable, "Субтитры");
         npcGreetingsTab = npcTabSheet.addTab(npcGreetingsTable, "Приветствие");
         npcContentLayout.addComponent(npcTabSheet);
+        contentLayout.addComponent(npcListlayout);
         contentLayout.addComponent(npcContentLayout);
-        contentLayout.setExpandRatio(npcContentLayout, 0.75f);
-        this.addComponent(actionsLayout);
+        contentLayout.setExpandRatio(npcListlayout, 1f);
+        contentLayout.setExpandRatio(npcContentLayout, 9f);
         this.addComponent(contentLayout);
         LoadFilters();
     }
