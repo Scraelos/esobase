@@ -48,6 +48,7 @@ import org.esn.esobase.security.SpringSecurityHelper;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -165,9 +166,9 @@ public class DBService {
         for (Location location : locations) {
             Criteria gsLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
             if (location.getName() != null && !location.getName().isEmpty()) {
-                gsLocationCrit.add(Restrictions.eq("textEn", location.getName()));
+                gsLocationCrit.add(Restrictions.ilike("textEn", location.getName()));
             } else if (location.getNameRu() != null && !location.getNameRu().isEmpty()) {
-                gsLocationCrit.add(Restrictions.eq("textRu", location.getNameRu()));
+                gsLocationCrit.add(Restrictions.ilike("textRu", location.getNameRu()));
             }
             List<GSpreadSheetsLocationName> list = gsLocationCrit.list();
             for (GSpreadSheetsLocationName loc : list) {
@@ -178,9 +179,9 @@ public class DBService {
             for (Npc npc : location.getNpcs()) {
                 Criteria gsNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
                 if (npc.getName() != null && !npc.getName().isEmpty()) {
-                    gsNpcCrit.add(Restrictions.eq("textEn", npc.getName()));
+                    gsNpcCrit.add(Restrictions.ilike("textEn", npc.getName()));
                 } else if (npc.getNameRu() != null && !npc.getNameRu().isEmpty()) {
-                    gsNpcCrit.add(Restrictions.eq("textRu", npc.getNameRu()));
+                    gsNpcCrit.add(Restrictions.ilike("textRu", npc.getNameRu()));
                 }
                 List<GSpreadSheetsNpcName> npcList = gsNpcCrit.list();
                 for (GSpreadSheetsNpcName gnpc : npcList) {
@@ -199,10 +200,9 @@ public class DBService {
             try {
                 Criteria locationCriteria = session.createCriteria(Location.class);
                 if (location.getName() != null) {
-                    locationCriteria.add(Restrictions.eq("name", location.getName()));
-
+                    locationCriteria.add(Restrictions.ilike("name", location.getName()));
                 } else {
-                    locationCriteria.add(Restrictions.eq("nameRu", location.getNameRu()));
+                    locationCriteria.add(Restrictions.ilike("nameRu", location.getNameRu()));
                 }
 
                 Location locationResult = (Location) locationCriteria.uniqueResult();
@@ -216,9 +216,9 @@ public class DBService {
                     for (Npc npc : location.getNpcs()) {
                         Criteria npcCriteria = session.createCriteria(Npc.class);
                         if (npc.getName() != null) {
-                            npcCriteria.add(Restrictions.eq("name", npc.getName()));
+                            npcCriteria.add(Restrictions.ilike("name", npc.getName()));
                         } else {
-                            npcCriteria.add(Restrictions.eq("nameRu", npc.getNameRu()));
+                            npcCriteria.add(Restrictions.ilike("nameRu", npc.getNameRu()));
                         }
                         npcCriteria.add(Restrictions.eq("location", npc.getLocation()));
                         npcCriteria.setMaxResults(1);
@@ -235,9 +235,9 @@ public class DBService {
                                 subtitleCriteria.add(Restrictions.eq("npc", npc));
                                 subtitleCriteria.setMaxResults(1);
                                 if (subtitle.getText() != null) {
-                                    subtitleCriteria.add(Restrictions.eq("text", subtitle.getText()));
+                                    subtitleCriteria.add(Restrictions.ilike("text", subtitle.getText()));
                                 } else {
-                                    subtitleCriteria.add(Restrictions.eq("textRu", subtitle.getTextRu()));
+                                    subtitleCriteria.add(Restrictions.ilike("textRu", subtitle.getTextRu()));
                                 }
                                 Subtitle subtitleResult = (Subtitle) subtitleCriteria.uniqueResult();
                                 if (subtitleResult == null) {
@@ -271,14 +271,14 @@ public class DBService {
                                 topicCriteria.add(Restrictions.eq("npc", npc));
                                 topicCriteria.setMaxResults(1);
                                 if (topic.getPlayerText() != null) {
-                                    topicCriteria.add(Restrictions.eq("playerText", topic.getPlayerText()));
+                                    topicCriteria.add(Restrictions.ilike("playerText", topic.getPlayerText()));
                                 } else {
-                                    topicCriteria.add(Restrictions.eq("playerTextRu", topic.getPlayerTextRu()));
+                                    topicCriteria.add(Restrictions.ilike("playerTextRu", topic.getPlayerTextRu()));
                                 }
                                 if (topic.getNpcText() != null) {
-                                    topicCriteria.add(Restrictions.eq("npcText", topic.getNpcText()));
+                                    topicCriteria.add(Restrictions.ilike("npcText", topic.getNpcText()));
                                 } else {
-                                    topicCriteria.add(Restrictions.eq("npcTextRu", topic.getNpcTextRu()));
+                                    topicCriteria.add(Restrictions.ilike("npcTextRu", topic.getNpcTextRu()));
                                 }
                                 Topic topicResult = (Topic) topicCriteria.uniqueResult();
                                 if (topicResult == null) {
@@ -1819,48 +1819,37 @@ public class DBService {
     public void updateNpcHasTranslated(Npc n) {
         Npc npc = em.find(Npc.class, n.getId());
         boolean hasNewTranslations = false;
-        Session session = (Session) em.getDelegate();
-        Criteria gCrit = session.createCriteria(Greeting.class);
-        gCrit.add(Restrictions.eq("npc", npc));
-        gCrit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
-        gCrit.setFetchMode("translations", FetchMode.SELECT);
-        gCrit.add(Restrictions.sizeGt("translations", 0));
-        gCrit.createAlias("translations", "translations");
-        gCrit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
-        gCrit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        List<Greeting> gList = gCrit.list();
-        if (gList != null && gList.size() > 0) {
-            hasNewTranslations = true;
-        } else {
-            Criteria sCrit = session.createCriteria(Subtitle.class);
-            sCrit.add(Restrictions.eq("npc", npc));
-            sCrit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
-            sCrit.setFetchMode("translations", FetchMode.SELECT);
-            sCrit.add(Restrictions.sizeGt("translations", 0));
-            sCrit.createAlias("translations", "translations");
-            sCrit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
-            sCrit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-            List<Subtitle> sList = sCrit.list();
-            if (sList != null && sList.size() > 0) {
-                hasNewTranslations = true;
-            } else {
-                Criteria tCrit = session.createCriteria(Topic.class);
-                tCrit.add(Restrictions.eq("npc", npc));
-                tCrit.setFetchMode("extPlayerPhrase", FetchMode.JOIN);
-                tCrit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
-                tCrit.setFetchMode("playerTranslations", FetchMode.SELECT);
-                tCrit.setFetchMode("npcTranslations", FetchMode.SELECT);
-                tCrit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
-                tCrit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
-                tCrit.add(Restrictions.or(
-                        Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
-                        Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)
-                )
-                );
-                tCrit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-                List<Topic> tList = tCrit.list();
-                if (tList != null && tList.size() > 0) {
+        for (Topic t : npc.getTopics()) {
+            for (TranslatedText tt : t.getPlayerTranslations()) {
+                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
                     hasNewTranslations = true;
+                    break;
+                }
+            }
+            for (TranslatedText tt : t.getNpcTranslations()) {
+                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
+                    hasNewTranslations = true;
+                    break;
+                }
+            }
+        }
+        if (!hasNewTranslations) {
+            for (Greeting g : npc.getGreetings()) {
+                for (TranslatedText tt : g.getTranslations()) {
+                    if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
+                        hasNewTranslations = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!hasNewTranslations) {
+            for (Subtitle s : npc.getSubtitles()) {
+                for (TranslatedText tt : s.getTranslations()) {
+                    if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
+                        hasNewTranslations = true;
+                        break;
+                    }
                 }
             }
         }
