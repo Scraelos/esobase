@@ -42,6 +42,7 @@ import org.esn.esobase.model.Quest;
 import org.esn.esobase.model.Subtitle;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.SysAccountRole;
+import org.esn.esobase.model.SystemProperty;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.Topic;
 import org.esn.esobase.model.TranslatedText;
@@ -2171,6 +2172,41 @@ public class DBService {
         item.getItemProperty("name").setValue("Строк на вычитку");
         item.getItemProperty("value").setValue(Long.toString(newTranslationCount.longValue()));
         return result;
+    }
+
+    @Transactional
+    public boolean getIsAutoSynchronizationEnabled() {
+        boolean result = false;
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(SystemProperty.class);
+        crit.add(Restrictions.eq("name", "autoSync"));
+        SystemProperty property = (SystemProperty) crit.uniqueResult();
+        if (property == null) {
+            property = new SystemProperty();
+            property.setName("autoSync");
+            property.setValue("false");
+            em.persist(property);
+        } else {
+            result = Boolean.valueOf(property.getValue());
+        }
+        return result;
+    }
+
+    @Transactional
+    public void setIsAutoSynchronizationEnabled(boolean isEnabled) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(SystemProperty.class);
+        crit.add(Restrictions.eq("name", "autoSync"));
+        SystemProperty property = (SystemProperty) crit.uniqueResult();
+        if (property == null) {
+            property = new SystemProperty();
+            property.setName("autoSync");
+            property.setValue(Boolean.toString(isEnabled));
+            em.persist(property);
+        } else {
+            property.setValue(Boolean.toString(isEnabled));
+            em.merge(property);
+        }
     }
 
 }

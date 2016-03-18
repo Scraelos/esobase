@@ -24,6 +24,7 @@ import org.esn.esobase.view.tab.PortalInfoTab;
 import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
 import org.esn.esobase.view.tab.SynchronizationTab;
+import org.esn.esobase.view.tab.SystemSettingsTab;
 import org.esn.esobase.view.tab.TranslateTab;
 import org.esn.esobase.view.tab.UsersTab;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem searchInCatalogsMenuItem;
     private MenuBar.MenuItem directTableEditMenuItem;
     private MenuBar.MenuItem portalInfoMenuItem;
+    private MenuBar.MenuItem systemSettingsMenuItem;
 
     private ImportTab importTabContent;
     private TranslateTab translateTabContent;
@@ -70,6 +72,7 @@ public class MainView extends Panel implements View, Command {
     private ChangePasswordTab changePasswordTabContent;
     private DirectTableEditTab directTableEditTabContent;
     private PortalInfoTab portalInfoTabContent;
+    private SystemSettingsTab systemSettingsTabContent;
 
     @PostConstruct
     public void PostConstruct() {
@@ -100,6 +103,7 @@ public class MainView extends Panel implements View, Command {
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             syncMenuItem = mainMenu.addItem("Синхронизация", this);
             usersMenuItem = mainMenu.addItem("Пользователи", this);
+            systemSettingsMenuItem = mainMenu.addItem("Настройки", this);
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
         portalInfoMenuItem = mainMenu.addItem("Инфо", this);
@@ -202,7 +206,7 @@ public class MainView extends Panel implements View, Command {
             TabSheet.Tab tab = tabs.addTab(changePasswordTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
-        }else if (selectedItem == portalInfoMenuItem) {
+        } else if (selectedItem == portalInfoMenuItem) {
             if (portalInfoTabContent != null) {
                 TabSheet.Tab tab = tabs.getTab(portalInfoTabContent);
                 if (tab != null) {
@@ -211,6 +215,17 @@ public class MainView extends Panel implements View, Command {
             }
             portalInfoTabContent = new PortalInfoTab(service);
             TabSheet.Tab tab = tabs.addTab(portalInfoTabContent, selectedItem.getText());
+            tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        } else if (selectedItem == systemSettingsMenuItem) {
+            if (systemSettingsTabContent != null) {
+                TabSheet.Tab tab = tabs.getTab(systemSettingsTabContent);
+                if (tab != null) {
+                    tabs.removeTab(tabs.getTab(systemSettingsTabContent));
+                }
+            }
+            systemSettingsTabContent = new SystemSettingsTab(service);
+            TabSheet.Tab tab = tabs.addTab(systemSettingsTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         }
