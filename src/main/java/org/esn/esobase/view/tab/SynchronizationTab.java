@@ -98,7 +98,7 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsPlayerPhrase> playerPhrases = docsService.getPlayerPhrases(service);
+                List<GSpreadSheetsPlayerPhrase> playerPhrases = docsService.getPlayerPhrases();
                 playerPhraseDiffContainer = service.getPlayerPhrasesDiff(playerPhrases, playerPhraseDiffContainer);
             }
         });
@@ -153,7 +153,7 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases(service);
+                List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
                 npcPhraseDiffContainer = service.getNpcPhrasesDiff(npcPhrases, npcPhraseDiffContainer);
             }
         });
@@ -209,7 +209,7 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsNpcName> npcNames = docsService.getNpcNames(service);
+                List<GSpreadSheetsNpcName> npcNames = docsService.getNpcNames();
                 npcNamesDiffContainer = service.getNpcnamessDiff(npcNames, npcNamesDiffContainer);
             }
         });
@@ -265,7 +265,7 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsLocationName> locationNames = docsService.getLocationsNames(service);
+                List<GSpreadSheetsLocationName> locationNames = docsService.getLocationsNames();
                 locationsDiffContainer = service.getLocationNamesDiff(locationNames, locationsDiffContainer);
             }
         });
@@ -321,7 +321,7 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsQuestName> items = docsService.getQuestNames(service);
+                List<GSpreadSheetsQuestName> items = docsService.getQuestNames();
                 questNamesDiffContainer = service.getQuestNamesDiff(items, questNamesDiffContainer);
             }
         });
@@ -377,7 +377,7 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions(service);
+                List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions();
                 questDescriptionsDiffContainer = service.getQuestDescriptionsDiff(items, questDescriptionsDiffContainer);
             }
         });

@@ -63,7 +63,7 @@ public class GoogleDocsService {
     private static final String QUEST_NAMES_SPREADSHEET_ID = "1ybqrErb9bSjt1NOufI4RyWcbzjnB6zSV7wj06ibCICk";
     private static final String QUEST_DESCRIPTIONS_SPREADSHEET_ID = "1-yWHcJioMLoqQs6eO0ReeCwEEhcqFTEgeRkLk69vziM";
 
-    public List<GSpreadSheetsPlayerPhrase> getPlayerPhrases(DBService service) {
+    public List<GSpreadSheetsPlayerPhrase> getPlayerPhrases() {
         List<GSpreadSheetsPlayerPhrase> phrases = new ArrayList<>();
         try {
             Credential authorize = authorize();
@@ -157,7 +157,7 @@ public class GoogleDocsService {
         return phrases;
     }
 
-    public List<GSpreadSheetsLocationName> getLocationsNames(DBService service) {
+    public List<GSpreadSheetsLocationName> getLocationsNames() {
         List<GSpreadSheetsLocationName> locations = new ArrayList<>();
         try {
             Credential authorize = authorize();
@@ -251,7 +251,7 @@ public class GoogleDocsService {
         return locations;
     }
 
-    public List<GSpreadSheetsQuestName> getQuestNames(DBService service) {
+    public List<GSpreadSheetsQuestName> getQuestNames() {
         List<GSpreadSheetsQuestName> items = new ArrayList<>();
         try {
             Credential authorize = authorize();
@@ -345,7 +345,7 @@ public class GoogleDocsService {
         return items;
     }
 
-    public List<GSpreadSheetsQuestDescription> getQuestDescriptions(DBService service) {
+    public List<GSpreadSheetsQuestDescription> getQuestDescriptions() {
         List<GSpreadSheetsQuestDescription> items = new ArrayList<>();
         try {
             Credential authorize = authorize();
@@ -439,7 +439,7 @@ public class GoogleDocsService {
         return items;
     }
 
-    public List<GSpreadSheetsNpcName> getNpcNames(DBService service) {
+    public List<GSpreadSheetsNpcName> getNpcNames() {
         List<GSpreadSheetsNpcName> names = new ArrayList<>();
         Pattern malePattern = Pattern.compile("\\^[Mm]");
         Pattern femalePattern = Pattern.compile("\\^[Ff]");
@@ -603,7 +603,7 @@ public class GoogleDocsService {
         return names;
     }
 
-    public List<GSpreadSheetsNpcPhrase> getNpcPhrases(DBService service) {
+    public List<GSpreadSheetsNpcPhrase> getNpcPhrases() {
         List<GSpreadSheetsNpcPhrase> phrases = new ArrayList<>();
         try {
 

@@ -61,7 +61,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsPlayerPhrase> playerPhrases = docsService.getPlayerPhrases(service);
+                    List<GSpreadSheetsPlayerPhrase> playerPhrases = docsService.getPlayerPhrases();
                     service.loadPlayerPhrasesFromSpreadSheet(playerPhrases);
                 }
             });
@@ -72,7 +72,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases(service);
+                    List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
                     service.loadNpcPhrasesFromSpreadSheet(npcPhrases);
                 }
             });
@@ -83,7 +83,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsLocationName> locationsNames = docsService.getLocationsNames(service);
+                    List<GSpreadSheetsLocationName> locationsNames = docsService.getLocationsNames();
                     service.loadLocationNamesFromSpreadSheet(locationsNames);
                 }
             });
@@ -95,7 +95,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestName> items = docsService.getQuestNames(service);
+                    List<GSpreadSheetsQuestName> items = docsService.getQuestNames();
                     service.loadQuestNamesFromSpreadSheet(items);
                 }
             });
@@ -107,7 +107,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions(service);
+                    List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions();
                     service.loadQuestDesciptionsFromSpreadSheet(items);
                 }
             });
@@ -119,7 +119,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsNpcName> npcNames = docsService.getNpcNames(service);
+                    List<GSpreadSheetsNpcName> npcNames = docsService.getNpcNames();
                     service.loadNpcNamesFromSpreadSheet(npcNames);
                 }
             });
