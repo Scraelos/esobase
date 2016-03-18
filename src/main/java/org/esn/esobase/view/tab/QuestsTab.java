@@ -14,6 +14,7 @@ import com.vaadin.data.util.filter.Or;
 import com.vaadin.data.util.filter.UnsupportedFilterException;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.server.Page;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.FormLayout;
@@ -23,6 +24,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TwinColSelect;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.ValoTheme;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Locale;
@@ -142,6 +144,11 @@ public class QuestsTab extends VerticalLayout {
         npcsContainer.addNestedContainerProperty("location.nameRu");
         npcs.setContainerDataSource(npcsContainer);
         npcs.setWidth(900f, Unit.PIXELS);
+        Page.Styles styles = Page.getCurrent().getStyles();
+        styles.add(".v-font-size {\n"
+                + "    font-size: 11px;\n"
+                + "}");
+        npcs.addStyleName("v-font-size");
         npcFilter = new TextField("Фильтр списка NPC");
         npcFilter.setNullRepresentation("");
         npcFilter.setImmediate(true);
