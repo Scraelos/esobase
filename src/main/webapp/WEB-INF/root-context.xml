@@ -3,43 +3,48 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
-http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd">
 
     <context:annotation-config/>
     <context:component-scan base-package="org.esn.esobase"/>
     <context:component-scan base-package="org.esn.esobase.config"/>
-<tx:annotation-driven transaction-manager="transactionManager"/>
-<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-    <property name="basename" value="classpath:/locales/messages"/>
-    <!-- Do not use System Locale file as default. Windows & Linux could have different default locale -->
-    <property name="fallbackToSystemLocale" value="false" />
-</bean>
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <task:annotation-driven executor="executor" scheduler="scheduler"/>
+    <task:executor id="executor" pool-size="5"/>
+    <task:scheduler id="scheduler" pool-size="10"/>
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basename" value="classpath:/locales/messages"/>
+        <!-- Do not use System Locale file as default. Windows & Linux could have different default locale -->
+        <property name="fallbackToSystemLocale" value="false" />
+    </bean>
 
-<!-- enables interpretation of the @PersistenceUnit/@PersistenceContext annotations providing convenient
-access to EntityManagerFactory/EntityManager &ndash;&gt;-->
-<bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
+    <!-- enables interpretation of the @PersistenceUnit/@PersistenceContext annotations providing convenient
+    access to EntityManagerFactory/EntityManager &ndash;&gt;-->
+    <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
 
-<!-- enables interpretation of the @Required annotation to ensure that dependency injection actually occures -->
-<bean class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"/>
+    <!-- enables interpretation of the @Required annotation to ensure that dependency injection actually occures -->
+    <bean class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"/>
 
-<bean class="org.springframework.orm.jpa.JpaTransactionManager" id="transactionManager">
-    <property name="entityManagerFactory" ref="entityManagerFactory"/>
-</bean>
+    <bean class="org.springframework.orm.jpa.JpaTransactionManager" id="transactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
     
-<bean id="entityManagerFactory"
-          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-    <property name="persistenceUnitName" value="esobasepu" />
-    <property name="jpaVendorAdapter">
-        <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-            <property name="showSql" value="false" />
-            <property name="generateDdl" value="true" />
-        </bean>
-    </property>
-</bean>
+    <bean id="entityManagerFactory"
+      class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="persistenceUnitName" value="esobasepu" />
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <property name="showSql" value="false" />
+                <property name="generateDdl" value="true" />
+            </bean>
+        </property>
+    </bean>
 
-<bean class="ru.xpoft.vaadin.VaadinMessageSource" />
-<import resource="security.xml"/>
+    <bean class="ru.xpoft.vaadin.VaadinMessageSource" />
+    <import resource="security.xml"/>
 
 </beans>
