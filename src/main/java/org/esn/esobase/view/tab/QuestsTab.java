@@ -18,6 +18,7 @@ import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TwinColSelect;
@@ -182,7 +183,7 @@ public class QuestsTab extends VerticalLayout {
                 LoadTable();
             }
         });
-        HorizontalLayout actions = new HorizontalLayout(cancelButton,saveButton);
+        HorizontalLayout actions = new HorizontalLayout(cancelButton, saveButton);
         form.addComponent(actions);
         form.setVisible(false);
         tableAndForm.addComponent(form);
@@ -222,6 +223,9 @@ public class QuestsTab extends VerticalLayout {
             service.saveEntity(entity);
             CloseForm();
             LoadTable();
+            Notification notification = new Notification("Квест сохранён", Notification.Type.HUMANIZED_MESSAGE);
+            notification.setDelayMsec(2000);
+            notification.show(this.getUI().getPage());
         } catch (FieldGroup.CommitException ex) {
             Logger.getLogger(QuestsTab.class.getName()).log(Level.SEVERE, null, ex);
         }
