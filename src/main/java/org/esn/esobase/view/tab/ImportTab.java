@@ -10,12 +10,19 @@ import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.Receiver;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
@@ -45,6 +52,7 @@ public class ImportTab extends VerticalLayout {
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
+    private Upload uploadXlsEn;
 
     public ImportTab(DBService service_) {
         this.service = service_;
@@ -88,7 +96,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importLocationNamesFromG);
-            
+
             importQuestNamesFromG = new Button("Импорт названий квестов из гугл-таблиц");
             importQuestNamesFromG.addClickListener(new Button.ClickListener() {
 
@@ -100,7 +108,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importQuestNamesFromG);
-            
+
             importQuestDescriptionsFromG = new Button("Импорт описаний квестов из гугл-таблиц");
             importQuestDescriptionsFromG.addClickListener(new Button.ClickListener() {
 
@@ -112,7 +120,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importQuestDescriptionsFromG);
-            
+
             importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
             importNpcNamesFromG.addClickListener(new Button.ClickListener() {
 
@@ -151,7 +159,89 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(gatherQuestStatistics);
+            RaswStringReceiverEn raswStringReceiverEn = new RaswStringReceiverEn(service);
+            upload = new Upload("Загрузите файл xlsx", raswStringReceiverEn);
+            upload.addSucceededListener(raswStringReceiverEn);
+            upload.setImmediate(true);
+            this.addComponent(upload);
         }
+    }
+
+    private class RaswStringReceiverEn implements Receiver, SucceededListener {
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        public RaswStringReceiverEn(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Long aId = Long.valueOf(s.getSheetName());
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell bIdCell = r.getCell(1);
+                        Cell cIdCell = r.getCell(2);
+                        Cell textCell = r.getCell(3);
+                        Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
+                        rows.add(row);
+                        if (rows.size() > 5000) {
+                            service.insertEnRawStrings(rows);
+                            rows.clear();
+                        }
+
+                    }
+                }
+                if (rows.size() > 0) {
+                    service.insertEnRawStrings(rows);
+                    rows.clear();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        private String getStringFromCell(Cell c) {
+            String result = null;
+            switch (c.getCellType()) {
+                case Cell.CELL_TYPE_STRING:
+                    result = c.getStringCellValue();
+                    break;
+                case Cell.CELL_TYPE_NUMERIC:
+                    result = Double.toString(c.getNumericCellValue());
+            }
+            return result;
+        }
+
+        private Long getLongFromCell(Cell c) {
+            Long result = null;
+            switch (c.getCellType()) {
+                case Cell.CELL_TYPE_STRING:
+                    result = Long.valueOf(c.getStringCellValue());
+                    break;
+                case Cell.CELL_TYPE_NUMERIC:
+                    Double d = c.getNumericCellValue();
+                    result = d.longValue();
+            }
+            return result;
+        }
+
     }
 
     private class ConversationsReceiver implements Receiver, SucceededListener {

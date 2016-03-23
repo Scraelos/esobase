@@ -1200,7 +1200,21 @@ public class DBService {
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
                     em.merge(g);
                 } else {
-                    assignGreetingToPhrase(g);
+                    Query fullTextQuery = em.createNativeQuery("select id from gspreadsheetsnpcphrase where texten @@ :textEn");
+                    fullTextQuery.setParameter("textEn", g.getText());
+                    List resultList = fullTextQuery.getResultList();
+                    if (resultList != null && resultList.size() > 0) {
+                        Object firstRow = resultList.get(0);
+                        BigInteger phraseId = (BigInteger) firstRow;
+                        phrase = em.find(GSpreadSheetsNpcPhrase.class, Long.valueOf(phraseId.longValue()));
+                        foundCounter++;
+                        g.setExtNpcPhrase(phrase);
+                        Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
+                        em.merge(g);
+                    }
+                    if (phrase == null) {
+                        assignGreetingToPhrase(g);
+                    }
                 }
             }
         }
@@ -1226,7 +1240,21 @@ public class DBService {
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
                     em.merge(t);
                 } else {
-                    assignTopicToPhrase(t);
+                    Query fullTextQuery = em.createNativeQuery("select id from gspreadsheetsnpcphrase where texten @@ :textEn");
+                    fullTextQuery.setParameter("textEn", t.getNpcText());
+                    List resultList = fullTextQuery.getResultList();
+                    if (resultList != null && resultList.size() > 0) {
+                        Object firstRow = resultList.get(0);
+                        BigInteger phraseId = (BigInteger) firstRow;
+                        phrase = em.find(GSpreadSheetsNpcPhrase.class, Long.valueOf(phraseId.longValue()));
+                        foundCounter++;
+                        t.setExtNpcPhrase(phrase);
+                        Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
+                        em.merge(t);
+                    }
+                    if (phrase == null) {
+                        assignTopicToPhrase(t);
+                    }
                 }
             }
         }
@@ -1251,7 +1279,21 @@ public class DBService {
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
                     em.merge(t);
                 } else {
-                    assignTopicToPhrase(t);
+                    Query fullTextQuery = em.createNativeQuery("select id from gspreadsheetsplayerphrase where texten @@ :textEn");
+                    fullTextQuery.setParameter("textEn", t.getPlayerText());
+                    List resultList = fullTextQuery.getResultList();
+                    if (resultList != null && resultList.size() > 0) {
+                        Object firstRow = resultList.get(0);
+                        BigInteger phraseId = (BigInteger) firstRow;
+                        phrase = em.find(GSpreadSheetsPlayerPhrase.class, Long.valueOf(phraseId.longValue()));
+                        foundCounter++;
+                        t.setExtPlayerPhrase(phrase);
+                        Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
+                        em.merge(t);
+                    }
+                    if (phrase == null) {
+                        assignTopicToPhrase(t);
+                    }
                 }
             }
         }
@@ -2206,6 +2248,18 @@ public class DBService {
         } else {
             property.setValue(Boolean.toString(isEnabled));
             em.merge(property);
+        }
+    }
+    
+    @Transactional
+    public void insertEnRawStrings(List<Object[]> rows) {
+        for(Object[] row:rows) {
+            Query q = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten)");
+            q.setParameter("aid", row[0]);
+            q.setParameter("bid", row[1]);
+            q.setParameter("cid", row[2]);
+            q.setParameter("texten", row[3]);
+            q.executeUpdate();
         }
     }
 
