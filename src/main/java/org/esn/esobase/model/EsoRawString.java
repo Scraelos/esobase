@@ -11,6 +11,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -18,6 +20,8 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
+@Table(indexes = {
+    @Index(columnList = "aId,bId,cId", unique = true)})
 public class EsoRawString extends DAO {
 
     @Id

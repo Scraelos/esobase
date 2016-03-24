@@ -53,6 +53,8 @@ public class ImportTab extends VerticalLayout {
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
     private Upload uploadXlsEn;
+    private Upload uploadXlsFr;
+    private Upload uploadXlsDe;
 
     public ImportTab(DBService service_) {
         this.service = service_;
@@ -160,11 +162,46 @@ public class ImportTab extends VerticalLayout {
             });
             this.addComponent(gatherQuestStatistics);
             RaswStringReceiverEn raswStringReceiverEn = new RaswStringReceiverEn(service);
-            upload = new Upload("Загрузите файл xlsx", raswStringReceiverEn);
-            upload.addSucceededListener(raswStringReceiverEn);
-            upload.setImmediate(true);
-            this.addComponent(upload);
+            uploadXlsEn = new Upload("Загрузите en-файл xlsx", raswStringReceiverEn);
+            uploadXlsEn.addSucceededListener(raswStringReceiverEn);
+            uploadXlsEn.setImmediate(true);
+            this.addComponent(uploadXlsEn);
+            RaswStringReceiverFr raswStringReceiverFr = new RaswStringReceiverFr(service);
+            uploadXlsFr = new Upload("Загрузите f-файл xlsx", raswStringReceiverFr);
+            uploadXlsFr.addSucceededListener(raswStringReceiverFr);
+            uploadXlsFr.setImmediate(true);
+            this.addComponent(uploadXlsFr);
+            RaswStringReceiverDe raswStringReceiverDe = new RaswStringReceiverDe(service);
+            uploadXlsDe = new Upload("Загрузите de-файл xlsx", raswStringReceiverDe);
+            uploadXlsDe.addSucceededListener(raswStringReceiverDe);
+            uploadXlsDe.setImmediate(true);
+            this.addComponent(uploadXlsDe);
         }
+    }
+
+    private String getStringFromCell(Cell c) {
+        String result = null;
+        switch (c.getCellType()) {
+            case Cell.CELL_TYPE_STRING:
+                result = c.getStringCellValue();
+                break;
+            case Cell.CELL_TYPE_NUMERIC:
+                result = Double.toString(c.getNumericCellValue());
+        }
+        return result;
+    }
+
+    private Long getLongFromCell(Cell c) {
+        Long result = null;
+        switch (c.getCellType()) {
+            case Cell.CELL_TYPE_STRING:
+                result = Long.valueOf(c.getStringCellValue());
+                break;
+            case Cell.CELL_TYPE_NUMERIC:
+                Double d = c.getNumericCellValue();
+                result = d.longValue();
+        }
+        return result;
     }
 
     private class RaswStringReceiverEn implements Receiver, SucceededListener {
@@ -217,31 +254,108 @@ public class ImportTab extends VerticalLayout {
             }
         }
 
-        private String getStringFromCell(Cell c) {
-            String result = null;
-            switch (c.getCellType()) {
-                case Cell.CELL_TYPE_STRING:
-                    result = c.getStringCellValue();
-                    break;
-                case Cell.CELL_TYPE_NUMERIC:
-                    result = Double.toString(c.getNumericCellValue());
-            }
-            return result;
+    }
+
+    private class RaswStringReceiverFr implements Receiver, SucceededListener {
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        public RaswStringReceiverFr(DBService service) {
+            this.service = service;
         }
 
-        private Long getLongFromCell(Cell c) {
-            Long result = null;
-            switch (c.getCellType()) {
-                case Cell.CELL_TYPE_STRING:
-                    result = Long.valueOf(c.getStringCellValue());
-                    break;
-                case Cell.CELL_TYPE_NUMERIC:
-                    Double d = c.getNumericCellValue();
-                    result = d.longValue();
-            }
-            return result;
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
         }
 
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Long aId = Long.valueOf(s.getSheetName());
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell bIdCell = r.getCell(1);
+                        Cell cIdCell = r.getCell(2);
+                        Cell textCell = r.getCell(3);
+                        Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
+                        rows.add(row);
+                        if (rows.size() > 5000) {
+                            service.updateFrRawStrings(rows);
+                            rows.clear();
+                        }
+
+                    }
+                }
+                if (rows.size() > 0) {
+                    service.updateFrRawStrings(rows);
+                    rows.clear();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private class RaswStringReceiverDe implements Receiver, SucceededListener {
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        public RaswStringReceiverDe(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Long aId = Long.valueOf(s.getSheetName());
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell bIdCell = r.getCell(1);
+                        Cell cIdCell = r.getCell(2);
+                        Cell textCell = r.getCell(3);
+                        Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
+                        rows.add(row);
+                        if (rows.size() > 5000) {
+                            service.updateDeRawStrings(rows);
+                            rows.clear();
+                        }
+
+                    }
+                }
+                if (rows.size() > 0) {
+                    service.updateDeRawStrings(rows);
+                    rows.clear();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     private class ConversationsReceiver implements Receiver, SucceededListener {

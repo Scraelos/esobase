@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
@@ -2095,6 +2096,28 @@ public class DBService {
 
         return hc;
     }
+    
+    @Transactional
+    public HierarchicalContainer searchInRawStrings(String search, HierarchicalContainer hc) {
+        hc.removeAllItems();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(EsoRawString.class);
+        List<Criterion> searchTermitems = new ArrayList<>();
+        searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("textDe", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("textFr", search, MatchMode.ANYWHERE));
+        Disjunction searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
+        crit.add(searchTerms);
+        List<EsoRawString> rows = crit.list();
+        for (EsoRawString row : rows) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textFr").setValue(row.getTextFr());
+            item.getItemProperty("textDe").setValue(row.getTextDe());
+        }
+
+        return hc;
+    }
 
     @Transactional
     public void updateUserPassword(SysAccount account, String newPassword) {
@@ -2250,15 +2273,39 @@ public class DBService {
             em.merge(property);
         }
     }
-    
+
     @Transactional
     public void insertEnRawStrings(List<Object[]> rows) {
-        for(Object[] row:rows) {
+        for (Object[] row : rows) {
             Query q = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten)");
             q.setParameter("aid", row[0]);
             q.setParameter("bid", row[1]);
             q.setParameter("cid", row[2]);
             q.setParameter("texten", row[3]);
+            q.executeUpdate();
+        }
+    }
+
+    @Transactional
+    public void updateFrRawStrings(List<Object[]> rows) {
+        for (Object[] row : rows) {
+            Query q = em.createNativeQuery("update esorawstring set textfr=:textfr where aid=:aid and bid=:bid and cid=:cid");
+            q.setParameter("aid", row[0]);
+            q.setParameter("bid", row[1]);
+            q.setParameter("cid", row[2]);
+            q.setParameter("textfr", row[3]);
+            q.executeUpdate();
+        }
+    }
+    
+    @Transactional
+    public void updateDeRawStrings(List<Object[]> rows) {
+        for (Object[] row : rows) {
+            Query q = em.createNativeQuery("update esorawstring set textde=:textde where aid=:aid and bid=:bid and cid=:cid");
+            q.setParameter("aid", row[0]);
+            q.setParameter("bid", row[1]);
+            q.setParameter("cid", row[2]);
+            q.setParameter("textde", row[3]);
             q.executeUpdate();
         }
     }

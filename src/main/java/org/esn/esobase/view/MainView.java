@@ -23,6 +23,7 @@ import org.esn.esobase.view.tab.ImportTab;
 import org.esn.esobase.view.tab.PortalInfoTab;
 import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
+import org.esn.esobase.view.tab.SearchInRawStringsTab;
 import org.esn.esobase.view.tab.SynchronizationTab;
 import org.esn.esobase.view.tab.SystemSettingsTab;
 import org.esn.esobase.view.tab.TranslateTab;
@@ -59,6 +60,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem changePasswordMenuItem;
     private MenuBar.MenuItem questsMenuItem;
     private MenuBar.MenuItem searchInCatalogsMenuItem;
+    private MenuBar.MenuItem searchInRawStringsMenuItem;
     private MenuBar.MenuItem directTableEditMenuItem;
     private MenuBar.MenuItem portalInfoMenuItem;
     private MenuBar.MenuItem systemSettingsMenuItem;
@@ -73,6 +75,7 @@ public class MainView extends Panel implements View, Command {
     private DirectTableEditTab directTableEditTabContent;
     private PortalInfoTab portalInfoTabContent;
     private SystemSettingsTab systemSettingsTabContent;
+    private SearchInRawStringsTab searchInRawStringsTabContent;
 
     @PostConstruct
     public void PostConstruct() {
@@ -98,6 +101,7 @@ public class MainView extends Panel implements View, Command {
             directTableEditMenuItem = mainMenu.addItem("Таблицы", this);
             questsMenuItem = mainMenu.addItem("Квесты", this);
             searchInCatalogsMenuItem = mainMenu.addItem("Поиск в справочниках", this);
+            searchInRawStringsMenuItem = mainMenu.addItem("Поиск в разных переводах", this);
             importMenuItem = mainMenu.addItem("Импорт", this);
         }
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
@@ -195,6 +199,19 @@ public class MainView extends Panel implements View, Command {
             subWindow.setSizeFull();
             subWindow.setContent(searchInCatalogsTabContent);
             searchInCatalogsTabContent.setWidth();
+        } else if (selectedItem == searchInRawStringsMenuItem) {
+            if (searchInRawStringsTabContent == null) {
+                searchInRawStringsTabContent = new SearchInRawStringsTab(service);
+            }
+            Window subWindow = new Window(selectedItem.getText());
+            subWindow.setModal(true);
+
+            subWindow.center();
+            this.getUI().addWindow(subWindow);
+            subWindow.setResizable(false);
+            subWindow.setSizeFull();
+            subWindow.setContent(searchInRawStringsTabContent);
+            searchInRawStringsTabContent.setWidth();
         } else if (selectedItem == changePasswordMenuItem) {
             if (changePasswordTabContent != null) {
                 TabSheet.Tab tab = tabs.getTab(changePasswordTabContent);
