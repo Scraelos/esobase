@@ -5,21 +5,17 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.sun.jndi.toolkit.dir.HierMemDirCtx;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.Page;
 import com.vaadin.server.Page.Styles;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 import org.esn.esobase.data.DBService;
 
 /**
