@@ -74,6 +74,10 @@ public class SearchInCatalogsTab extends VerticalLayout {
         resultTable.setContainerDataSource(hc);
         resultTable.setVisibleColumns(new Object[]{"textEn","textRu","catalogType","translator"});
         resultTable.setColumnHeaders(new String[]{"Текст","Русский текст","Тип","Переводчик"});
+        resultTable.setColumnExpandRatio("textEn", 4f);
+        resultTable.setColumnExpandRatio("textRu", 4f);
+        resultTable.setColumnExpandRatio("catalogType", 1f);
+        resultTable.setColumnExpandRatio("translator", 1f);
         
         this.addComponent(resultTable);
         this.setExpandRatio(hl, 5);

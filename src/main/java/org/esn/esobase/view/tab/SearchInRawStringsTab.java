@@ -72,6 +72,9 @@ public class SearchInRawStringsTab extends VerticalLayout {
         resultTable.setContainerDataSource(hc);
         resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr"});
         resultTable.setColumnHeaders(new String[]{"En", "De", "Fr"});
+        resultTable.setColumnExpandRatio("textEn", 1f);
+        resultTable.setColumnExpandRatio("textFr", 1f);
+        resultTable.setColumnExpandRatio("textDe", 1f);
 
         this.addComponent(resultTable);
         this.setExpandRatio(hl, 5);
