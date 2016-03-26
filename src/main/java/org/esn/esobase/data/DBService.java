@@ -78,6 +78,13 @@ public class DBService {
         roles.add(new SysAccountRole(3L, "ROLE_TRANSLATE", "Перевод"));
         roles.add(new SysAccountRole(4L, "ROLE_APPROVE", "Вычитка"));
         roles.add(new SysAccountRole(5L, "ROLE_DIRECT_ACCESS", "Прямое редактирование таблиц"));
+        roles.add(new SysAccountRole(6L, "ROLE_DIRECT_ACCESS_NPC_NAMES", "Прямое редактирование имён NPC"));
+        roles.add(new SysAccountRole(7L, "ROLE_DIRECT_ACCESS_LOCATION_NAMES", "Прямое редактирование названий Локаций"));
+        roles.add(new SysAccountRole(8L, "ROLE_DIRECT_ACCESS_NPC_PHRASES", "Прямое редактирование реплик NPC"));
+        roles.add(new SysAccountRole(9L, "ROLE_DIRECT_ACCESS_PLAYER_PHRASES", "Прямое редактирование реплик игрока"));
+        roles.add(new SysAccountRole(10L, "ROLE_DIRECT_ACCESS_QUEST_NAMES", "Прямое редактирование названий квестов"));
+        roles.add(new SysAccountRole(11L, "ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS", "Прямое редактирование описаний квестов"));
+        roles.add(new SysAccountRole(12L, "ROLE_MANAGE_USERS", "Управление пользователями"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {

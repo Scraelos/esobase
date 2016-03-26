@@ -106,7 +106,11 @@ public class MainView extends Panel implements View, Command {
         }
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             syncMenuItem = mainMenu.addItem("Синхронизация", this);
+            }
+        if (SpringSecurityHelper.hasRole("ROLE_ADMIN")||SpringSecurityHelper.hasRole("ROLE_MANAGE_USERS")) {
             usersMenuItem = mainMenu.addItem("Пользователи", this);
+        }
+        if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             systemSettingsMenuItem = mainMenu.addItem("Настройки", this);
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);

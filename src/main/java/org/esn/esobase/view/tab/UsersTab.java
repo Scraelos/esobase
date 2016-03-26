@@ -10,6 +10,7 @@ import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.server.Page;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.FormLayout;
@@ -84,7 +85,7 @@ public class UsersTab extends VerticalLayout {
         table.addItemClickListener(new TableClickListener());
         LoadTable();
         tableAndForm.addComponent(table);
-        tableAndForm.setExpandRatio(table, 0.7f);
+        tableAndForm.setExpandRatio(table, 0.5f);
         form = new FormLayout();
         form.setSizeFull();
         login = new TextField("Логин");
@@ -100,6 +101,12 @@ public class UsersTab extends VerticalLayout {
         BeanItemContainer<SysAccountRole> rolesContainer = new BeanItemContainer<>(SysAccountRole.class);
         rolesContainer = service.loadBeanItems(rolesContainer);
         roles.setContainerDataSource(rolesContainer);
+        roles.setWidth(900f, Unit.PIXELS);
+        Page.Styles styles = Page.getCurrent().getStyles();
+        styles.add(".v-font-size {\n"
+                + "    font-size: 11px;\n"
+                + "}");
+        roles.addStyleName("v-font-size");
         form.addComponent(roles);
         isBlocked=new CheckBox("Заблокирован");
         form.addComponent(isBlocked);
@@ -114,7 +121,7 @@ public class UsersTab extends VerticalLayout {
         form.addComponent(saveButton);
         form.setVisible(false);
         tableAndForm.addComponent(form);
-        tableAndForm.setExpandRatio(form, 0.25f);
+        tableAndForm.setExpandRatio(form, 0.5f);
         this.addComponent(tableAndForm);
     }
 

@@ -7,21 +7,18 @@ package org.esn.esobase.view.tab;
 
 import com.vaadin.addon.jpacontainer.EntityItem;
 import com.vaadin.addon.jpacontainer.JPAContainer;
-import com.vaadin.addon.jpacontainer.fieldfactory.FieldFactory;
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
-import com.vaadin.server.Page;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.Field;
-import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
@@ -30,7 +27,6 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
-import java.util.Collection;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -127,7 +123,7 @@ public class DirectTableEditTab extends VerticalLayout {
         npcNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNpcName.class);
         npcNameContainer.setBuffered(true);
         npcNameTable.setContainerDataSource(npcNameContainer);
-        npcNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        npcNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_NPC_NAMES"));
         npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         npcNameTable.setColumnHeaders(new String[]{"Номер строки", "Пол", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         npcNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -144,7 +140,7 @@ public class DirectTableEditTab extends VerticalLayout {
         npcNameTable.setColumnExpandRatio("saveColumn", 1.1f);
         npcNameTable.setColumnWidth("saveColumn", 115);
         npcNameTable.setEditable(true);
-        npcNameTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        npcNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_NAMES"));
         npcNameTable.setSortEnabled(false);
         tableTabs.addTab(npcNameTable, "NPC");
 
@@ -154,7 +150,7 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsLocationName.class);
         locationNameContainer.setBuffered(true);
         locationNameTable.setContainerDataSource(locationNameContainer);
-        locationNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        locationNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
         locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         locationNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         locationNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -169,7 +165,7 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameTable.setColumnExpandRatio("saveColumn", 1.1f);
         locationNameTable.setColumnWidth("saveColumn", 115);
         locationNameTable.setEditable(true);
-        locationNameTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        locationNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
         locationNameTable.setSortEnabled(false);
         tableTabs.addTab(locationNameTable, "Локации");
 
@@ -179,7 +175,7 @@ public class DirectTableEditTab extends VerticalLayout {
         playerPhraseContainer = service.getJPAContainerContainerForClass(GSpreadSheetsPlayerPhrase.class);
         playerPhraseContainer.setBuffered(true);
         playerPhraseTable.setContainerDataSource(playerPhraseContainer);
-        playerPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        playerPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
         playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         playerPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         playerPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -194,7 +190,7 @@ public class DirectTableEditTab extends VerticalLayout {
         playerPhraseTable.setColumnExpandRatio("saveColumn", 1.1f);
         playerPhraseTable.setColumnWidth("saveColumn", 115);
         playerPhraseTable.setEditable(true);
-        playerPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        playerPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
         playerPhraseTable.setSortEnabled(false);
         tableTabs.addTab(playerPhraseTable, "Фразы игрока");
 
@@ -204,7 +200,7 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNpcPhrase.class);
         npcPhraseContainer.setBuffered(true);
         npcPhraseTable.setContainerDataSource(npcPhraseContainer);
-        npcPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        npcPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
         npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         npcPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         npcPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -219,7 +215,7 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseTable.setColumnExpandRatio("saveColumn", 1.1f);
         npcPhraseTable.setColumnWidth("saveColumn", 115);
         npcPhraseTable.setEditable(true);
-        npcPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        npcPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
         npcPhraseTable.setSortEnabled(false);
         tableTabs.addTab(npcPhraseTable, "Фразы NPC");
 
@@ -229,7 +225,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestName.class);
         questNameContainer.setBuffered(true);
         questNameTable.setContainerDataSource(questNameContainer);
-        questNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        questNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
         questNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         questNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         questNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -244,7 +240,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questNameTable.setColumnExpandRatio("saveColumn", 1.1f);
         questNameTable.setColumnWidth("saveColumn", 115);
         questNameTable.setEditable(true);
-        questNameTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        questNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
         questNameTable.setSortEnabled(false);
         tableTabs.addTab(questNameTable, "Названия квестов");
         
@@ -254,7 +250,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDescription.class);
         questDescriptionContainer.setBuffered(true);
         questDescriptionTable.setContainerDataSource(questDescriptionContainer);
-        questDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator());
+        questDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
         questDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         questDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         questDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -269,7 +265,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
         questDescriptionTable.setColumnWidth("saveColumn", 115);
         questDescriptionTable.setEditable(true);
-        questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory());
+        questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
         questDescriptionTable.setSortEnabled(false);
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
         
@@ -291,6 +287,14 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private class TranslateTableFieldFactory implements TableFieldFactory {
 
+        private final String tableEditRole;
+
+        public TranslateTableFieldFactory(String tableEditRole_) {
+            this.tableEditRole = tableEditRole_;
+        }
+        
+        
+        
         @Override
         public Field<?> createField(Container container, Object itemId, Object propertyId, Component uiContext) {
             Field result = null;
@@ -299,7 +303,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 area.setSizeFull();
                 area.addStyleName(ValoTheme.TEXTAREA_SMALL);
                 area.addStyleName(ValoTheme.TEXTAREA_TINY);
-                if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS")) {
+                if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS")&&!SpringSecurityHelper.hasRole(tableEditRole)) {
                     area.setReadOnly(true);
                 }
                 result = area;
@@ -343,11 +347,17 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private class SaveColumnGenerator implements Table.ColumnGenerator {
 
+        private final String tableEditRole;
+
+        public SaveColumnGenerator(String tableEditRole_) {
+            this.tableEditRole = tableEditRole_;
+        }
+        
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
             Button button = new Button("Сохранить");
             button.addClickListener(new SaveButtonClickListener(itemId, (JPAContainer) source.getContainerDataSource()));
-            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS")) {
+            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS")&&!SpringSecurityHelper.hasRole(tableEditRole)) {
                 button.setEnabled(false);
             }
             button.addStyleName(ValoTheme.BUTTON_SMALL);
