@@ -1588,10 +1588,12 @@ public class DBService {
     public void saveTranslatedTextDirty(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.DIRTY);
         if (entity.getId() == null) {
+            entity.setCreateTime(new Date());
             em.persist(entity);
         } else if (entity.getText() == null || entity.getText().isEmpty()) {
             em.remove(em.find(TranslatedText.class, entity.getId()));
         } else {
+            entity.setChangeTime(new Date());
             em.merge(entity);
         }
     }
@@ -1600,10 +1602,12 @@ public class DBService {
     public void saveTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.NEW);
         if (entity.getId() == null) {
+            entity.setCreateTime(new Date());
             em.persist(entity);
         } else if (entity.getText() == null || entity.getText().isEmpty()) {
             em.remove(em.find(TranslatedText.class, entity.getId()));
         } else {
+            entity.setChangeTime(new Date());
             em.merge(entity);
         }
     }
@@ -1749,6 +1753,8 @@ public class DBService {
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
+                entity.setApptovedTime(new Date());
+                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
                 em.merge(entity);
             }
 
@@ -1762,6 +1768,8 @@ public class DBService {
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
+                entity.setApptovedTime(new Date());
+                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
                 em.merge(entity);
             }
 
@@ -1775,6 +1783,8 @@ public class DBService {
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
+                entity.setApptovedTime(new Date());
+                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
                 em.merge(entity);
             }
 
@@ -1788,6 +1798,8 @@ public class DBService {
                 playerPhrase.setChangeTime(new Date());
                 em.merge(playerPhrase);
                 entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
+                entity.setApptovedTime(new Date());
+                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
                 em.merge(entity);
             }
 

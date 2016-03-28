@@ -5,6 +5,7 @@
  */
 package org.esn.esobase.model;
 
+import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Temporal;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -43,6 +45,14 @@ public class TranslatedText extends DAO {
     private Subtitle subtitle;
     @Enumerated(EnumType.STRING)
     private TRANSLATE_STATUS status;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private SysAccount approvedBy;
+    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private Date createTime;
+    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private Date changeTime;
+    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private Date apptovedTime;
 
     @Override
     public Long getId() {
@@ -108,6 +118,38 @@ public class TranslatedText extends DAO {
 
     public void setStatus(TRANSLATE_STATUS status) {
         this.status = status;
+    }
+
+    public SysAccount getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(SysAccount approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getChangeTime() {
+        return changeTime;
+    }
+
+    public void setChangeTime(Date changeTime) {
+        this.changeTime = changeTime;
+    }
+
+    public Date getApptovedTime() {
+        return apptovedTime;
+    }
+
+    public void setApptovedTime(Date apptovedTime) {
+        this.apptovedTime = apptovedTime;
     }
 
 }

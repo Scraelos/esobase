@@ -17,7 +17,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
@@ -586,7 +585,13 @@ public class TranslateTab extends VerticalLayout {
             if (translatedText.getStatus() != null) {
                 translatedStatus = translatedText.getStatus().toString();
             }
-            translation = new TextArea("Статус перевода: " + translatedStatus + ", автор: " + translatedText_.getAuthor().getLogin());
+            StringBuilder caption=new StringBuilder();
+                    caption.append("Статус: ").append(translatedStatus).append(", автор: ").append(translatedText.getAuthor().getLogin());
+                    if(translatedText.getStatus()==TRANSLATE_STATUS.ACCEPTED&&(translatedText.getApprovedBy()!=null)&&(translatedText.getApptovedTime()!=null)) {
+                        caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
+                    }
+                    
+            translation = new TextArea(caption.toString());
             translation.setSizeFull();
             translation.addStyleName(ValoTheme.TEXTAREA_TINY);
             translation.setNullRepresentation("");
@@ -613,7 +618,12 @@ public class TranslateTab extends VerticalLayout {
 
                         status = translatedText.getStatus().toString();
                     }
-                    translation.setCaption("Статус перевода: " + status + ", автор: " + translatedText.getAuthor().getLogin());
+                    StringBuilder caption=new StringBuilder();
+                    caption.append("Статус: ").append(status).append(", автор: ").append(translatedText.getAuthor().getLogin());
+                    if(translatedText.getStatus()==TRANSLATE_STATUS.ACCEPTED&&(translatedText.getApprovedBy()!=null)&&(translatedText.getApptovedTime()!=null)) {
+                        caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
+                    }
+                    translation.setCaption(caption.toString());
                 }
             });
             if (SpringSecurityHelper.getSysAccount().equals(translatedText_.getAuthor())) {
