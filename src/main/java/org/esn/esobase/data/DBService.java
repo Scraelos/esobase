@@ -1488,7 +1488,7 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, boolean withNewTranslations) {
+    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, boolean withNewTranslations, SysAccount translator) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Topic.class);
@@ -1497,12 +1497,19 @@ public class DBService {
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
+        crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
+        crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
         if (withNewTranslations) {
-            crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
             crit.add(Restrictions.or(
                     Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
                     Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)
+            )
+            );
+        }
+        if (translator != null) {
+            crit.add(Restrictions.or(
+                    Restrictions.eq("playerTranslations.author", translator),
+                    Restrictions.eq("npcTranslations.author", translator)
             )
             );
         }
@@ -1513,17 +1520,20 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Greeting> getNpcGreetings(Npc npc, BeanItemContainer<Greeting> container, boolean withNewTranslations) {
+    public BeanItemContainer<Greeting> getNpcGreetings(Npc npc, BeanItemContainer<Greeting> container, boolean withNewTranslations, SysAccount translator) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Greeting.class);
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
+        crit.createAlias("translations", "translations");
         if (withNewTranslations) {
             crit.add(Restrictions.sizeGt("translations", 0));
-            crit.createAlias("translations", "translations");
             crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+        }
+        if (translator != null) {
+            crit.add(Restrictions.eq("translations.author", translator));
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Greeting> list = crit.list();
@@ -1533,17 +1543,20 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, boolean withNewTranslations) {
+    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, boolean withNewTranslations, SysAccount translator) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Subtitle.class);
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
+        crit.createAlias("translations", "translations");
         if (withNewTranslations) {
             crit.add(Restrictions.sizeGt("translations", 0));
-            crit.createAlias("translations", "translations");
             crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+        }
+        if (translator != null) {
+            crit.add(Restrictions.eq("translations.author", translator));
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Subtitle> list = crit.list();
@@ -1552,13 +1565,17 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations) {
+    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations,SysAccount translator) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Npc.class);
         crit.setFetchMode("location", FetchMode.JOIN);
         if (withNewTranslations) {
             crit.add(Restrictions.eq("hasNewTranslations", true));
+        }
+        if(translator!=null) {
+            crit.createAlias("translators", "tr");
+            crit.add(Restrictions.eq("tr.id", translator.getId()));
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Npc> list = crit.list();
@@ -1888,27 +1905,34 @@ public class DBService {
         Query updateNpcQuery = em.createQuery("update Npc set hasNewTranslations=false");
         updateNpcQuery.executeUpdate();
         Criteria npcCrit = session.createCriteria(TranslatedText.class);
-        npcCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
+        //npcCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
         List<TranslatedText> list1 = npcCrit.list();
         for (TranslatedText t : list1) {
+            Npc npc = null;
             if (t.getGreeting() != null) {
-                Npc npc = t.getGreeting().getNpc();
-                npc.setHasNewTranslations(Boolean.TRUE);
-                em.merge(npc);
+                npc = t.getGreeting().getNpc();
             }
             if (t.getSubtitle() != null) {
-                Npc npc = t.getSubtitle().getNpc();
-                npc.setHasNewTranslations(Boolean.TRUE);
-                em.merge(npc);
+                npc = t.getSubtitle().getNpc();
             }
             if (t.getNpcTopic() != null) {
-                Npc npc = t.getNpcTopic().getNpc();
-                npc.setHasNewTranslations(Boolean.TRUE);
-                em.merge(npc);
+                npc = t.getNpcTopic().getNpc();
             }
             if (t.getPlayerTopic() != null) {
-                Npc npc = t.getPlayerTopic().getNpc();
-                npc.setHasNewTranslations(Boolean.TRUE);
+                npc = t.getPlayerTopic().getNpc();
+            }
+            if (npc != null) {
+                Set<SysAccount> translators = npc.getTranslators();
+                if (translators == null) {
+                    translators = new HashSet<>();
+                }
+                if (!translators.contains(t.getAuthor())) {
+                    translators.add(t.getAuthor());
+                }
+                npc.setTranslators(translators);
+                if(t.getStatus()==TRANSLATE_STATUS.NEW) {
+                    npc.setHasNewTranslations(Boolean.TRUE);
+                }
                 em.merge(npc);
             }
         }
@@ -2115,7 +2139,7 @@ public class DBService {
 
         return hc;
     }
-    
+
     @Transactional
     public HierarchicalContainer searchInRawStrings(String search, HierarchicalContainer hc) {
         hc.removeAllItems();
@@ -2191,40 +2215,38 @@ public class DBService {
     public void updateNpcHasTranslated(Npc n) {
         Npc npc = em.find(Npc.class, n.getId());
         boolean hasNewTranslations = false;
+        Set<SysAccount> translators = new HashSet<>();
         for (Topic t : npc.getTopics()) {
             for (TranslatedText tt : t.getPlayerTranslations()) {
+                translators.add(tt.getAuthor());
                 if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
                     hasNewTranslations = true;
-                    break;
                 }
             }
             for (TranslatedText tt : t.getNpcTranslations()) {
+                translators.add(tt.getAuthor());
                 if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
                     hasNewTranslations = true;
-                    break;
                 }
             }
         }
-        if (!hasNewTranslations) {
-            for (Greeting g : npc.getGreetings()) {
-                for (TranslatedText tt : g.getTranslations()) {
-                    if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                        hasNewTranslations = true;
-                        break;
-                    }
+        for (Greeting g : npc.getGreetings()) {
+            for (TranslatedText tt : g.getTranslations()) {
+                translators.add(tt.getAuthor());
+                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
+                    hasNewTranslations = true;
                 }
             }
         }
-        if (!hasNewTranslations) {
-            for (Subtitle s : npc.getSubtitles()) {
-                for (TranslatedText tt : s.getTranslations()) {
-                    if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                        hasNewTranslations = true;
-                        break;
-                    }
+        for (Subtitle s : npc.getSubtitles()) {
+            for (TranslatedText tt : s.getTranslations()) {
+                translators.add(tt.getAuthor());
+                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
+                    hasNewTranslations = true;
                 }
             }
         }
+        npc.setTranslators(translators);
         npc.setHasNewTranslations(hasNewTranslations);
         em.merge(npc);
     }
@@ -2316,7 +2338,7 @@ public class DBService {
             q.executeUpdate();
         }
     }
-    
+
     @Transactional
     public void updateDeRawStrings(List<Object[]> rows) {
         for (Object[] row : rows) {

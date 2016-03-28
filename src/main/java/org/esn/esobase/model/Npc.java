@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -52,6 +53,8 @@ public class Npc extends DAO {
     private List<Quest> quests;
     private BigDecimal progress;
     private Boolean hasNewTranslations;
+    @ManyToMany
+    private Set<SysAccount> translators;
 
     public Npc() {
     }
@@ -181,6 +184,14 @@ public class Npc extends DAO {
 
     public void setHasNewTranslations(Boolean hasNewTranslations) {
         this.hasNewTranslations = hasNewTranslations;
+    }
+
+    public Set<SysAccount> getTranslators() {
+        return translators;
+    }
+
+    public void setTranslators(Set<SysAccount> translators) {
+        this.translators = translators;
     }
 
 }

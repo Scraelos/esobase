@@ -80,4 +80,11 @@ public class SysAccount extends DAO {
         this.roles = roles;
     }
 
+    @Override
+    public String toString() {
+        return this.login;
+    }
+    
+    
+
 }

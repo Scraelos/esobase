@@ -74,6 +74,8 @@ public class TranslateTab extends VerticalLayout {
     private BeanItemContainer<Subtitle> subtitlesContainer;
     private Npc currentNpc;
     private CheckBox onlyWithTranslations;
+    private ComboBox translatorBox;
+    private BeanItemContainer<SysAccount> sysAccountContainer=new BeanItemContainer<>(SysAccount.class);;
 
     public TranslateTab(DBService service) {
         TopicNpcColumnGenerator topicNpcColumnGenerator = new TopicNpcColumnGenerator();
@@ -88,7 +90,7 @@ public class TranslateTab extends VerticalLayout {
         contentLayout.setWidth(100f, Unit.PERCENTAGE);
         npcListlayout = new HorizontalLayout();
         npcListlayout.setWidth(100f, Unit.PERCENTAGE);
-        npcListlayout.setHeight(80f, Unit.PIXELS);
+        npcListlayout.setHeight(100f, Unit.PIXELS);
         npcTable = new ComboBox("NPC");
         //npcTable.addStyleName(ValoTheme.COMBOBOX_TINY);
         //npcTable.addStyleName(ValoTheme.COMBOBOX_SMALL);
@@ -133,8 +135,20 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
-        
-        FormLayout questAndWithNewTranslations=new FormLayout(questTable,onlyWithTranslations);
+        translatorBox=new ComboBox("Переводчик");
+        sysAccountContainer=service.loadBeanItems(sysAccountContainer);
+        translatorBox.setContainerDataSource(sysAccountContainer);
+        translatorBox.setFilteringMode(FilteringMode.CONTAINS);
+        translatorBox.addValueChangeListener(new Property.ValueChangeListener() {
+
+            @Override
+            public void valueChange(Property.ValueChangeEvent event) {
+                locationTable.setValue(null);
+                LoadFilters();
+                LoadNpcContent();
+            }
+        });
+        FormLayout questAndWithNewTranslations=new FormLayout(questTable,onlyWithTranslations,translatorBox);
         questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
         questAndWithNewTranslations.setWidth(95f, Unit.PERCENTAGE);
         npcListlayout.addComponent(questAndWithNewTranslations);
@@ -209,14 +223,14 @@ public class TranslateTab extends VerticalLayout {
         npcContentLayout.addComponent(npcTabSheet);
         contentLayout.addComponent(npcListlayout);
         contentLayout.addComponent(npcContentLayout);
-        contentLayout.setExpandRatio(npcListlayout, 1f);
+        contentLayout.setExpandRatio(npcListlayout, 1.5f);
         contentLayout.setExpandRatio(npcContentLayout, 9f);
         this.addComponent(contentLayout);
         LoadFilters();
     }
 
     private void LoadFilters() {
-        npcContainer = service.getNpcs(npcContainer, onlyWithTranslations.getValue());
+        npcContainer = service.getNpcs(npcContainer, onlyWithTranslations.getValue(),(SysAccount) translatorBox.getValue());
         npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
         List<Location> locations = new ArrayList<>();
         for (Npc npc : npcContainer.getItemIds()) {
@@ -236,11 +250,11 @@ public class TranslateTab extends VerticalLayout {
             locationNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "location.nameRu"));
             npcName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "name"));
             npcNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "nameRu"));
-            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, onlyWithTranslations.getValue());
+            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue());
             topicsContainer.sort(new Object[]{"id"}, new boolean[]{true});
-            greetingsContainer = service.getNpcGreetings(currentNpc, greetingsContainer, onlyWithTranslations.getValue());
+            greetingsContainer = service.getNpcGreetings(currentNpc, greetingsContainer, onlyWithTranslations.getValue(),(SysAccount) translatorBox.getValue());
             greetingsContainer.sort(new Object[]{"id"}, new boolean[]{true});
-            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, onlyWithTranslations.getValue());
+            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, onlyWithTranslations.getValue(),(SysAccount) translatorBox.getValue());
             subtitlesContainer.sort(new Object[]{"id"}, new boolean[]{true});
         }
     }
