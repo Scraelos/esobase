@@ -79,7 +79,7 @@ public class SynchronizationTab extends VerticalLayout {
     private Button saveQuestDescriptionsButton;
     private Table questDescriptionsDiffTable;
     private HierarchicalContainer questDescriptionsDiffContainer;
-
+    
     private static final String[] columnHeaders = {"Перевод в таблицах", "Переводчик в таблицах", "Дата в таблицах", "Перевод в базе", "Переводчик в базе", "Дата в базе", "Действие"};
     private static final Object[] columns = {"shText", "shNic", "shDate", "dbText", "dbNic", "dbDate", "syncType"};
 

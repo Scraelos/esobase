@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
+import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
@@ -49,6 +50,7 @@ public class ImportTab extends VerticalLayout {
     private Button importQuestNamesFromG;
     private Button importQuestDescriptionsFromG;
     private Button importNpcNamesFromG;
+    private Button importActiivatorsFromG;
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
@@ -122,6 +124,18 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importQuestDescriptionsFromG);
+            
+            importActiivatorsFromG = new Button("Импорт активаторов из гугл-таблиц");
+            importActiivatorsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsActivator> items = docsService.getActivators();
+                    service.loadActivatorsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importActiivatorsFromG);
 
             importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
             importNpcNamesFromG.addClickListener(new Button.ClickListener() {

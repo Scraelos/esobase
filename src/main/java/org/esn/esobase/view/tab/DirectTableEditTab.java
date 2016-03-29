@@ -28,6 +28,7 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
@@ -56,15 +57,18 @@ public class DirectTableEditTab extends VerticalLayout {
     private Table locationNameTable;
     private JPAContainer<GSpreadSheetsLocationName> locationNameContainer;
 
+    private Table activatorTable;
+    private JPAContainer<GSpreadSheetsActivator> activatorContainer;
+
     private Table playerPhraseTable;
     private JPAContainer<GSpreadSheetsPlayerPhrase> playerPhraseContainer;
 
     private Table npcPhraseTable;
     private JPAContainer<GSpreadSheetsNpcPhrase> npcPhraseContainer;
-    
+
     private Table questNameTable;
     private JPAContainer<GSpreadSheetsNpcPhrase> questNameContainer;
-    
+
     private Table questDescriptionTable;
     private JPAContainer<GSpreadSheetsNpcPhrase> questDescriptionContainer;
 
@@ -169,6 +173,31 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameTable.setSortEnabled(false);
         tableTabs.addTab(locationNameTable, "Локации");
 
+        activatorTable = new Table();
+        activatorTable.setSizeFull();
+        activatorTable.setHeight(500f, Unit.PIXELS);
+        activatorContainer = service.getJPAContainerContainerForClass(GSpreadSheetsActivator.class);
+        activatorContainer.setBuffered(true);
+        activatorTable.setContainerDataSource(activatorContainer);
+        activatorTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ACTIVATORS"));
+        activatorTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        activatorTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        activatorTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        activatorTable.setColumnExpandRatio("rowNum", 1.5f);
+        activatorTable.setColumnWidth("rowNum", 100);
+        activatorTable.setColumnExpandRatio("textEn", 5f);
+        activatorTable.setColumnExpandRatio("textRu", 5f);
+        activatorTable.setColumnExpandRatio("translator", 1f);
+        activatorTable.setColumnWidth("translator", 131);
+        activatorTable.setColumnExpandRatio("changeTime", 1.7f);
+        activatorTable.setColumnWidth("changeTime", 190);
+        activatorTable.setColumnExpandRatio("saveColumn", 1.1f);
+        activatorTable.setColumnWidth("saveColumn", 115);
+        activatorTable.setEditable(true);
+        activatorTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACTIVATORS"));
+        activatorTable.setSortEnabled(false);
+        tableTabs.addTab(activatorTable, "Активаторы");
+
         playerPhraseTable = new Table();
         playerPhraseTable.setSizeFull();
         playerPhraseTable.setHeight(500f, Unit.PIXELS);
@@ -243,7 +272,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
         questNameTable.setSortEnabled(false);
         tableTabs.addTab(questNameTable, "Названия квестов");
-        
+
         questDescriptionTable = new Table();
         questDescriptionTable.setSizeFull();
         questDescriptionTable.setHeight(500f, Unit.PIXELS);
@@ -268,7 +297,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
         questDescriptionTable.setSortEnabled(false);
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
-        
+
         this.addComponent(tableTabs);
         this.setExpandRatio(resultTable, 10f);
         this.setExpandRatio(tableTabs, 90f);
@@ -292,9 +321,7 @@ public class DirectTableEditTab extends VerticalLayout {
         public TranslateTableFieldFactory(String tableEditRole_) {
             this.tableEditRole = tableEditRole_;
         }
-        
-        
-        
+
         @Override
         public Field<?> createField(Container container, Object itemId, Object propertyId, Component uiContext) {
             Field result = null;
@@ -303,7 +330,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 area.setSizeFull();
                 area.addStyleName(ValoTheme.TEXTAREA_SMALL);
                 area.addStyleName(ValoTheme.TEXTAREA_TINY);
-                if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS")&&!SpringSecurityHelper.hasRole(tableEditRole)) {
+                if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
                     area.setReadOnly(true);
                 }
                 result = area;
@@ -352,12 +379,12 @@ public class DirectTableEditTab extends VerticalLayout {
         public SaveColumnGenerator(String tableEditRole_) {
             this.tableEditRole = tableEditRole_;
         }
-        
+
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
             Button button = new Button("Сохранить");
             button.addClickListener(new SaveButtonClickListener(itemId, (JPAContainer) source.getContainerDataSource()));
-            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS")&&!SpringSecurityHelper.hasRole(tableEditRole)) {
+            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
                 button.setEnabled(false);
             }
             button.addStyleName(ValoTheme.BUTTON_SMALL);
@@ -414,9 +441,12 @@ public class DirectTableEditTab extends VerticalLayout {
             } else if (entity instanceof GSpreadSheetsQuestName) {
                 targetTable = questNameTable;
                 rowNum = ((GSpreadSheetsQuestName) entity).getRowNum().intValue();
-            }else if (entity instanceof GSpreadSheetsQuestDescription) {
+            } else if (entity instanceof GSpreadSheetsQuestDescription) {
                 targetTable = questDescriptionTable;
                 rowNum = ((GSpreadSheetsQuestDescription) entity).getRowNum().intValue();
+            } else if (entity instanceof GSpreadSheetsActivator) {
+                targetTable = activatorTable;
+                rowNum = ((GSpreadSheetsActivator) entity).getRowNum().intValue();
             }
             rowNum--;
             if (targetTable != null) {

@@ -1,5 +1,6 @@
 package org.esn.esobase.config;
 
+import org.esn.esobase.jobs.SyncActivatorsJob;
 import org.esn.esobase.jobs.SyncLocationNamesJob;
 import org.esn.esobase.jobs.SyncNpcNamesJob;
 import org.esn.esobase.jobs.SyncNpcPhrasesJob;
@@ -43,5 +44,10 @@ public class JobContext {
     @Bean
     public SyncNpcPhrasesJob syncNpcPhrasesJob() {
         return new SyncNpcPhrasesJob();
+    }
+
+    @Bean
+    public SyncActivatorsJob syncActivatorsJob() {
+        return new SyncActivatorsJob();
     }
 }

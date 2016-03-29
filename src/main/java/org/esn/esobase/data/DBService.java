@@ -29,6 +29,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import org.esn.esobase.model.EsoRawString;
+import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
@@ -85,6 +86,7 @@ public class DBService {
         roles.add(new SysAccountRole(10L, "ROLE_DIRECT_ACCESS_QUEST_NAMES", "Прямое редактирование названий квестов"));
         roles.add(new SysAccountRole(11L, "ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS", "Прямое редактирование описаний квестов"));
         roles.add(new SysAccountRole(12L, "ROLE_MANAGE_USERS", "Управление пользователями"));
+        roles.add(new SysAccountRole(13L, "ROLE_DIRECT_ACCESS_ACTIVATORS", "Прямое редактирование активаторов"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -632,6 +634,58 @@ public class DBService {
     }
 
     @Transactional
+    public void loadActivatorsFromSpreadSheet(List<GSpreadSheetsActivator> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsActivator.class);
+        Map<String, GSpreadSheetsActivator> itemMap = new HashMap<>();
+        List<GSpreadSheetsActivator> allItems = crit.list();
+        for (GSpreadSheetsActivator item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsActivator item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "activator {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsActivator result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for activator: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for activator: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsActivator item : items) {
+            GSpreadSheetsActivator result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting activator for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsActivator> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsActivator location : items) {
+            spreadSheetItemMap.put(location.getTextEn(), location);
+        }
+        for (GSpreadSheetsActivator item : allItems) {
+            GSpreadSheetsActivator result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing activator rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
     public void loadNpcNamesFromSpreadSheet(List<GSpreadSheetsNpcName> npcs) {
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(GSpreadSheetsNpcName.class);
@@ -1009,6 +1063,56 @@ public class DBService {
             }
         }
         for (QuestDescriptionsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getActivatorsDiff(List<GSpreadSheetsActivator> items, HierarchicalContainer hc) {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<ActivatorsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsActivator.class);
+        Map<Long, GSpreadSheetsActivator> itemMap = new HashMap<>();
+        List<GSpreadSheetsActivator> allItems = crit.list();
+        for (GSpreadSheetsActivator item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsActivator item : items) {
+            GSpreadSheetsActivator result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new ActivatorsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new ActivatorsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new ActivatorsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new ActivatorsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new ActivatorsDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (ActivatorsDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -1759,6 +1863,24 @@ public class DBService {
     }
 
     @Transactional
+    public void saveActivators(List<GSpreadSheetsActivator> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsActivator item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsActivator.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsActivator result = (GSpreadSheetsActivator) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
         em.merge(entity);
@@ -2119,6 +2241,17 @@ public class DBService {
             item.getItemProperty("translator").setValue(loc.getTranslator());
             item.getItemProperty("catalogType").setValue("Локация");
         }
+        Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class);
+        activatorCrit.add(searchTerms);
+        List<GSpreadSheetsActivator> activatorList = activatorCrit.list();
+        for (GSpreadSheetsActivator loc : activatorList) {
+            Item item = hc.addItem(loc);
+            item.getItemProperty("textEn").setValue(loc.getTextEn());
+            item.getItemProperty("textRu").setValue(loc.getTextRu());
+            item.getItemProperty("weight").setValue(loc.getWeight());
+            item.getItemProperty("translator").setValue(loc.getTranslator());
+            item.getItemProperty("catalogType").setValue("Активатор");
+        }
 
         Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
         npcPhraseCrit.add(searchTerms);
@@ -2262,6 +2395,7 @@ public class DBService {
         result.addContainerProperty("name", String.class, null);
         result.addContainerProperty("value", String.class, null);
         Query gdpreadsheetsStatsQuery = em.createNativeQuery("select 'Перевод названий локаций', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetslocationname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetslocationname) as qres union all\n"
+                + "select 'Перевод активаторов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsactivator where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsactivator) as qres union all\n"
                 + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
                 + "select 'Перевод названий квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestname) as qres union all\n"
                 + "select 'Перевод описаний квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestdescription) as qres union all\n"
