@@ -30,6 +30,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
@@ -87,6 +88,7 @@ public class DBService {
         roles.add(new SysAccountRole(11L, "ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS", "Прямое редактирование описаний квестов"));
         roles.add(new SysAccountRole(12L, "ROLE_MANAGE_USERS", "Управление пользователями"));
         roles.add(new SysAccountRole(13L, "ROLE_DIRECT_ACCESS_ACTIVATORS", "Прямое редактирование активаторов"));
+        roles.add(new SysAccountRole(14L, "ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES", "Прямое редактирование записей журнала"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -686,6 +688,58 @@ public class DBService {
     }
 
     @Transactional
+    public void loadJournalEntriesFromSpreadSheet(List<GSpreadSheetsJournalEntry> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+        Map<String, GSpreadSheetsJournalEntry> itemMap = new HashMap<>();
+        List<GSpreadSheetsJournalEntry> allItems = crit.list();
+        for (GSpreadSheetsJournalEntry item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsJournalEntry item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "journal entry {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsJournalEntry result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for journal entry: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for journal entry: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsJournalEntry item : items) {
+            GSpreadSheetsJournalEntry result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting journal entry for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsJournalEntry> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsJournalEntry location : items) {
+            spreadSheetItemMap.put(location.getTextEn(), location);
+        }
+        for (GSpreadSheetsJournalEntry item : allItems) {
+            GSpreadSheetsJournalEntry result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing journal entry rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
     public void loadNpcNamesFromSpreadSheet(List<GSpreadSheetsNpcName> npcs) {
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(GSpreadSheetsNpcName.class);
@@ -1113,6 +1167,56 @@ public class DBService {
             }
         }
         for (ActivatorsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getJournalEntriesDiff(List<GSpreadSheetsJournalEntry> items, HierarchicalContainer hc) {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<JournalEntriesDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+        Map<Long, GSpreadSheetsJournalEntry> itemMap = new HashMap<>();
+        List<GSpreadSheetsJournalEntry> allItems = crit.list();
+        for (GSpreadSheetsJournalEntry item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsJournalEntry item : items) {
+            GSpreadSheetsJournalEntry result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new JournalEntriesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new JournalEntriesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new JournalEntriesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new JournalEntriesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new JournalEntriesDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (JournalEntriesDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -1881,6 +1985,24 @@ public class DBService {
     }
 
     @Transactional
+    public void saveJournalEntries(List<GSpreadSheetsJournalEntry> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsJournalEntry item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsJournalEntry result = (GSpreadSheetsJournalEntry) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
         em.merge(entity);
@@ -2196,29 +2318,7 @@ public class DBService {
 
         }
         Session session = (Session) em.getDelegate();
-        Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
-        questNameCrit.add(searchTerms);
-        List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
-        for (GSpreadSheetsQuestName row : questNameList) {
-            Item item = hc.addItem(row);
-            item.getItemProperty("textEn").setValue(row.getTextEn());
-            item.getItemProperty("textRu").setValue(row.getTextRu());
-            item.getItemProperty("weight").setValue(row.getWeight());
-            item.getItemProperty("translator").setValue(row.getTranslator());
-            item.getItemProperty("catalogType").setValue("Название квеста");
-        }
 
-        Criteria questDescriptionCrit = session.createCriteria(GSpreadSheetsQuestDescription.class);
-        questDescriptionCrit.add(searchTerms);
-        List<GSpreadSheetsQuestDescription> questDescriptionList = questDescriptionCrit.list();
-        for (GSpreadSheetsQuestDescription row : questDescriptionList) {
-            Item item = hc.addItem(row);
-            item.getItemProperty("textEn").setValue(row.getTextEn());
-            item.getItemProperty("textRu").setValue(row.getTextRu());
-            item.getItemProperty("weight").setValue(row.getWeight());
-            item.getItemProperty("translator").setValue(row.getTranslator());
-            item.getItemProperty("catalogType").setValue("Описание квеста");
-        }
         Criteria npcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
         npcCrit.add(searchTerms);
         List<GSpreadSheetsNpcName> npcList = npcCrit.list();
@@ -2251,6 +2351,42 @@ public class DBService {
             item.getItemProperty("weight").setValue(loc.getWeight());
             item.getItemProperty("translator").setValue(loc.getTranslator());
             item.getItemProperty("catalogType").setValue("Активатор");
+        }
+
+        Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
+        questNameCrit.add(searchTerms);
+        List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
+        for (GSpreadSheetsQuestName row : questNameList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Название квеста");
+        }
+
+        Criteria questDescriptionCrit = session.createCriteria(GSpreadSheetsQuestDescription.class);
+        questDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsQuestDescription> questDescriptionList = questDescriptionCrit.list();
+        for (GSpreadSheetsQuestDescription row : questDescriptionList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание квеста");
+        }
+
+        Criteria journalEntryCrit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+        journalEntryCrit.add(searchTerms);
+        List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryCrit.list();
+        for (GSpreadSheetsJournalEntry row : journalEntryList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Запись в журнале");
         }
 
         Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
@@ -2399,6 +2535,7 @@ public class DBService {
                 + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
                 + "select 'Перевод названий квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestname) as qres union all\n"
                 + "select 'Перевод описаний квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestdescription) as qres union all\n"
+                + "select 'Перевод записей в журнале', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsjournalentry where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsjournalentry) as qres union all\n"
                 + "select 'Перевод реплик NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcphrase) as qres union all\n"
                 + "select 'Перевод реплик игрока', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsplayerphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsplayerphrase) as qres;");
         List<Object[]> gspreadsheetResult = gdpreadsheetsStatsQuery.getResultList();

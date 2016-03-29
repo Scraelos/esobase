@@ -29,6 +29,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
@@ -71,6 +72,9 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table questDescriptionTable;
     private JPAContainer<GSpreadSheetsNpcPhrase> questDescriptionContainer;
+
+    private Table journalEntryTable;
+    private JPAContainer<GSpreadSheetsJournalEntry> journalEntryContainer;
 
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
@@ -298,6 +302,31 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionTable.setSortEnabled(false);
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
 
+        journalEntryTable = new Table();
+        journalEntryTable.setSizeFull();
+        journalEntryTable.setHeight(500f, Unit.PIXELS);
+        journalEntryContainer = service.getJPAContainerContainerForClass(GSpreadSheetsJournalEntry.class);
+        journalEntryContainer.setBuffered(true);
+        journalEntryTable.setContainerDataSource(journalEntryContainer);
+        journalEntryTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
+        journalEntryTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        journalEntryTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        journalEntryTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        journalEntryTable.setColumnExpandRatio("rowNum", 1.5f);
+        journalEntryTable.setColumnWidth("rowNum", 100);
+        journalEntryTable.setColumnExpandRatio("textEn", 5f);
+        journalEntryTable.setColumnExpandRatio("textRu", 5f);
+        journalEntryTable.setColumnExpandRatio("translator", 1f);
+        journalEntryTable.setColumnWidth("translator", 131);
+        journalEntryTable.setColumnExpandRatio("changeTime", 1.7f);
+        journalEntryTable.setColumnWidth("changeTime", 190);
+        journalEntryTable.setColumnExpandRatio("saveColumn", 1.1f);
+        journalEntryTable.setColumnWidth("saveColumn", 115);
+        journalEntryTable.setEditable(true);
+        journalEntryTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
+        journalEntryTable.setSortEnabled(false);
+        tableTabs.addTab(journalEntryTable, "Записи журнала");
+
         this.addComponent(tableTabs);
         this.setExpandRatio(resultTable, 10f);
         this.setExpandRatio(tableTabs, 90f);
@@ -447,6 +476,9 @@ public class DirectTableEditTab extends VerticalLayout {
             } else if (entity instanceof GSpreadSheetsActivator) {
                 targetTable = activatorTable;
                 rowNum = ((GSpreadSheetsActivator) entity).getRowNum().intValue();
+            } else if (entity instanceof GSpreadSheetsJournalEntry) {
+                targetTable = journalEntryTable;
+                rowNum = ((GSpreadSheetsJournalEntry) entity).getRowNum().intValue();
             }
             rowNum--;
             if (targetTable != null) {
