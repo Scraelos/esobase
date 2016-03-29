@@ -1497,8 +1497,10 @@ public class DBService {
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
-        crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
-        crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
+        if (withNewTranslations || (translator != null)) {
+            crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
+        }
         if (withNewTranslations) {
             crit.add(Restrictions.or(
                     Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
@@ -1527,7 +1529,9 @@ public class DBService {
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
-        crit.createAlias("translations", "translations");
+        if (withNewTranslations || (translator != null)) {
+            crit.createAlias("translations", "translations");
+        }
         if (withNewTranslations) {
             crit.add(Restrictions.sizeGt("translations", 0));
             crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
@@ -1550,7 +1554,9 @@ public class DBService {
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
-        crit.createAlias("translations", "translations");
+        if (withNewTranslations || (translator != null)) {
+            crit.createAlias("translations", "translations");
+        }
         if (withNewTranslations) {
             crit.add(Restrictions.sizeGt("translations", 0));
             crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
@@ -1565,7 +1571,7 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations,SysAccount translator) {
+    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations, SysAccount translator) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Npc.class);
@@ -1573,7 +1579,7 @@ public class DBService {
         if (withNewTranslations) {
             crit.add(Restrictions.eq("hasNewTranslations", true));
         }
-        if(translator!=null) {
+        if (translator != null) {
             crit.createAlias("translators", "tr");
             crit.add(Restrictions.eq("tr.id", translator.getId()));
         }
@@ -1930,7 +1936,7 @@ public class DBService {
                     translators.add(t.getAuthor());
                 }
                 npc.setTranslators(translators);
-                if(t.getStatus()==TRANSLATE_STATUS.NEW) {
+                if (t.getStatus() == TRANSLATE_STATUS.NEW) {
                     npc.setHasNewTranslations(Boolean.TRUE);
                 }
                 em.merge(npc);
