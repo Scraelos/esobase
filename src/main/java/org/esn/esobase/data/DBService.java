@@ -2453,35 +2453,35 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
-        }
-        em.merge(item.getEntity());
-        if (item.getEntity() instanceof GSpreadSheetsLocationName) {
-            GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) item.getEntity();
-            Session session = (Session) em.getDelegate();
-            Criteria crit = session.createCriteria(Location.class);
-            crit.add(Restrictions.eq("name", locationName.getTextEn()));
-            List<Location> list = crit.list();
-            for (Location l : list) {
-                l.setNameRu(locationName.getTextRu());
-                em.merge(l);
-            }
-        }
-        if (item.getEntity() instanceof GSpreadSheetsNpcName) {
-            GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) item.getEntity();
-            Session session = (Session) em.getDelegate();
-            Criteria crit = session.createCriteria(Npc.class);
-            crit.add(Restrictions.eq("name", npcName.getTextEn()));
-            List<Npc> list = crit.list();
-            for (Npc n : list) {
-                if (n.getSex() == null || n.getSex() == NPC_SEX.U) {
-                    n.setSex(npcName.getSex());
+            em.merge(item.getEntity());
+            if (item.getEntity() instanceof GSpreadSheetsLocationName) {
+                GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) item.getEntity();
+                Session session = (Session) em.getDelegate();
+                Criteria crit = session.createCriteria(Location.class);
+                crit.add(Restrictions.eq("name", locationName.getTextEn()));
+                List<Location> list = crit.list();
+                for (Location l : list) {
+                    l.setNameRu(locationName.getTextRu());
+                    em.merge(l);
                 }
-                n.setName(npcName.getTextEn());
-                n.setNameRu(npcName.getTextRu());
-                em.merge(n);
+            }
+            if (item.getEntity() instanceof GSpreadSheetsNpcName) {
+                GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) item.getEntity();
+                Session session = (Session) em.getDelegate();
+                Criteria crit = session.createCriteria(Npc.class);
+                crit.add(Restrictions.eq("name", npcName.getTextEn()));
+                List<Npc> list = crit.list();
+                for (Npc n : list) {
+                    if (n.getSex() == null || n.getSex() == NPC_SEX.U) {
+                        n.setSex(npcName.getSex());
+                    }
+                    n.setName(npcName.getTextEn());
+                    n.setNameRu(npcName.getTextRu());
+                    em.merge(n);
+                }
             }
         }
     }

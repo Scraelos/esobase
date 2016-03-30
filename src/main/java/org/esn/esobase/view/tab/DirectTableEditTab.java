@@ -308,7 +308,7 @@ public class DirectTableEditTab extends VerticalLayout {
         journalEntryContainer = service.getJPAContainerContainerForClass(GSpreadSheetsJournalEntry.class);
         journalEntryContainer.setBuffered(true);
         journalEntryTable.setContainerDataSource(journalEntryContainer);
-        journalEntryTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
+        journalEntryTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
         journalEntryTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
         journalEntryTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
         journalEntryTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
@@ -323,7 +323,7 @@ public class DirectTableEditTab extends VerticalLayout {
         journalEntryTable.setColumnExpandRatio("saveColumn", 1.1f);
         journalEntryTable.setColumnWidth("saveColumn", 115);
         journalEntryTable.setEditable(true);
-        journalEntryTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
+        journalEntryTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
         journalEntryTable.setSortEnabled(false);
         tableTabs.addTab(journalEntryTable, "Записи журнала");
 
