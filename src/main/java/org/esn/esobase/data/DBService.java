@@ -175,6 +175,21 @@ public class DBService {
                 em.merge(npc);
             }
         }
+        Criteria questCrit = session.createCriteria(Quest.class);
+        List<Quest> quests = questCrit.list();
+        for (Quest q : quests) {
+            Criteria gsQuestCrit = session.createCriteria(GSpreadSheetsQuestName.class);
+            if (q.getName() != null && !q.getName().isEmpty()) {
+                gsQuestCrit.add(Restrictions.ilike("textEn", q.getName()));
+            }
+            List<GSpreadSheetsQuestName> questList = gsQuestCrit.list();
+            for (GSpreadSheetsQuestName gnpc : questList) {
+                q.setName(gnpc.getTextEn());
+                q.setNameRu(gnpc.getTextRu());
+                em.merge(q);
+            }
+        }
+        
     }
 
     @Transactional
@@ -1895,7 +1910,7 @@ public class DBService {
                 em.persist(name);
             }
             Criteria npcNameCrit = session.createCriteria(Npc.class);
-            npcNameCrit.add(Restrictions.eq("name", name.getTextEn()));
+            npcNameCrit.add(Restrictions.ilike("name", name.getTextEn()));
             List<Npc> npcs = npcNameCrit.list();
             for (Npc npc : npcs) {
                 if (npc.getSex() != null && npc.getSex() != NPC_SEX.N && name.getSex() != null && name.getSex() != NPC_SEX.N) {
@@ -1927,6 +1942,13 @@ public class DBService {
             } else {
                 em.persist(name);
             }
+            Criteria locationsCrit = session.createCriteria(Location.class);
+            locationsCrit.add(Restrictions.ilike("name", name.getTextEn()));
+            List<Location> list = locationsCrit.list();
+            for (Location l : list) {
+                l.setNameRu(name.getTextRu());
+                em.merge(l);
+            }
         }
     }
 
@@ -1944,6 +1966,14 @@ public class DBService {
                 em.merge(result);
             } else {
                 em.persist(item);
+            }
+            Criteria questsCrit = session.createCriteria(Quest.class);
+            questsCrit.add(Restrictions.ilike("name", item.getTextEn()));
+            List<Quest> list = questsCrit.list();
+            for (Quest q : list) {
+                q.setName(item.getTextEn());
+                q.setNameRu(item.getTextRu());
+                em.merge(q);
             }
         }
     }
@@ -2461,18 +2491,29 @@ public class DBService {
                 GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) item.getEntity();
                 Session session = (Session) em.getDelegate();
                 Criteria crit = session.createCriteria(Location.class);
-                crit.add(Restrictions.eq("name", locationName.getTextEn()));
+                crit.add(Restrictions.ilike("name", locationName.getTextEn()));
                 List<Location> list = crit.list();
                 for (Location l : list) {
                     l.setNameRu(locationName.getTextRu());
                     em.merge(l);
                 }
             }
+            if (item.getEntity() instanceof GSpreadSheetsQuestName) {
+                GSpreadSheetsQuestName questName = (GSpreadSheetsQuestName) item.getEntity();
+                Session session = (Session) em.getDelegate();
+                Criteria crit = session.createCriteria(Quest.class);
+                crit.add(Restrictions.ilike("name", questName.getTextEn()));
+                List<Quest> list = crit.list();
+                for (Quest q : list) {
+                    q.setNameRu(questName.getTextRu());
+                    em.merge(q);
+                }
+            }
             if (item.getEntity() instanceof GSpreadSheetsNpcName) {
                 GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) item.getEntity();
                 Session session = (Session) em.getDelegate();
                 Criteria crit = session.createCriteria(Npc.class);
-                crit.add(Restrictions.eq("name", npcName.getTextEn()));
+                crit.add(Restrictions.ilike("name", npcName.getTextEn()));
                 List<Npc> list = crit.list();
                 for (Npc n : list) {
                     if (n.getSex() == null || n.getSex() == NPC_SEX.U) {
