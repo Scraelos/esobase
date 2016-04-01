@@ -2321,11 +2321,11 @@ public class DBService {
 
             }
             if (r > 0) {
-                n.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
+                npc.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
             } else {
-                n.setProgress(BigDecimal.ZERO);
+                npc.setProgress(BigDecimal.ZERO);
             }
-            em.merge(n);
+            em.merge(npc);
         }
 
     }
