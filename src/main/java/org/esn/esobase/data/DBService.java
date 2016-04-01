@@ -30,6 +30,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsItemDescription;
+import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -89,6 +91,8 @@ public class DBService {
         roles.add(new SysAccountRole(12L, "ROLE_MANAGE_USERS", "Управление пользователями"));
         roles.add(new SysAccountRole(13L, "ROLE_DIRECT_ACCESS_ACTIVATORS", "Прямое редактирование активаторов"));
         roles.add(new SysAccountRole(14L, "ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES", "Прямое редактирование записей журнала"));
+        roles.add(new SysAccountRole(15L, "ROLE_DIRECT_ACCESS_ITEM_NAMES", "Прямое редактирование названий предметов"));
+        roles.add(new SysAccountRole(16L, "ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS", "Прямое редактирование описаний предметов"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -189,7 +193,7 @@ public class DBService {
                 em.merge(q);
             }
         }
-        
+
     }
 
     @Transactional
@@ -645,6 +649,110 @@ public class DBService {
             GSpreadSheetsQuestDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadItemNamesFromSpreadSheet(List<GSpreadSheetsItemName> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsItemName.class);
+        Map<String, GSpreadSheetsItemName> itemMap = new HashMap<>();
+        List<GSpreadSheetsItemName> allItems = crit.list();
+        for (GSpreadSheetsItemName item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsItemName item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "item name {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsItemName result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for item name: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for item name: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsItemName item : items) {
+            GSpreadSheetsItemName result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting item name for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsItemName> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsItemName location : items) {
+            spreadSheetItemMap.put(location.getTextEn(), location);
+        }
+        for (GSpreadSheetsItemName item : allItems) {
+            GSpreadSheetsItemName result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing item name rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadItemDesciptionsFromSpreadSheet(List<GSpreadSheetsItemDescription> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsItemDescription.class);
+        Map<String, GSpreadSheetsItemDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsItemDescription> allItems = crit.list();
+        for (GSpreadSheetsItemDescription item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsItemDescription item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "item description {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsItemDescription result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for item description: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for item description: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsItemDescription item : items) {
+            GSpreadSheetsItemDescription result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting item description for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsItemDescription> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsItemDescription location : items) {
+            spreadSheetItemMap.put(location.getTextEn(), location);
+        }
+        for (GSpreadSheetsItemDescription item : allItems) {
+            GSpreadSheetsItemDescription result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing item description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
                 em.remove(item);
             }
         }
@@ -1132,6 +1240,106 @@ public class DBService {
             }
         }
         for (QuestDescriptionsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+    
+    @Transactional
+    public HierarchicalContainer getItemNamesDiff(List<GSpreadSheetsItemName> items, HierarchicalContainer hc) {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<ItemNamesDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsItemName.class);
+        Map<Long, GSpreadSheetsItemName> itemMap = new HashMap<>();
+        List<GSpreadSheetsItemName> allItems = crit.list();
+        for (GSpreadSheetsItemName item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsItemName item : items) {
+            GSpreadSheetsItemName result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new ItemNamesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new ItemNamesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new ItemNamesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new ItemNamesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new ItemNamesDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (ItemNamesDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getItemDescriptionsDiff(List<GSpreadSheetsItemDescription> items, HierarchicalContainer hc) {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<ItemDescriptionsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsItemDescription.class);
+        Map<Long, GSpreadSheetsItemDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsItemDescription> allItems = crit.list();
+        for (GSpreadSheetsItemDescription item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsItemDescription item : items) {
+            GSpreadSheetsItemDescription result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new ItemDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new ItemDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new ItemDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new ItemDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new ItemDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (ItemDescriptionsDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -1997,6 +2205,42 @@ public class DBService {
     }
 
     @Transactional
+    public void saveItemNames(List<GSpreadSheetsItemName> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsItemName item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsItemName.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsItemName result = (GSpreadSheetsItemName) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void saveItemDescriptions(List<GSpreadSheetsItemDescription> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsItemDescription item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsItemDescription.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsItemDescription result = (GSpreadSheetsItemDescription) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
     public void saveActivators(List<GSpreadSheetsActivator> items) {
         Session session = (Session) em.getDelegate();
         for (GSpreadSheetsActivator item : items) {
@@ -2383,6 +2627,30 @@ public class DBService {
             item.getItemProperty("catalogType").setValue("Активатор");
         }
 
+        Criteria itemNameCrit = session.createCriteria(GSpreadSheetsItemName.class);
+        itemNameCrit.add(searchTerms);
+        List<GSpreadSheetsItemName> itemNameList = itemNameCrit.list();
+        for (GSpreadSheetsItemName row : itemNameList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Название предмета");
+        }
+
+        Criteria itemDescriptionCrit = session.createCriteria(GSpreadSheetsItemDescription.class);
+        itemDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionCrit.list();
+        for (GSpreadSheetsItemDescription row : itemDescriptionList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание предмета");
+        }
+        
         Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
         questNameCrit.add(searchTerms);
         List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
@@ -2483,7 +2751,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry)|| (item.getEntity() instanceof GSpreadSheetsItemName)|| (item.getEntity() instanceof GSpreadSheetsItemDescription)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             em.merge(item.getEntity());
@@ -2576,6 +2844,8 @@ public class DBService {
                 + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
                 + "select 'Перевод названий квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestname) as qres union all\n"
                 + "select 'Перевод описаний квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestdescription) as qres union all\n"
+                + "select 'Перевод названий предметов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsitemname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsitemname) as qres union all\n"
+                + "select 'Перевод описаний предметов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsitemdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsitemdescription) as qres union all\n"
                 + "select 'Перевод записей в журнале', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsjournalentry where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsjournalentry) as qres union all\n"
                 + "select 'Перевод реплик NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcphrase) as qres union all\n"
                 + "select 'Перевод реплик игрока', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsplayerphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsplayerphrase) as qres;");

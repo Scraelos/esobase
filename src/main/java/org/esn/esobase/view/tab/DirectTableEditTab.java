@@ -20,6 +20,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TableFieldFactory;
@@ -29,6 +30,8 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsItemDescription;
+import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -68,10 +71,17 @@ public class DirectTableEditTab extends VerticalLayout {
     private JPAContainer<GSpreadSheetsNpcPhrase> npcPhraseContainer;
 
     private Table questNameTable;
-    private JPAContainer<GSpreadSheetsNpcPhrase> questNameContainer;
+    private JPAContainer<GSpreadSheetsQuestName> questNameContainer;
 
     private Table questDescriptionTable;
-    private JPAContainer<GSpreadSheetsNpcPhrase> questDescriptionContainer;
+    private JPAContainer<GSpreadSheetsQuestDescription> questDescriptionContainer;
+
+    private VerticalLayout itemNameLayout;
+    private Table itemNameTable;
+    private JPAContainer<GSpreadSheetsItemName> itemNameContainer;
+
+    private Table itemDescriptionTable;
+    private JPAContainer<GSpreadSheetsItemDescription> itemDescriptionContainer;
 
     private Table journalEntryTable;
     private JPAContainer<GSpreadSheetsJournalEntry> journalEntryContainer;
@@ -302,6 +312,61 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionTable.setSortEnabled(false);
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
 
+        itemNameLayout=new VerticalLayout();
+        Label itemNameLabel=new Label("ВНИМАНИЕ! В этой таблице НЕЛЬЗЯ:  переводить односложные слова, особенно написанные со строчной буквы.");
+        itemNameLabel.setStyleName(ValoTheme.LABEL_COLORED);
+        itemNameTable = new Table();
+        itemNameTable.setSizeFull();
+        itemNameTable.setHeight(500f, Unit.PIXELS);
+        itemNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsItemName.class);
+        itemNameContainer.setBuffered(true);
+        itemNameTable.setContainerDataSource(itemNameContainer);
+        itemNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
+        itemNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        itemNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        itemNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        itemNameTable.setColumnExpandRatio("rowNum", 1.5f);
+        itemNameTable.setColumnWidth("rowNum", 100);
+        itemNameTable.setColumnExpandRatio("textEn", 5f);
+        itemNameTable.setColumnExpandRatio("textRu", 5f);
+        itemNameTable.setColumnExpandRatio("translator", 1f);
+        itemNameTable.setColumnWidth("translator", 131);
+        itemNameTable.setColumnExpandRatio("changeTime", 1.7f);
+        itemNameTable.setColumnWidth("changeTime", 190);
+        itemNameTable.setColumnExpandRatio("saveColumn", 1.1f);
+        itemNameTable.setColumnWidth("saveColumn", 115);
+        itemNameTable.setEditable(true);
+        itemNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
+        itemNameTable.setSortEnabled(false);
+        itemNameLayout.addComponent(itemNameLabel);
+        itemNameLayout.addComponent(itemNameTable);
+        tableTabs.addTab(itemNameLayout, "Названия предметов");
+
+        itemDescriptionTable = new Table();
+        itemDescriptionTable.setSizeFull();
+        itemDescriptionTable.setHeight(500f, Unit.PIXELS);
+        itemDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsItemDescription.class);
+        itemDescriptionContainer.setBuffered(true);
+        itemDescriptionTable.setContainerDataSource(itemDescriptionContainer);
+        itemDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
+        itemDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        itemDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        itemDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        itemDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
+        itemDescriptionTable.setColumnWidth("rowNum", 100);
+        itemDescriptionTable.setColumnExpandRatio("textEn", 5f);
+        itemDescriptionTable.setColumnExpandRatio("textRu", 5f);
+        itemDescriptionTable.setColumnExpandRatio("translator", 1f);
+        itemDescriptionTable.setColumnWidth("translator", 131);
+        itemDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
+        itemDescriptionTable.setColumnWidth("changeTime", 190);
+        itemDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
+        itemDescriptionTable.setColumnWidth("saveColumn", 115);
+        itemDescriptionTable.setEditable(true);
+        itemDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
+        itemDescriptionTable.setSortEnabled(false);
+        tableTabs.addTab(itemDescriptionTable, "Описания предметов");
+
         journalEntryTable = new Table();
         journalEntryTable.setSizeFull();
         journalEntryTable.setHeight(500f, Unit.PIXELS);
@@ -453,36 +518,53 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public void itemClick(ItemClickEvent event) {
             DAO entity = (DAO) event.getItemId();
+            Component targetTabId=null;
             Table targetTable = null;
             Integer rowNum = 1;
             if (entity instanceof GSpreadSheetsNpcName) {
+                targetTabId = npcNameTable;
                 targetTable = npcNameTable;
                 rowNum = ((GSpreadSheetsNpcName) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsLocationName) {
+                targetTabId = locationNameTable;
                 targetTable = locationNameTable;
                 rowNum = ((GSpreadSheetsLocationName) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsPlayerPhrase) {
+                targetTabId = playerPhraseTable;
                 targetTable = playerPhraseTable;
                 rowNum = ((GSpreadSheetsPlayerPhrase) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsNpcPhrase) {
+                targetTabId = npcPhraseTable;
                 targetTable = npcPhraseTable;
                 rowNum = ((GSpreadSheetsNpcPhrase) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsQuestName) {
+                targetTabId = questNameTable;
                 targetTable = questNameTable;
                 rowNum = ((GSpreadSheetsQuestName) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsQuestDescription) {
+                targetTabId = questDescriptionTable;
                 targetTable = questDescriptionTable;
                 rowNum = ((GSpreadSheetsQuestDescription) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsActivator) {
+                targetTabId = activatorTable;
                 targetTable = activatorTable;
                 rowNum = ((GSpreadSheetsActivator) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsJournalEntry) {
+                targetTabId = journalEntryTable;
                 targetTable = journalEntryTable;
                 rowNum = ((GSpreadSheetsJournalEntry) entity).getRowNum().intValue();
+            } else if (entity instanceof GSpreadSheetsItemName) {
+                targetTabId = itemNameLayout;
+                targetTable = itemNameTable;
+                rowNum = ((GSpreadSheetsItemName) entity).getRowNum().intValue();
+            } else if (entity instanceof GSpreadSheetsItemDescription) {
+                targetTabId = itemDescriptionTable;
+                targetTable = itemDescriptionTable;
+                rowNum = ((GSpreadSheetsItemDescription) entity).getRowNum().intValue();
             }
             rowNum--;
-            if (targetTable != null) {
-                tableTabs.setSelectedTab(targetTable);
+            if (targetTabId != null) {
+                tableTabs.setSelectedTab(targetTabId);
                 targetTable.setCurrentPageFirstItemIndex(rowNum);
             }
         }

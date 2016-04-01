@@ -26,6 +26,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsItemDescription;
+import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -50,6 +52,8 @@ public class ImportTab extends VerticalLayout {
     private Button importLocationNamesFromG;
     private Button importQuestNamesFromG;
     private Button importQuestDescriptionsFromG;
+    private Button importItemNamesFromG;
+    private Button importItemDescriptionsFromG;
     private Button importJournalEntriesFromG;
     private Button importNpcNamesFromG;
     private Button importActiivatorsFromG;
@@ -126,7 +130,31 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importQuestDescriptionsFromG);
-            
+
+            importItemNamesFromG = new Button("Импорт названий предметов из гугл-таблиц");
+            importItemNamesFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsItemName> items = docsService.getItemNames();
+                    service.loadItemNamesFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importItemNamesFromG);
+
+            importItemDescriptionsFromG = new Button("Импорт описаний предметов из гугл-таблиц");
+            importItemDescriptionsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsItemDescription> items = docsService.getItemDescriptions();
+                    service.loadItemDesciptionsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importItemDescriptionsFromG);
+
             importJournalEntriesFromG = new Button("Импорт записей журнала из гугл-таблиц");
             importJournalEntriesFromG.addClickListener(new Button.ClickListener() {
 
@@ -138,7 +166,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importJournalEntriesFromG);
-            
+
             importActiivatorsFromG = new Button("Импорт активаторов из гугл-таблиц");
             importActiivatorsFromG.addClickListener(new Button.ClickListener() {
 
