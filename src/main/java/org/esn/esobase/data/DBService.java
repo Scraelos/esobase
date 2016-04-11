@@ -1252,7 +1252,7 @@ public class DBService {
         }
         return hc;
     }
-    
+
     @Transactional
     public HierarchicalContainer getItemNamesDiff(List<GSpreadSheetsItemName> items, HierarchicalContainer hc) {
         if (hc == null) {
@@ -2064,6 +2064,19 @@ public class DBService {
             entity.setChangeTime(new Date());
             em.merge(entity);
         }
+        Npc npc = null;
+        if (entity.getSubtitle() != null) {
+            npc = entity.getSubtitle().getNpc();
+        } else if (entity.getGreeting() != null) {
+            npc = entity.getGreeting().getNpc();
+        } else if (entity.getPlayerTopic() != null) {
+            npc = entity.getPlayerTopic().getNpc();
+        } else if (entity.getNpcTopic() != null) {
+            npc = entity.getNpcTopic().getNpc();
+        }
+        if (npc != null) {
+            updateNpcHasTranslated(npc);
+        }
     }
 
     @Transactional
@@ -2280,12 +2293,27 @@ public class DBService {
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
         em.merge(entity);
+        Npc npc = null;
+        if (entity.getSubtitle() != null) {
+            npc = entity.getSubtitle().getNpc();
+        } else if (entity.getGreeting() != null) {
+            npc = entity.getGreeting().getNpc();
+        } else if (entity.getPlayerTopic() != null) {
+            npc = entity.getPlayerTopic().getNpc();
+        } else if (entity.getNpcTopic() != null) {
+            npc = entity.getNpcTopic().getNpc();
+        }
+        if (npc != null) {
+            updateNpcHasTranslated(npc);
+        }
     }
 
     @Transactional
     public void acceptTranslatedText(TranslatedText entity) {
 
+        Npc npc = null;
         if (entity.getGreeting() != null) {
+            npc = entity.getGreeting().getNpc();
             Greeting greeting = em.find(Greeting.class, entity.getGreeting().getId());
             GSpreadSheetsNpcPhrase npcPhrase = greeting.getExtNpcPhrase();
             if (npcPhrase != null) {
@@ -2301,6 +2329,7 @@ public class DBService {
 
         }
         if (entity.getSubtitle() != null) {
+            npc = entity.getSubtitle().getNpc();
             Subtitle subtitle = em.find(Subtitle.class, entity.getSubtitle().getId());
             GSpreadSheetsNpcPhrase npcPhrase = subtitle.getExtNpcPhrase();
             if (npcPhrase != null) {
@@ -2316,6 +2345,7 @@ public class DBService {
 
         }
         if (entity.getNpcTopic() != null) {
+            npc = entity.getNpcTopic().getNpc();
             Topic topic = em.find(Topic.class, entity.getNpcTopic().getId());
             GSpreadSheetsNpcPhrase npcPhrase = topic.getExtNpcPhrase();
             if (npcPhrase != null) {
@@ -2331,6 +2361,7 @@ public class DBService {
 
         }
         if (entity.getPlayerTopic() != null) {
+            npc = entity.getPlayerTopic().getNpc();
             Topic topic = em.find(Topic.class, entity.getPlayerTopic().getId());
             GSpreadSheetsPlayerPhrase playerPhrase = topic.getExtPlayerPhrase();
             if (playerPhrase != null) {
@@ -2344,6 +2375,10 @@ public class DBService {
                 em.merge(entity);
             }
 
+        }
+        if (npc != null) {
+            calculateNpcProgress(npc);
+            updateNpcHasTranslated(npc);
         }
     }
 
@@ -2524,7 +2559,7 @@ public class DBService {
     public void calculateNpcProgress(Npc n) {
         int totalPhases = 0;
         int translatedPhrases = 0;
-        Npc npc = em.find(Npc.class, n.getId());
+        Npc npc=em.find(Npc.class, n.getId());
         for (Topic t : npc.getTopics()) {
             GSpreadSheetsNpcPhrase extNpcPhrase = t.getExtNpcPhrase();
             if (extNpcPhrase != null) {
@@ -2565,11 +2600,11 @@ public class DBService {
 
             }
             if (r > 0) {
-                npc.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
+                n.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
             } else {
-                npc.setProgress(BigDecimal.ZERO);
+                n.setProgress(BigDecimal.ZERO);
             }
-            em.merge(npc);
+            em.merge(n);
         }
 
     }
@@ -2650,7 +2685,7 @@ public class DBService {
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание предмета");
         }
-        
+
         Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
         questNameCrit.add(searchTerms);
         List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
@@ -2751,7 +2786,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry)|| (item.getEntity() instanceof GSpreadSheetsItemName)|| (item.getEntity() instanceof GSpreadSheetsItemDescription)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             em.merge(item.getEntity());
@@ -2797,8 +2832,8 @@ public class DBService {
 
     @Transactional
     public void updateNpcHasTranslated(Npc n) {
-        Npc npc = em.find(Npc.class, n.getId());
         boolean hasNewTranslations = false;
+        Npc npc=em.find(Npc.class, n.getId());
         Set<SysAccount> translators = new HashSet<>();
         for (Topic t : npc.getTopics()) {
             for (TranslatedText tt : t.getPlayerTranslations()) {
@@ -2830,9 +2865,9 @@ public class DBService {
                 }
             }
         }
-        npc.setTranslators(translators);
-        npc.setHasNewTranslations(hasNewTranslations);
-        em.merge(npc);
+        n.setTranslators(translators);
+        n.setHasNewTranslations(hasNewTranslations);
+        em.merge(n);
     }
 
     public HierarchicalContainer getStatistics() {
