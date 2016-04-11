@@ -38,6 +38,7 @@ import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
+import org.esn.esobase.model.GSpreadSheetsQuestDirection;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.lib.DAO;
@@ -75,6 +76,9 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table questDescriptionTable;
     private JPAContainer<GSpreadSheetsQuestDescription> questDescriptionContainer;
+
+    private Table questDirectionTable;
+    private JPAContainer<GSpreadSheetsQuestDirection> questDirectionContainer;
 
     private VerticalLayout itemNameLayout;
     private Table itemNameTable;
@@ -312,8 +316,33 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionTable.setSortEnabled(false);
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
 
-        itemNameLayout=new VerticalLayout();
-        Label itemNameLabel=new Label("ВНИМАНИЕ! В этой таблице НЕЛЬЗЯ:  переводить односложные слова, особенно написанные со строчной буквы.");
+        questDirectionTable = new Table();
+        questDirectionTable.setSizeFull();
+        questDirectionTable.setHeight(500f, Unit.PIXELS);
+        questDirectionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDirection.class);
+        questDirectionContainer.setBuffered(true);
+        questDirectionTable.setContainerDataSource(questDirectionContainer);
+        questDirectionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
+        questDirectionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "weight", "translator", "changeTime", "saveColumn"});
+        questDirectionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "Порядок", "Переводчик", "Время", ""});
+        questDirectionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        questDirectionTable.setColumnExpandRatio("rowNum", 1.5f);
+        questDirectionTable.setColumnWidth("rowNum", 100);
+        questDirectionTable.setColumnExpandRatio("textEn", 5f);
+        questDirectionTable.setColumnExpandRatio("textRu", 5f);
+        questDirectionTable.setColumnExpandRatio("translator", 1f);
+        questDirectionTable.setColumnWidth("translator", 131);
+        questDirectionTable.setColumnExpandRatio("changeTime", 1.7f);
+        questDirectionTable.setColumnWidth("changeTime", 190);
+        questDirectionTable.setColumnExpandRatio("saveColumn", 1.1f);
+        questDirectionTable.setColumnWidth("saveColumn", 115);
+        questDirectionTable.setEditable(true);
+        questDirectionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
+        questDirectionTable.setSortEnabled(false);
+        tableTabs.addTab(questDirectionTable, "Цели квестов");
+
+        itemNameLayout = new VerticalLayout();
+        Label itemNameLabel = new Label("ВНИМАНИЕ! В этой таблице НЕЛЬЗЯ:  переводить односложные слова, особенно написанные со строчной буквы.");
         itemNameLabel.setStyleName(ValoTheme.LABEL_COLORED);
         itemNameTable = new Table();
         itemNameTable.setSizeFull();
@@ -518,7 +547,7 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public void itemClick(ItemClickEvent event) {
             DAO entity = (DAO) event.getItemId();
-            Component targetTabId=null;
+            Component targetTabId = null;
             Table targetTable = null;
             Integer rowNum = 1;
             if (entity instanceof GSpreadSheetsNpcName) {
@@ -545,6 +574,10 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTabId = questDescriptionTable;
                 targetTable = questDescriptionTable;
                 rowNum = ((GSpreadSheetsQuestDescription) entity).getRowNum().intValue();
+            } else if (entity instanceof GSpreadSheetsQuestDirection) {
+                targetTabId = questDirectionTable;
+                targetTable = questDirectionTable;
+                rowNum = ((GSpreadSheetsQuestDirection) entity).getRowNum().intValue();
             } else if (entity instanceof GSpreadSheetsActivator) {
                 targetTabId = activatorTable;
                 targetTable = activatorTable;

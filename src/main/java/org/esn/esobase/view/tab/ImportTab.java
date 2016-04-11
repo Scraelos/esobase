@@ -34,6 +34,7 @@ import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
+import org.esn.esobase.model.GSpreadSheetsQuestDirection;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -52,6 +53,7 @@ public class ImportTab extends VerticalLayout {
     private Button importLocationNamesFromG;
     private Button importQuestNamesFromG;
     private Button importQuestDescriptionsFromG;
+    private Button importQuestDirectionsFromG;
     private Button importItemNamesFromG;
     private Button importItemDescriptionsFromG;
     private Button importJournalEntriesFromG;
@@ -130,6 +132,18 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importQuestDescriptionsFromG);
+
+            importQuestDirectionsFromG = new Button("Импорт целей квестов из гугл-таблиц");
+            importQuestDirectionsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsQuestDirection> items = docsService.getQuestDirections();
+                    service.loadQuestDirectionsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importQuestDirectionsFromG);
 
             importItemNamesFromG = new Button("Импорт названий предметов из гугл-таблиц");
             importItemNamesFromG.addClickListener(new Button.ClickListener() {
