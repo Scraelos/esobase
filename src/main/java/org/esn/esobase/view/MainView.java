@@ -24,6 +24,7 @@ import org.esn.esobase.view.tab.PortalInfoTab;
 import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
 import org.esn.esobase.view.tab.SearchInRawStringsTab;
+import org.esn.esobase.view.tab.SpellerTestTab;
 import org.esn.esobase.view.tab.SynchronizationTab;
 import org.esn.esobase.view.tab.SystemSettingsTab;
 import org.esn.esobase.view.tab.TranslateTab;
@@ -64,6 +65,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem directTableEditMenuItem;
     private MenuBar.MenuItem portalInfoMenuItem;
     private MenuBar.MenuItem systemSettingsMenuItem;
+    private MenuBar.MenuItem spellerTestMenuItem;
 
     private ImportTab importTabContent;
     private TranslateTab translateTabContent;
@@ -76,6 +78,7 @@ public class MainView extends Panel implements View, Command {
     private PortalInfoTab portalInfoTabContent;
     private SystemSettingsTab systemSettingsTabContent;
     private SearchInRawStringsTab searchInRawStringsTabContent;
+    private SpellerTestTab spellerTestTabContent;
 
     @PostConstruct
     public void PostConstruct() {
@@ -112,6 +115,7 @@ public class MainView extends Panel implements View, Command {
         }
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             systemSettingsMenuItem = mainMenu.addItem("Настройки", this);
+            spellerTestMenuItem = mainMenu.addItem("Тест орфографии", this);
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
         portalInfoMenuItem = mainMenu.addItem("Инфо", this);
@@ -247,6 +251,17 @@ public class MainView extends Panel implements View, Command {
             }
             systemSettingsTabContent = new SystemSettingsTab(service);
             TabSheet.Tab tab = tabs.addTab(systemSettingsTabContent, selectedItem.getText());
+            tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        } else if (selectedItem == spellerTestMenuItem) {
+            if (spellerTestTabContent != null) {
+                TabSheet.Tab tab = tabs.getTab(spellerTestTabContent);
+                if (tab != null) {
+                    tabs.removeTab(tabs.getTab(spellerTestTabContent));
+                }
+            }
+            spellerTestTabContent = new SpellerTestTab();
+            TabSheet.Tab tab = tabs.addTab(spellerTestTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         }
