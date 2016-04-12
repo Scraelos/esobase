@@ -9,6 +9,7 @@ import org.esn.esobase.jobs.SyncNpcNamesJob;
 import org.esn.esobase.jobs.SyncNpcPhrasesJob;
 import org.esn.esobase.jobs.SyncPlayerPhrasesJob;
 import org.esn.esobase.jobs.SyncQuestDescriptionsJob;
+import org.esn.esobase.jobs.SyncQuestDirectionsJob;
 import org.esn.esobase.jobs.SyncQuestNamesJob;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,7 +66,12 @@ public class JobContext {
     }
 
     @Bean
-    public SyncItemDescriptionsJob SyncItemDescriptionsJob() {
+    public SyncItemDescriptionsJob syncItemDescriptionsJob() {
         return new SyncItemDescriptionsJob();
+    }
+
+    @Bean
+    public SyncQuestDirectionsJob syncQuestDirectionsJob() {
+        return new SyncQuestDirectionsJob();
     }
 }
