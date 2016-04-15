@@ -45,6 +45,7 @@ import org.esn.esobase.model.Location;
 import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Quest;
+import org.esn.esobase.model.SpellerWord;
 import org.esn.esobase.model.Subtitle;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.SysAccountRole;
@@ -59,7 +60,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.LogicalExpression;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -95,6 +95,7 @@ public class DBService {
         roles.add(new SysAccountRole(15L, "ROLE_DIRECT_ACCESS_ITEM_NAMES", "Прямое редактирование названий предметов"));
         roles.add(new SysAccountRole(16L, "ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS", "Прямое редактирование описаний предметов"));
         roles.add(new SysAccountRole(17L, "ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS", "Прямое редактирование целей заданий"));
+        roles.add(new SysAccountRole(18L, "ROLE_SPELL_CHECK", "Проверка орфографии"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -655,7 +656,7 @@ public class DBService {
             }
         }
     }
-    
+
     @Transactional
     public void loadQuestDirectionsFromSpreadSheet(List<GSpreadSheetsQuestDirection> items) {
         Session session = (Session) em.getDelegate();
@@ -1306,7 +1307,7 @@ public class DBService {
         }
         return hc;
     }
-    
+
     @Transactional
     public HierarchicalContainer getQuestDirectionsDiff(List<GSpreadSheetsQuestDirection> items, HierarchicalContainer hc) {
         if (hc == null) {
@@ -2320,7 +2321,7 @@ public class DBService {
             }
         }
     }
-    
+
     @Transactional
     public void saveQuestDirections(List<GSpreadSheetsQuestDirection> items) {
         Session session = (Session) em.getDelegate();
@@ -2681,7 +2682,7 @@ public class DBService {
     public void calculateNpcProgress(Npc n) {
         int totalPhases = 0;
         int translatedPhrases = 0;
-        Npc npc=em.find(Npc.class, n.getId());
+        Npc npc = em.find(Npc.class, n.getId());
         for (Topic t : npc.getTopics()) {
             GSpreadSheetsNpcPhrase extNpcPhrase = t.getExtNpcPhrase();
             if (extNpcPhrase != null) {
@@ -2831,7 +2832,7 @@ public class DBService {
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание квеста");
         }
-        
+
         Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class);
         questDirectionCrit.add(searchTerms);
         List<GSpreadSheetsQuestDirection> questDirectionList = questDirectionCrit.list();
@@ -2883,6 +2884,98 @@ public class DBService {
     }
 
     @Transactional
+    public HierarchicalContainer getTextForSpellCheck(Date startDate, Date endDate, HierarchicalContainer hc) {
+        hc.removeAllItems();
+        List<Criterion> searchTermitems = new ArrayList<>();
+        if (startDate == null) {
+            searchTermitems.add(Restrictions.and(Restrictions.neProperty("textEn", "textRu"), Restrictions.isNull("changeTime")));
+        } else {
+            searchTermitems.add(Restrictions.and(Restrictions.neProperty("textEn", "textRu"), Restrictions.ge("changeTime", startDate), Restrictions.le("changeTime", endDate)));
+        }
+
+        Disjunction searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
+        Session session = (Session) em.getDelegate();
+
+        Criteria itemDescriptionCrit = session.createCriteria(GSpreadSheetsItemDescription.class);
+        itemDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionCrit.list();
+        for (GSpreadSheetsItemDescription row : itemDescriptionList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание предмета");
+        }
+
+        Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
+        questNameCrit.add(searchTerms);
+        List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
+        for (GSpreadSheetsQuestName row : questNameList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Название квеста");
+        }
+
+        Criteria questDescriptionCrit = session.createCriteria(GSpreadSheetsQuestDescription.class);
+        questDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsQuestDescription> questDescriptionList = questDescriptionCrit.list();
+        for (GSpreadSheetsQuestDescription row : questDescriptionList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание квеста");
+        }
+
+        Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class);
+        questDirectionCrit.add(searchTerms);
+        List<GSpreadSheetsQuestDirection> questDirectionList = questDirectionCrit.list();
+        for (GSpreadSheetsQuestDirection row : questDirectionList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Цель квеста");
+        }
+
+        Criteria journalEntryCrit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+        journalEntryCrit.add(searchTerms);
+        List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryCrit.list();
+        for (GSpreadSheetsJournalEntry row : journalEntryList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Запись в журнале");
+        }
+
+        Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
+        npcPhraseCrit.add(searchTerms);
+        List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseCrit.list();
+        for (GSpreadSheetsNpcPhrase gSpreadSheetsNpcPhrase : npcPhraseList) {
+            Item item = hc.addItem(gSpreadSheetsNpcPhrase);
+            item.getItemProperty("textEn").setValue(gSpreadSheetsNpcPhrase.getTextEn());
+            item.getItemProperty("textRu").setValue(gSpreadSheetsNpcPhrase.getTextRu());
+            item.getItemProperty("translator").setValue(gSpreadSheetsNpcPhrase.getTranslator());
+            item.getItemProperty("catalogType").setValue("Фраза NPC");
+        }
+        Criteria playerPhraseCrit = session.createCriteria(GSpreadSheetsPlayerPhrase.class);
+        playerPhraseCrit.add(searchTerms);
+        List<GSpreadSheetsPlayerPhrase> playerPhraseList = playerPhraseCrit.list();
+        for (GSpreadSheetsPlayerPhrase gSpreadSheetsPlayerPhrase : playerPhraseList) {
+            Item item = hc.addItem(gSpreadSheetsPlayerPhrase);
+            item.getItemProperty("textEn").setValue(gSpreadSheetsPlayerPhrase.getTextEn());
+            item.getItemProperty("textRu").setValue(gSpreadSheetsPlayerPhrase.getTextRu());
+            item.getItemProperty("translator").setValue(gSpreadSheetsPlayerPhrase.getTranslator());
+            item.getItemProperty("catalogType").setValue("Фраза игрока");
+        }
+
+        return hc;
+    }
+
+    @Transactional
     public HierarchicalContainer searchInRawStrings(String search, HierarchicalContainer hc) {
         hc.removeAllItems();
         Session session = (Session) em.getDelegate();
@@ -2920,7 +3013,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription)|| (item.getEntity() instanceof GSpreadSheetsQuestDirection)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             em.merge(item.getEntity());
@@ -2965,9 +3058,98 @@ public class DBService {
     }
 
     @Transactional
+    public void commitTableEntityItem(Object itemId,String textRu) {
+        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection)) {
+            if (itemId instanceof GSpreadSheetsNpcName) {
+                ((GSpreadSheetsNpcName) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsNpcName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+                ((GSpreadSheetsNpcName) itemId).setTextRu(textRu);
+            } else if (itemId instanceof GSpreadSheetsLocationName) {
+                ((GSpreadSheetsLocationName) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsLocationName) itemId).setTextRu(textRu);
+                ((GSpreadSheetsLocationName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsPlayerPhrase) {
+                ((GSpreadSheetsPlayerPhrase) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsPlayerPhrase) itemId).setTextRu(textRu);
+                ((GSpreadSheetsPlayerPhrase) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsNpcPhrase) {
+                ((GSpreadSheetsNpcPhrase) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsNpcPhrase) itemId).setTextRu(textRu);
+                ((GSpreadSheetsNpcPhrase) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsQuestName) {
+                ((GSpreadSheetsQuestName) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsQuestName) itemId).setTextRu(textRu);
+                ((GSpreadSheetsQuestName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsQuestDescription) {
+                ((GSpreadSheetsQuestDescription) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsQuestDescription) itemId).setTextRu(textRu);
+                ((GSpreadSheetsQuestDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsQuestDirection) {
+                ((GSpreadSheetsQuestDirection) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsQuestDirection) itemId).setTextRu(textRu);
+                ((GSpreadSheetsQuestDirection) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsActivator) {
+                ((GSpreadSheetsActivator) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsActivator) itemId).setTextRu(textRu);
+                ((GSpreadSheetsActivator) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsJournalEntry) {
+                ((GSpreadSheetsJournalEntry) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsJournalEntry) itemId).setTextRu(textRu);
+                ((GSpreadSheetsJournalEntry) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsItemName) {
+                ((GSpreadSheetsItemName) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsItemName) itemId).setTextRu(textRu);
+                ((GSpreadSheetsItemName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsItemDescription) {
+                ((GSpreadSheetsItemDescription) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsItemDescription) itemId).setTextRu(textRu);
+                ((GSpreadSheetsItemDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            }
+            em.merge(itemId);
+            if (itemId instanceof GSpreadSheetsLocationName) {
+                GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) itemId;
+                Session session = (Session) em.getDelegate();
+                Criteria crit = session.createCriteria(Location.class);
+                crit.add(Restrictions.ilike("name", locationName.getTextEn()));
+                List<Location> list = crit.list();
+                for (Location l : list) {
+                    l.setNameRu(locationName.getTextRu());
+                    em.merge(l);
+                }
+            }
+            if (itemId instanceof GSpreadSheetsQuestName) {
+                GSpreadSheetsQuestName questName = (GSpreadSheetsQuestName) itemId;
+                Session session = (Session) em.getDelegate();
+                Criteria crit = session.createCriteria(Quest.class);
+                crit.add(Restrictions.ilike("name", questName.getTextEn()));
+                List<Quest> list = crit.list();
+                for (Quest q : list) {
+                    q.setNameRu(questName.getTextRu());
+                    em.merge(q);
+                }
+            }
+            if (itemId instanceof GSpreadSheetsNpcName) {
+                GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) itemId;
+                Session session = (Session) em.getDelegate();
+                Criteria crit = session.createCriteria(Npc.class);
+                crit.add(Restrictions.ilike("name", npcName.getTextEn()));
+                List<Npc> list = crit.list();
+                for (Npc n : list) {
+                    if (n.getSex() == null || n.getSex() == NPC_SEX.U) {
+                        n.setSex(npcName.getSex());
+                    }
+                    n.setName(npcName.getTextEn());
+                    n.setNameRu(npcName.getTextRu());
+                    em.merge(n);
+                }
+            }
+        }
+    }
+
+    @Transactional
     public void updateNpcHasTranslated(Npc n) {
         boolean hasNewTranslations = false;
-        Npc npc=em.find(Npc.class, n.getId());
+        Npc npc = em.find(Npc.class, n.getId());
         Set<SysAccount> translators = new HashSet<>();
         for (Topic t : npc.getTopics()) {
             for (TranslatedText tt : t.getPlayerTranslations()) {
@@ -3107,6 +3289,31 @@ public class DBService {
             q.setParameter("textde", row[3]);
             q.executeUpdate();
         }
+    }
+
+    @Transactional
+    public void addSpellerWord(String word) {
+        Session session = (Session) em.getDelegate();
+        Criteria c = session.createCriteria(SpellerWord.class);
+        c.add(Restrictions.eq("text", word));
+        SpellerWord w = (SpellerWord) c.uniqueResult();
+        if (w == null) {
+            SpellerWord newWord = new SpellerWord();
+            newWord.setText(word);
+            em.persist(newWord);
+        }
+    }
+
+    @Transactional
+    public boolean isExistSpellerWord(String word) {
+        Session session = (Session) em.getDelegate();
+        Criteria c = session.createCriteria(SpellerWord.class);
+        c.add(Restrictions.eq("text", word));
+        SpellerWord w = (SpellerWord) c.uniqueResult();
+        if (w != null) {
+            return true;
+        }
+        return false;
     }
 
 }

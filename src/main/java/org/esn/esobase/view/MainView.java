@@ -109,13 +109,15 @@ public class MainView extends Panel implements View, Command {
         }
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             syncMenuItem = mainMenu.addItem("Синхронизация", this);
-            }
-        if (SpringSecurityHelper.hasRole("ROLE_ADMIN")||SpringSecurityHelper.hasRole("ROLE_MANAGE_USERS")) {
+        }
+        if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_MANAGE_USERS")) {
             usersMenuItem = mainMenu.addItem("Пользователи", this);
         }
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             systemSettingsMenuItem = mainMenu.addItem("Настройки", this);
-            spellerTestMenuItem = mainMenu.addItem("Тест орфографии", this);
+        }
+        if (SpringSecurityHelper.hasRole("ROLE_SPELL_CHECK")) {
+            spellerTestMenuItem = mainMenu.addItem("Проверка орфографии", this);
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
         portalInfoMenuItem = mainMenu.addItem("Инфо", this);
@@ -260,7 +262,7 @@ public class MainView extends Panel implements View, Command {
                     tabs.removeTab(tabs.getTab(spellerTestTabContent));
                 }
             }
-            spellerTestTabContent = new SpellerTestTab();
+            spellerTestTabContent = new SpellerTestTab(service);
             TabSheet.Tab tab = tabs.addTab(spellerTestTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);

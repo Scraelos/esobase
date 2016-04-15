@@ -142,6 +142,8 @@ public class GoogleDocsService {
                                 editTime = dateFormat.parse(value);
                             } catch (java.text.ParseException ex) {
 
+                            } catch (java.lang.NumberFormatException ex) {
+                                
                             }
                         }
                         break;
