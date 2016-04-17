@@ -3016,6 +3016,9 @@ public class DBService {
         if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
+            String textRu=(String) item.getItemProperty("textRu").getValue();
+            textRu=textRu.trim().replace("\n", "$").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ");
+            item.getItemProperty("textRu").setValue(textRu);
             em.merge(item.getEntity());
             if (item.getEntity() instanceof GSpreadSheetsLocationName) {
                 GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) item.getEntity();
