@@ -2433,7 +2433,7 @@ public class DBService {
 
     @Transactional
     public void acceptTranslatedText(TranslatedText entity) {
-
+        entity.setText(entity.getText().trim());
         Npc npc = null;
         if (entity.getGreeting() != null) {
             npc = entity.getGreeting().getNpc();
