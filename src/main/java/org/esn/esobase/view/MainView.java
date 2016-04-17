@@ -99,14 +99,14 @@ public class MainView extends Panel implements View, Command {
 
     private void buildMenu() {
         mainMenu.setWidth(100f, Unit.PERCENTAGE);
+        translateMenuItem = mainMenu.addItem("Перевод", this);
+        directTableEditMenuItem = mainMenu.addItem("Таблицы", this);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-            translateMenuItem = mainMenu.addItem("Перевод", this);
-            directTableEditMenuItem = mainMenu.addItem("Таблицы", this);
             questsMenuItem = mainMenu.addItem("Квесты", this);
-            searchInCatalogsMenuItem = mainMenu.addItem("Поиск в справочниках", this);
-            searchInRawStringsMenuItem = mainMenu.addItem("Поиск в разных переводах", this);
             importMenuItem = mainMenu.addItem("Импорт", this);
         }
+        searchInCatalogsMenuItem = mainMenu.addItem("Поиск в справочниках", this);
+        searchInRawStringsMenuItem = mainMenu.addItem("Поиск в разных переводах", this);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             syncMenuItem = mainMenu.addItem("Синхронизация", this);
         }

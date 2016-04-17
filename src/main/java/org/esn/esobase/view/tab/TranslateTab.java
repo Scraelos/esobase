@@ -554,7 +554,7 @@ public class TranslateTab extends VerticalLayout {
                     text = ((Topic) itemId).getNpcText();
                 }
             }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty()) {
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty()&&SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Greeting) {
