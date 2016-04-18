@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.NpcPhraseDiff;
+import org.esn.esobase.data.OriginalTextMismatchException;
 import org.esn.esobase.data.SYNC_TYPE;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class SyncNpcPhrasesJob {
     private static final String TABLE_NAME = "npc phrases";
 
     @Scheduled(fixedDelay = 1800000, initialDelay = 2000)
-    public void execute() {
+    public void execute() throws OriginalTextMismatchException {
         if (dbService.getIsAutoSynchronizationEnabled()) {
             LOG.info("automatic sync enabled");
             HierarchicalContainer hc = new HierarchicalContainer();

@@ -17,11 +17,14 @@ import com.vaadin.ui.themes.ValoTheme;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.LocationsDiff;
 import org.esn.esobase.data.NpcNameDiff;
 import org.esn.esobase.data.NpcPhraseDiff;
+import org.esn.esobase.data.OriginalTextMismatchException;
 import org.esn.esobase.data.PlayerPhraseDiff;
 import org.esn.esobase.data.QuestDescriptionsDiff;
 import org.esn.esobase.data.QuestNamesDiff;
@@ -99,7 +102,11 @@ public class SynchronizationTab extends VerticalLayout {
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
                 List<GSpreadSheetsPlayerPhrase> playerPhrases = docsService.getPlayerPhrases();
-                playerPhraseDiffContainer = service.getPlayerPhrasesDiff(playerPhrases, playerPhraseDiffContainer);
+                try {
+                    playerPhraseDiffContainer = service.getPlayerPhrasesDiff(playerPhrases, playerPhraseDiffContainer);
+                } catch (OriginalTextMismatchException ex) {
+                    Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                }
             }
         });
         syncPlayerPhrasesActions.addComponent(syncPlayerPhrasesButton);
@@ -154,7 +161,11 @@ public class SynchronizationTab extends VerticalLayout {
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
                 List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
-                npcPhraseDiffContainer = service.getNpcPhrasesDiff(npcPhrases, npcPhraseDiffContainer);
+                try {
+                    npcPhraseDiffContainer = service.getNpcPhrasesDiff(npcPhrases, npcPhraseDiffContainer);
+                } catch (OriginalTextMismatchException ex) {
+                    Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                }
             }
         });
         syncNpcPhrasesActions.addComponent(syncNpcPhrasesButton);
@@ -210,7 +221,11 @@ public class SynchronizationTab extends VerticalLayout {
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
                 List<GSpreadSheetsNpcName> npcNames = docsService.getNpcNames();
-                npcNamesDiffContainer = service.getNpcnamessDiff(npcNames, npcNamesDiffContainer);
+                try {
+                    npcNamesDiffContainer = service.getNpcnamessDiff(npcNames, npcNamesDiffContainer);
+                } catch (OriginalTextMismatchException ex) {
+                    Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                }
             }
         });
         syncNpcNamesActions.addComponent(syncNpcNamesButton);
@@ -266,7 +281,11 @@ public class SynchronizationTab extends VerticalLayout {
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
                 List<GSpreadSheetsLocationName> locationNames = docsService.getLocationsNames();
-                locationsDiffContainer = service.getLocationNamesDiff(locationNames, locationsDiffContainer);
+                try {
+                    locationsDiffContainer = service.getLocationNamesDiff(locationNames, locationsDiffContainer);
+                } catch (OriginalTextMismatchException ex) {
+                    Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                }
             }
         });
         syncLocationsActions.addComponent(syncLocationsButton);
@@ -322,7 +341,11 @@ public class SynchronizationTab extends VerticalLayout {
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
                 List<GSpreadSheetsQuestName> items = docsService.getQuestNames();
-                questNamesDiffContainer = service.getQuestNamesDiff(items, questNamesDiffContainer);
+                try {
+                    questNamesDiffContainer = service.getQuestNamesDiff(items, questNamesDiffContainer);
+                } catch (OriginalTextMismatchException ex) {
+                    Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                }
             }
         });
         syncQuestNamesActions.addComponent(syncQuestNamesButton);
@@ -378,7 +401,11 @@ public class SynchronizationTab extends VerticalLayout {
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
                 List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions();
-                questDescriptionsDiffContainer = service.getQuestDescriptionsDiff(items, questDescriptionsDiffContainer);
+                try {
+                    questDescriptionsDiffContainer = service.getQuestDescriptionsDiff(items, questDescriptionsDiffContainer);
+                } catch (OriginalTextMismatchException ex) {
+                    Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                }
             }
         });
         syncQuestDescriptionsActions.addComponent(syncQuestDescriptionsButton);

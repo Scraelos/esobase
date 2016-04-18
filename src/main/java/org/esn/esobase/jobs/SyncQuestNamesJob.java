@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
+import org.esn.esobase.data.OriginalTextMismatchException;
 import org.esn.esobase.data.QuestNamesDiff;
 import org.esn.esobase.data.SYNC_TYPE;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
@@ -33,7 +34,7 @@ public class SyncQuestNamesJob {
     private static final String TABLE_NAME = "quest names";
 
     @Scheduled(fixedDelay = 1800000, initialDelay = 2000)
-    public void execute() {
+    public void execute() throws OriginalTextMismatchException {
         if (dbService.getIsAutoSynchronizationEnabled()) {
             LOG.info("automatic sync enabled");
             HierarchicalContainer hc = new HierarchicalContainer();

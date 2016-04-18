@@ -1059,7 +1059,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getNpcPhrasesDiff(List<GSpreadSheetsNpcPhrase> phrases, HierarchicalContainer hc) {
+    public HierarchicalContainer getNpcPhrasesDiff(List<GSpreadSheetsNpcPhrase> phrases, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1081,6 +1081,9 @@ public class DBService {
         for (GSpreadSheetsNpcPhrase phrase : phrases) {
             GSpreadSheetsNpcPhrase result = phrasesMap.get(phrase.getRowNum());
             if (result != null) {
+                if(!phrase.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(phrase.getRowNum(), phrase.getTextEn(), result.getTextEn());
+                }
                 if (phrase.getChangeTime() != null && result.getChangeTime() != null && phrase.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new NpcPhraseDiff(phrase, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (phrase.getChangeTime() != null && result.getChangeTime() != null && phrase.getChangeTime().after(result.getChangeTime())) {
@@ -1109,7 +1112,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getNpcnamessDiff(List<GSpreadSheetsNpcName> names, HierarchicalContainer hc) {
+    public HierarchicalContainer getNpcnamessDiff(List<GSpreadSheetsNpcName> names, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1131,6 +1134,9 @@ public class DBService {
         for (GSpreadSheetsNpcName name : names) {
             GSpreadSheetsNpcName result = namesMap.get(name.getRowNum());
             if (result != null) {
+                if(!name.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(name.getRowNum(), name.getTextEn(), result.getTextEn());
+                }
                 if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new NpcNameDiff(name, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().after(result.getChangeTime())) {
@@ -1159,7 +1165,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getLocationNamesDiff(List<GSpreadSheetsLocationName> names, HierarchicalContainer hc) {
+    public HierarchicalContainer getLocationNamesDiff(List<GSpreadSheetsLocationName> names, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1181,6 +1187,9 @@ public class DBService {
         for (GSpreadSheetsLocationName name : names) {
             GSpreadSheetsLocationName result = namesMap.get(name.getRowNum());
             if (result != null) {
+                if(!name.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(name.getRowNum(), name.getTextEn(), result.getTextEn());
+                }
                 if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new LocationsDiff(name, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().after(result.getChangeTime())) {
@@ -1209,7 +1218,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getQuestNamesDiff(List<GSpreadSheetsQuestName> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getQuestNamesDiff(List<GSpreadSheetsQuestName> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1231,6 +1240,9 @@ public class DBService {
         for (GSpreadSheetsQuestName item : items) {
             GSpreadSheetsQuestName result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new QuestNamesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1259,7 +1271,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getQuestDescriptionsDiff(List<GSpreadSheetsQuestDescription> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getQuestDescriptionsDiff(List<GSpreadSheetsQuestDescription> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1281,6 +1293,9 @@ public class DBService {
         for (GSpreadSheetsQuestDescription item : items) {
             GSpreadSheetsQuestDescription result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new QuestDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1309,7 +1324,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getQuestDirectionsDiff(List<GSpreadSheetsQuestDirection> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getQuestDirectionsDiff(List<GSpreadSheetsQuestDirection> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1331,6 +1346,9 @@ public class DBService {
         for (GSpreadSheetsQuestDirection item : items) {
             GSpreadSheetsQuestDirection result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new QuestDirectionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1359,7 +1377,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getItemNamesDiff(List<GSpreadSheetsItemName> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getItemNamesDiff(List<GSpreadSheetsItemName> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1381,6 +1399,9 @@ public class DBService {
         for (GSpreadSheetsItemName item : items) {
             GSpreadSheetsItemName result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new ItemNamesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1409,7 +1430,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getItemDescriptionsDiff(List<GSpreadSheetsItemDescription> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getItemDescriptionsDiff(List<GSpreadSheetsItemDescription> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1431,6 +1452,9 @@ public class DBService {
         for (GSpreadSheetsItemDescription item : items) {
             GSpreadSheetsItemDescription result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new ItemDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1459,7 +1483,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getActivatorsDiff(List<GSpreadSheetsActivator> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getActivatorsDiff(List<GSpreadSheetsActivator> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1481,6 +1505,9 @@ public class DBService {
         for (GSpreadSheetsActivator item : items) {
             GSpreadSheetsActivator result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new ActivatorsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1509,7 +1536,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getJournalEntriesDiff(List<GSpreadSheetsJournalEntry> items, HierarchicalContainer hc) {
+    public HierarchicalContainer getJournalEntriesDiff(List<GSpreadSheetsJournalEntry> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
         if (hc == null) {
             hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
@@ -1531,6 +1558,9 @@ public class DBService {
         for (GSpreadSheetsJournalEntry item : items) {
             GSpreadSheetsJournalEntry result = itemMap.get(item.getRowNum());
             if (result != null) {
+                if(!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new JournalEntriesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
@@ -1559,7 +1589,7 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getPlayerPhrasesDiff(List<GSpreadSheetsPlayerPhrase> phrases, HierarchicalContainer hc) {
+    public HierarchicalContainer getPlayerPhrasesDiff(List<GSpreadSheetsPlayerPhrase> phrases, HierarchicalContainer hc) throws OriginalTextMismatchException {
         hc.removeAllItems();
         List<PlayerPhraseDiff> diffs = new ArrayList<>();
         Session session = (Session) em.getDelegate();
@@ -1572,6 +1602,9 @@ public class DBService {
         for (GSpreadSheetsPlayerPhrase phrase : phrases) {
             GSpreadSheetsPlayerPhrase result = phrasesMap.get(phrase.getRowNum());
             if (result != null) {
+                if(!phrase.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(phrase.getRowNum(), phrase.getTextEn(), result.getTextEn());
+                }
                 if (phrase.getChangeTime() != null && result.getChangeTime() != null && phrase.getChangeTime().before(result.getChangeTime())) {
                     diffs.add(new PlayerPhraseDiff(phrase, result, SYNC_TYPE.TO_SPREADSHEET));
                 } else if (phrase.getChangeTime() != null && result.getChangeTime() != null && phrase.getChangeTime().after(result.getChangeTime())) {
