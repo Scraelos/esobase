@@ -641,7 +641,7 @@ public class TranslateTab extends VerticalLayout {
                     translation.setCaption(caption.toString());
                 }
             });
-            if (SpringSecurityHelper.getSysAccount().equals(translatedText_.getAuthor())) {
+            if ((SpringSecurityHelper.getSysAccount().equals(translatedText_.getAuthor()))&&(translatedText_.getStatus()!=TRANSLATE_STATUS.ACCEPTED)) {
                 translation.setReadOnly(false);
             } else if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
                 translation.setReadOnly(false);
