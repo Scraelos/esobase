@@ -1081,7 +1081,7 @@ public class DBService {
         for (GSpreadSheetsNpcPhrase phrase : phrases) {
             GSpreadSheetsNpcPhrase result = phrasesMap.get(phrase.getRowNum());
             if (result != null) {
-                if(!phrase.getTextEn().equals(result.getTextEn())) {
+                if (!phrase.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(phrase.getRowNum(), phrase.getTextEn(), result.getTextEn());
                 }
                 if (phrase.getChangeTime() != null && result.getChangeTime() != null && phrase.getChangeTime().before(result.getChangeTime())) {
@@ -1134,7 +1134,7 @@ public class DBService {
         for (GSpreadSheetsNpcName name : names) {
             GSpreadSheetsNpcName result = namesMap.get(name.getRowNum());
             if (result != null) {
-                if(!name.getTextEn().equals(result.getTextEn())) {
+                if (!name.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(name.getRowNum(), name.getTextEn(), result.getTextEn());
                 }
                 if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().before(result.getChangeTime())) {
@@ -1187,7 +1187,7 @@ public class DBService {
         for (GSpreadSheetsLocationName name : names) {
             GSpreadSheetsLocationName result = namesMap.get(name.getRowNum());
             if (result != null) {
-                if(!name.getTextEn().equals(result.getTextEn())) {
+                if (!name.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(name.getRowNum(), name.getTextEn(), result.getTextEn());
                 }
                 if (name.getChangeTime() != null && result.getChangeTime() != null && name.getChangeTime().before(result.getChangeTime())) {
@@ -1240,7 +1240,7 @@ public class DBService {
         for (GSpreadSheetsQuestName item : items) {
             GSpreadSheetsQuestName result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1293,7 +1293,7 @@ public class DBService {
         for (GSpreadSheetsQuestDescription item : items) {
             GSpreadSheetsQuestDescription result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1346,7 +1346,7 @@ public class DBService {
         for (GSpreadSheetsQuestDirection item : items) {
             GSpreadSheetsQuestDirection result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1399,7 +1399,7 @@ public class DBService {
         for (GSpreadSheetsItemName item : items) {
             GSpreadSheetsItemName result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1452,7 +1452,7 @@ public class DBService {
         for (GSpreadSheetsItemDescription item : items) {
             GSpreadSheetsItemDescription result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1505,7 +1505,7 @@ public class DBService {
         for (GSpreadSheetsActivator item : items) {
             GSpreadSheetsActivator result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1558,7 +1558,7 @@ public class DBService {
         for (GSpreadSheetsJournalEntry item : items) {
             GSpreadSheetsJournalEntry result = itemMap.get(item.getRowNum());
             if (result != null) {
-                if(!item.getTextEn().equals(result.getTextEn())) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
                 }
                 if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
@@ -1602,7 +1602,7 @@ public class DBService {
         for (GSpreadSheetsPlayerPhrase phrase : phrases) {
             GSpreadSheetsPlayerPhrase result = phrasesMap.get(phrase.getRowNum());
             if (result != null) {
-                if(!phrase.getTextEn().equals(result.getTextEn())) {
+                if (!phrase.getTextEn().equals(result.getTextEn())) {
                     throw new OriginalTextMismatchException(phrase.getRowNum(), phrase.getTextEn(), result.getTextEn());
                 }
                 if (phrase.getChangeTime() != null && result.getChangeTime() != null && phrase.getChangeTime().before(result.getChangeTime())) {
@@ -1850,6 +1850,9 @@ public class DBService {
             Logger.getLogger(DBService.class.getName()).log(Level.INFO, "player topic {0}/{1}", new Object[]{counter, total});
             if (t.getPlayerText() != null && !t.getPlayerText().isEmpty()) {
                 GSpreadSheetsPlayerPhrase phrase = getPlayerPharse(t.getPlayerText());
+                if (phrase == null) {
+                    phrase = getPlayerPharse(t.getPlayerText().replace("Intimidate ", "").replace("Persuade ", ""));
+                }
                 if (phrase != null) {
                     foundCounter++;
                     t.setExtPlayerPhrase(phrase);
@@ -3049,8 +3052,8 @@ public class DBService {
         if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
-            String textRu=(String) item.getItemProperty("textRu").getValue();
-            textRu=textRu.trim().replace("\n", "$").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ");
+            String textRu = (String) item.getItemProperty("textRu").getValue();
+            textRu = textRu.trim().replace("\n", "$").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ");
             item.getItemProperty("textRu").setValue(textRu);
             em.merge(item.getEntity());
             if (item.getEntity() instanceof GSpreadSheetsLocationName) {
@@ -3094,7 +3097,7 @@ public class DBService {
     }
 
     @Transactional
-    public void commitTableEntityItem(Object itemId,String textRu) {
+    public void commitTableEntityItem(Object itemId, String textRu) {
         if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection)) {
             if (itemId instanceof GSpreadSheetsNpcName) {
                 ((GSpreadSheetsNpcName) itemId).setChangeTime(new Date());
