@@ -54,6 +54,29 @@ public class TranslatedText extends DAO {
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date apptovedTime;
 
+    @ManyToOne
+    private GSpreadSheetsActivator spreadSheetsActivator;
+    @ManyToOne
+    private GSpreadSheetsItemDescription spreadSheetsItemDescription;
+    @ManyToOne
+    private GSpreadSheetsItemName spreadSheetsItemName;
+    @ManyToOne
+    private GSpreadSheetsJournalEntry spreadSheetsJournalEntry;
+    @ManyToOne
+    private GSpreadSheetsLocationName spreadSheetsLocationName;
+    @ManyToOne
+    private GSpreadSheetsNpcName spreadSheetsNpcName;
+    @ManyToOne
+    private GSpreadSheetsNpcPhrase spreadSheetsNpcPhrase;
+    @ManyToOne
+    private GSpreadSheetsPlayerPhrase spreadSheetsPlayerPhrase;
+    @ManyToOne
+    private GSpreadSheetsQuestDescription spreadSheetsQuestDescription;
+    @ManyToOne
+    private GSpreadSheetsQuestDirection spreadSheetsQuestDirection;
+    @ManyToOne
+    private GSpreadSheetsQuestName spreadSheetsQuestName;
+
     @Override
     public Long getId() {
         return id;
@@ -150,6 +173,94 @@ public class TranslatedText extends DAO {
 
     public void setApptovedTime(Date apptovedTime) {
         this.apptovedTime = apptovedTime;
+    }
+
+    public GSpreadSheetsActivator getSpreadSheetsActivator() {
+        return spreadSheetsActivator;
+    }
+
+    public void setSpreadSheetsActivator(GSpreadSheetsActivator spreadSheetsActivator) {
+        this.spreadSheetsActivator = spreadSheetsActivator;
+    }
+
+    public GSpreadSheetsItemDescription getSpreadSheetsItemDescription() {
+        return spreadSheetsItemDescription;
+    }
+
+    public void setSpreadSheetsItemDescription(GSpreadSheetsItemDescription spreadSheetsItemDescription) {
+        this.spreadSheetsItemDescription = spreadSheetsItemDescription;
+    }
+
+    public GSpreadSheetsItemName getSpreadSheetsItemName() {
+        return spreadSheetsItemName;
+    }
+
+    public void setSpreadSheetsItemName(GSpreadSheetsItemName spreadSheetsItemName) {
+        this.spreadSheetsItemName = spreadSheetsItemName;
+    }
+
+    public GSpreadSheetsJournalEntry getSpreadSheetsJournalEntry() {
+        return spreadSheetsJournalEntry;
+    }
+
+    public void setSpreadSheetsJournalEntry(GSpreadSheetsJournalEntry spreadSheetsJournalEntry) {
+        this.spreadSheetsJournalEntry = spreadSheetsJournalEntry;
+    }
+
+    public GSpreadSheetsLocationName getSpreadSheetsLocationName() {
+        return spreadSheetsLocationName;
+    }
+
+    public void setSpreadSheetsLocationName(GSpreadSheetsLocationName spreadSheetsLocationName) {
+        this.spreadSheetsLocationName = spreadSheetsLocationName;
+    }
+
+    public GSpreadSheetsNpcName getSpreadSheetsNpcName() {
+        return spreadSheetsNpcName;
+    }
+
+    public void setSpreadSheetsNpcName(GSpreadSheetsNpcName spreadSheetsNpcName) {
+        this.spreadSheetsNpcName = spreadSheetsNpcName;
+    }
+
+    public GSpreadSheetsNpcPhrase getSpreadSheetsNpcPhrase() {
+        return spreadSheetsNpcPhrase;
+    }
+
+    public void setSpreadSheetsNpcPhrase(GSpreadSheetsNpcPhrase spreadSheetsNpcPhrase) {
+        this.spreadSheetsNpcPhrase = spreadSheetsNpcPhrase;
+    }
+
+    public GSpreadSheetsPlayerPhrase getSpreadSheetsPlayerPhrase() {
+        return spreadSheetsPlayerPhrase;
+    }
+
+    public void setSpreadSheetsPlayerPhrase(GSpreadSheetsPlayerPhrase spreadSheetsPlayerPhrase) {
+        this.spreadSheetsPlayerPhrase = spreadSheetsPlayerPhrase;
+    }
+
+    public GSpreadSheetsQuestDescription getSpreadSheetsQuestDescription() {
+        return spreadSheetsQuestDescription;
+    }
+
+    public void setSpreadSheetsQuestDescription(GSpreadSheetsQuestDescription spreadSheetsQuestDescription) {
+        this.spreadSheetsQuestDescription = spreadSheetsQuestDescription;
+    }
+
+    public GSpreadSheetsQuestDirection getSpreadSheetsQuestDirection() {
+        return spreadSheetsQuestDirection;
+    }
+
+    public void setSpreadSheetsQuestDirection(GSpreadSheetsQuestDirection spreadSheetsQuestDirection) {
+        this.spreadSheetsQuestDirection = spreadSheetsQuestDirection;
+    }
+
+    public GSpreadSheetsQuestName getSpreadSheetsQuestName() {
+        return spreadSheetsQuestName;
+    }
+
+    public void setSpreadSheetsQuestName(GSpreadSheetsQuestName spreadSheetsQuestName) {
+        this.spreadSheetsQuestName = spreadSheetsQuestName;
     }
 
 }

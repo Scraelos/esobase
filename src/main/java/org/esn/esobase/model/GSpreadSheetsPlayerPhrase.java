@@ -6,13 +6,17 @@
 package org.esn.esobase.model;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import org.esn.esobase.model.lib.DAO;
@@ -44,6 +48,8 @@ public class GSpreadSheetsPlayerPhrase extends DAO {
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date changeTime;
     private Integer weight;
+    @OneToMany(mappedBy = "spreadSheetsPlayerPhrase", fetch = FetchType.LAZY)
+    private Set<TranslatedText> translatedTexts;
 
     public GSpreadSheetsPlayerPhrase() {
     }
@@ -112,6 +118,14 @@ public class GSpreadSheetsPlayerPhrase extends DAO {
 
     public void setWeight(Integer weigth) {
         this.weight = weigth;
+    }
+
+    public Set<TranslatedText> getTranslatedTexts() {
+        return translatedTexts;
+    }
+
+    public void setTranslatedTexts(Set<TranslatedText> translatedTexts) {
+        this.translatedTexts = translatedTexts;
     }
 
 }

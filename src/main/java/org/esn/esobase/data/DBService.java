@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
@@ -2469,14 +2470,15 @@ public class DBService {
 
     @Transactional
     public void acceptTranslatedText(TranslatedText entity) {
-        entity.setText(entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " "));
+        entity.setText(entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n", "$"));
         Npc npc = null;
+        boolean isSucceeded = false;
         if (entity.getGreeting() != null) {
             npc = entity.getGreeting().getNpc();
             Greeting greeting = em.find(Greeting.class, entity.getGreeting().getId());
             GSpreadSheetsNpcPhrase npcPhrase = greeting.getExtNpcPhrase();
             if (npcPhrase != null) {
-                npcPhrase.setTextRu(entity.getText().replace("\n", "$"));
+                npcPhrase.setTextRu(entity.getText());
                 npcPhrase.setTranslator(entity.getAuthor().getLogin());
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
@@ -2486,54 +2488,125 @@ public class DBService {
                 em.merge(entity);
             }
 
-        }
-        if (entity.getSubtitle() != null) {
+        } else if (entity.getSubtitle() != null) {
             npc = entity.getSubtitle().getNpc();
             Subtitle subtitle = em.find(Subtitle.class, entity.getSubtitle().getId());
             GSpreadSheetsNpcPhrase npcPhrase = subtitle.getExtNpcPhrase();
             if (npcPhrase != null) {
-                npcPhrase.setTextRu(entity.getText().replace("\n", "$"));
+                npcPhrase.setTextRu(entity.getText());
                 npcPhrase.setTranslator(entity.getAuthor().getLogin());
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
-                entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
-                entity.setApptovedTime(new Date());
-                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
-                em.merge(entity);
+                isSucceeded = true;
             }
 
-        }
-        if (entity.getNpcTopic() != null) {
+        } else if (entity.getNpcTopic() != null) {
             npc = entity.getNpcTopic().getNpc();
             Topic topic = em.find(Topic.class, entity.getNpcTopic().getId());
             GSpreadSheetsNpcPhrase npcPhrase = topic.getExtNpcPhrase();
             if (npcPhrase != null) {
-                npcPhrase.setTextRu(entity.getText().replace("\n", "$"));
+                npcPhrase.setTextRu(entity.getText());
                 npcPhrase.setTranslator(entity.getAuthor().getLogin());
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
-                entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
-                entity.setApptovedTime(new Date());
-                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
-                em.merge(entity);
+                isSucceeded = true;
             }
 
-        }
-        if (entity.getPlayerTopic() != null) {
+        } else if (entity.getPlayerTopic() != null) {
             npc = entity.getPlayerTopic().getNpc();
             Topic topic = em.find(Topic.class, entity.getPlayerTopic().getId());
             GSpreadSheetsPlayerPhrase playerPhrase = topic.getExtPlayerPhrase();
             if (playerPhrase != null) {
-                playerPhrase.setTextRu(entity.getText().replace("\n", "$"));
+                playerPhrase.setTextRu(entity.getText());
                 playerPhrase.setTranslator(entity.getAuthor().getLogin());
                 playerPhrase.setChangeTime(new Date());
                 em.merge(playerPhrase);
-                entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
-                entity.setApptovedTime(new Date());
-                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
-                em.merge(entity);
+                isSucceeded = true;
             }
 
+        } else if (entity.getSpreadSheetsActivator() != null) {
+            GSpreadSheetsActivator gs = em.find(GSpreadSheetsActivator.class, entity.getSpreadSheetsActivator().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsItemDescription() != null) {
+            GSpreadSheetsItemDescription gs = em.find(GSpreadSheetsItemDescription.class, entity.getSpreadSheetsItemDescription().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsItemName() != null) {
+            GSpreadSheetsItemName gs = em.find(GSpreadSheetsItemName.class, entity.getSpreadSheetsItemName().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsJournalEntry() != null) {
+            GSpreadSheetsJournalEntry gs = em.find(GSpreadSheetsJournalEntry.class, entity.getSpreadSheetsJournalEntry().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsLocationName() != null) {
+            GSpreadSheetsLocationName gs = em.find(GSpreadSheetsLocationName.class, entity.getSpreadSheetsLocationName().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsNpcName() != null) {
+            GSpreadSheetsNpcName gs = em.find(GSpreadSheetsNpcName.class, entity.getSpreadSheetsNpcName().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsNpcPhrase() != null) {
+            GSpreadSheetsNpcPhrase gs = em.find(GSpreadSheetsNpcPhrase.class, entity.getSpreadSheetsNpcPhrase().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsPlayerPhrase() != null) {
+            GSpreadSheetsPlayerPhrase gs = em.find(GSpreadSheetsPlayerPhrase.class, entity.getSpreadSheetsPlayerPhrase().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsQuestDescription() != null) {
+            GSpreadSheetsQuestDescription gs = em.find(GSpreadSheetsQuestDescription.class, entity.getSpreadSheetsQuestDescription().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsQuestDirection() != null) {
+            GSpreadSheetsQuestDirection gs = em.find(GSpreadSheetsQuestDirection.class, entity.getSpreadSheetsQuestDirection().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsQuestName() != null) {
+            GSpreadSheetsQuestName gs = em.find(GSpreadSheetsQuestName.class, entity.getSpreadSheetsQuestName().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        }
+        if (isSucceeded) {
+            entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
+            entity.setApptovedTime(new Date());
+            entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
+            em.merge(entity);
         }
         if (npc != null) {
             calculateNpcProgress(npc);
@@ -2753,19 +2826,19 @@ public class DBService {
                 }
             }
 
-            float r = 0;
-            if (totalPhases > 0) {
-                r = (float) translatedPhrases / totalPhases;
-
-            }
-            if (r > 0) {
-                n.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
-            } else {
-                n.setProgress(BigDecimal.ZERO);
-            }
-            em.merge(n);
         }
-
+        float r = 0;
+        if (totalPhases > 0) {
+            r = (float) translatedPhrases / totalPhases;
+        }
+        if (r > 0) {
+            n.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
+        } else if (totalPhases == 0) {
+            n.setProgress(BigDecimal.ONE);
+        } else {
+            n.setProgress(BigDecimal.ZERO);
+        }
+        em.merge(n);
     }
 
     @Transactional

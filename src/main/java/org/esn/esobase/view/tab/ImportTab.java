@@ -5,6 +5,7 @@
  */
 package org.esn.esobase.view.tab;
 
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.Receiver;
@@ -37,6 +38,7 @@ import org.esn.esobase.model.GSpreadSheetsQuestDescription;
 import org.esn.esobase.model.GSpreadSheetsQuestDirection;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.Location;
+import org.esn.esobase.model.Npc;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.LuaDecoder;
 
@@ -62,6 +64,7 @@ public class ImportTab extends VerticalLayout {
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
+    private Button calculateNpcStatistics;
     private Upload uploadXlsEn;
     private Upload uploadXlsFr;
     private Upload uploadXlsDe;
@@ -231,6 +234,19 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(gatherQuestStatistics);
+            calculateNpcStatistics = new Button("Пересчитать счётчики NPC");
+            calculateNpcStatistics.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    BeanItemContainer<Npc> c=new BeanItemContainer<>(Npc.class);
+                    c=service.getNpcs(c, false, null);
+                    for(Npc n:c.getItemIds()) {
+                        service.calculateNpcProgress(n);
+                    }
+                }
+            });
+            this.addComponent(calculateNpcStatistics);
             RaswStringReceiverEn raswStringReceiverEn = new RaswStringReceiverEn(service);
             uploadXlsEn = new Upload("Загрузите en-файл xlsx", raswStringReceiverEn);
             uploadXlsEn.addSucceededListener(raswStringReceiverEn);
