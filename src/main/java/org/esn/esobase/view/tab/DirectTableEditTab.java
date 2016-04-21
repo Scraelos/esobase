@@ -642,31 +642,6 @@ public class DirectTableEditTab extends VerticalLayout {
                 area.addStyleName(ValoTheme.TEXTAREA_TINY);
                 area.setReadOnly(true);
                 result = area;
-            } else if (propertyId.equals("translator") || propertyId.equals("rowNum")) {
-                TextField textField = new TextField();
-                textField.setSizeFull();
-                textField.setReadOnly(true);
-                textField.setNullRepresentation("");
-                textField.addStyleName(ValoTheme.TEXTFIELD_SMALL);
-                textField.addStyleName(ValoTheme.TEXTFIELD_TINY);
-                result = textField;
-
-            } else if (propertyId.equals("changeTime")) {
-                DateField dateField = new DateField();
-                dateField.addStyleName(ValoTheme.DATEFIELD_SMALL);
-                dateField.addStyleName(ValoTheme.DATEFIELD_TINY);
-                dateField.setResolution(Resolution.SECOND);
-                dateField.setReadOnly(true);
-                dateField.setWidth(170f, Unit.PIXELS);
-                result = dateField;
-            } else if (propertyId.equals("sex")) {
-                ComboBox comboBox = new ComboBox();
-                comboBox.addStyleName(ValoTheme.COMBOBOX_SMALL);
-                comboBox.addStyleName(ValoTheme.COMBOBOX_TINY);
-                comboBox.addItems(NPC_SEX.values());
-                comboBox.setReadOnly(true);
-                comboBox.setWidth(100f, Unit.PIXELS);
-                result = comboBox;
             }
             return result;
         }
@@ -928,12 +903,10 @@ public class DirectTableEditTab extends VerticalLayout {
                     translatedText.setText(translation.getValue());
                     service.saveTranslatedText(translatedText);
                     try {
-                        container.refreshItem(item);
+                        container.refresh();
                     } catch (Exception ex) {
 
                     }
-                    table.refreshRowCache();
-                    table.markAsDirty();
                 }
             });
 
@@ -965,12 +938,10 @@ public class DirectTableEditTab extends VerticalLayout {
                             translatedText.setText(translation.getValue());
                             service.rejectTranslatedText(translatedText);
                             try {
-                                container.refreshItem(item);
+                                container.refresh();
                             } catch (Exception ex) {
 
                             }
-                            table.refreshRowCache();
-                            table.markAsDirty();
                         }
                     });
                     this.addComponent(reject);
