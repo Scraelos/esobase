@@ -12,6 +12,7 @@ import com.vaadin.data.Container;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.converter.Converter;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.filter.IsNull;
 import com.vaadin.event.FieldEvents;
@@ -41,6 +42,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.GSpreadSheetsActivator;
@@ -195,7 +197,7 @@ public class DirectTableEditTab extends VerticalLayout {
         filterTranslations();
         newTranslationsContainer.sort(new Object[]{"id"}, new boolean[]{true});
         newTranslationsTable.setContainerDataSource(newTranslationsContainer);
-        newTranslationsTable.setVisibleColumns(new Object[]{"author", "changeTime", "text"});
+        newTranslationsTable.setVisibleColumns(new Object[]{"author", "createTime", "text"});
         newTranslationsTable.setColumnHeaders(new String[]{"Автор", "Дата", "Перевод"});
         newTranslationsTable.addItemClickListener(new TranslationsTableRowClickListener());
         translationsLayout.addComponent(newTranslationsTable);
@@ -231,6 +233,7 @@ public class DirectTableEditTab extends VerticalLayout {
         npcNameTable.setEditable(true);
         npcNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_NAMES"));
         npcNameTable.setSortEnabled(false);
+        npcNameTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(npcNameTable, "NPC");
 
         locationNameTable = new Table();
@@ -259,6 +262,7 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameTable.setEditable(true);
         locationNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
         locationNameTable.setSortEnabled(false);
+        locationNameTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(locationNameTable, "Локации");
 
         activatorTable = new Table();
@@ -286,6 +290,7 @@ public class DirectTableEditTab extends VerticalLayout {
         activatorTable.setEditable(true);
         activatorTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACTIVATORS"));
         activatorTable.setSortEnabled(false);
+        activatorTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(activatorTable, "Активаторы");
 
         playerPhraseTable = new Table();
@@ -313,6 +318,7 @@ public class DirectTableEditTab extends VerticalLayout {
         playerPhraseTable.setEditable(true);
         playerPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
         playerPhraseTable.setSortEnabled(false);
+        playerPhraseTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(playerPhraseTable, "Фразы игрока");
 
         npcPhraseTable = new Table();
@@ -340,6 +346,7 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseTable.setEditable(true);
         npcPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
         npcPhraseTable.setSortEnabled(false);
+        npcPhraseTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(npcPhraseTable, "Фразы NPC");
 
         questNameTable = new Table();
@@ -367,6 +374,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questNameTable.setEditable(true);
         questNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
         questNameTable.setSortEnabled(false);
+        questNameTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(questNameTable, "Названия квестов");
 
         questDescriptionTable = new Table();
@@ -394,6 +402,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionTable.setEditable(true);
         questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
         questDescriptionTable.setSortEnabled(false);
+        questDescriptionTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
 
         questDirectionTable = new Table();
@@ -421,6 +430,7 @@ public class DirectTableEditTab extends VerticalLayout {
         questDirectionTable.setEditable(true);
         questDirectionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
         questDirectionTable.setSortEnabled(false);
+        questDirectionTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(questDirectionTable, "Цели квестов");
 
         itemNameLayout = new VerticalLayout();
@@ -453,6 +463,7 @@ public class DirectTableEditTab extends VerticalLayout {
         itemNameTable.setSortEnabled(false);
         itemNameLayout.addComponent(itemNameLabel);
         itemNameLayout.addComponent(itemNameTable);
+        itemNameTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(itemNameLayout, "Названия предметов");
 
         itemDescriptionTable = new Table();
@@ -480,6 +491,7 @@ public class DirectTableEditTab extends VerticalLayout {
         itemDescriptionTable.setEditable(true);
         itemDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
         itemDescriptionTable.setSortEnabled(false);
+        itemDescriptionTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(itemDescriptionTable, "Описания предметов");
 
         journalEntryTable = new Table();
@@ -507,6 +519,7 @@ public class DirectTableEditTab extends VerticalLayout {
         journalEntryTable.setEditable(true);
         journalEntryTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
         journalEntryTable.setSortEnabled(false);
+        journalEntryTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(journalEntryTable, "Записи журнала");
 
         this.addComponent(tableTabs);
@@ -527,7 +540,7 @@ public class DirectTableEditTab extends VerticalLayout {
         newTranslationsContainer.addContainerFilter(new IsNull("greeting"));
         newTranslationsContainer.addContainerFilter(new IsNull("subtitle"));
         newTranslationsContainer.addContainerFilter(new Compare.Equal("status", statusFilter.getValue()));
-        if(translatorBox.getValue()!=null) {
+        if (translatorBox.getValue() != null) {
             newTranslationsContainer.addContainerFilter(new Compare.Equal("author", translatorBox.getValue()));
         }
     }
@@ -703,50 +716,62 @@ public class DirectTableEditTab extends VerticalLayout {
             Component targetTabId = null;
             Table targetTable = null;
             Integer rowNum = 1;
+            Long itemId = null;
             if (entity instanceof GSpreadSheetsNpcName) {
                 targetTabId = npcNameTable;
                 targetTable = npcNameTable;
                 rowNum = ((GSpreadSheetsNpcName) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsNpcName) entity).getId();
             } else if (entity instanceof GSpreadSheetsLocationName) {
                 targetTabId = locationNameTable;
                 targetTable = locationNameTable;
                 rowNum = ((GSpreadSheetsLocationName) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsLocationName) entity).getId();
             } else if (entity instanceof GSpreadSheetsPlayerPhrase) {
                 targetTabId = playerPhraseTable;
                 targetTable = playerPhraseTable;
                 rowNum = ((GSpreadSheetsPlayerPhrase) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsPlayerPhrase) entity).getId();
             } else if (entity instanceof GSpreadSheetsNpcPhrase) {
                 targetTabId = npcPhraseTable;
                 targetTable = npcPhraseTable;
                 rowNum = ((GSpreadSheetsNpcPhrase) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsNpcPhrase) entity).getId();
             } else if (entity instanceof GSpreadSheetsQuestName) {
                 targetTabId = questNameTable;
                 targetTable = questNameTable;
                 rowNum = ((GSpreadSheetsQuestName) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsQuestName) entity).getId();
             } else if (entity instanceof GSpreadSheetsQuestDescription) {
                 targetTabId = questDescriptionTable;
                 targetTable = questDescriptionTable;
                 rowNum = ((GSpreadSheetsQuestDescription) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsQuestDescription) entity).getId();
             } else if (entity instanceof GSpreadSheetsQuestDirection) {
                 targetTabId = questDirectionTable;
                 targetTable = questDirectionTable;
                 rowNum = ((GSpreadSheetsQuestDirection) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsQuestDirection) entity).getId();
             } else if (entity instanceof GSpreadSheetsActivator) {
                 targetTabId = activatorTable;
                 targetTable = activatorTable;
                 rowNum = ((GSpreadSheetsActivator) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsActivator) entity).getId();
             } else if (entity instanceof GSpreadSheetsJournalEntry) {
                 targetTabId = journalEntryTable;
                 targetTable = journalEntryTable;
                 rowNum = ((GSpreadSheetsJournalEntry) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsJournalEntry) entity).getId();
             } else if (entity instanceof GSpreadSheetsItemName) {
                 targetTabId = itemNameLayout;
                 targetTable = itemNameTable;
                 rowNum = ((GSpreadSheetsItemName) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsItemName) entity).getId();
             } else if (entity instanceof GSpreadSheetsItemDescription) {
                 targetTabId = itemDescriptionTable;
                 targetTable = itemDescriptionTable;
                 rowNum = ((GSpreadSheetsItemDescription) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsItemDescription) entity).getId();
             }
             rowNum--;
             if (rowNum > 0) {
@@ -755,6 +780,7 @@ public class DirectTableEditTab extends VerticalLayout {
             if (targetTabId != null) {
                 tableTabs.setSelectedTab(targetTabId);
                 targetTable.setCurrentPageFirstItemIndex(rowNum);
+                targetTable.select(itemId);
             }
         }
 
@@ -769,50 +795,62 @@ public class DirectTableEditTab extends VerticalLayout {
             Component targetTabId = null;
             Table targetTable = null;
             Integer rowNum = 1;
+            Long itemId = null;
             if (tt.getSpreadSheetsNpcName() != null) {
                 targetTabId = npcNameTable;
                 targetTable = npcNameTable;
                 rowNum = tt.getSpreadSheetsNpcName().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsNpcName().getId();
             } else if (tt.getSpreadSheetsLocationName() != null) {
                 targetTabId = locationNameTable;
                 targetTable = locationNameTable;
                 rowNum = tt.getSpreadSheetsLocationName().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsLocationName().getId();
             } else if (tt.getSpreadSheetsPlayerPhrase() != null) {
                 targetTabId = playerPhraseTable;
                 targetTable = playerPhraseTable;
                 rowNum = tt.getSpreadSheetsPlayerPhrase().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsPlayerPhrase().getId();
             } else if (tt.getSpreadSheetsNpcPhrase() != null) {
                 targetTabId = npcPhraseTable;
                 targetTable = npcPhraseTable;
                 rowNum = tt.getSpreadSheetsNpcPhrase().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsNpcPhrase().getId();
             } else if (tt.getSpreadSheetsQuestName() != null) {
                 targetTabId = questNameTable;
                 targetTable = questNameTable;
                 rowNum = tt.getSpreadSheetsQuestName().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsQuestName().getId();
             } else if (tt.getSpreadSheetsQuestDescription() != null) {
                 targetTabId = questDescriptionTable;
                 targetTable = questDescriptionTable;
                 rowNum = tt.getSpreadSheetsQuestDescription().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsQuestDescription().getId();
             } else if (tt.getSpreadSheetsQuestDirection() != null) {
                 targetTabId = questDirectionTable;
                 targetTable = questDirectionTable;
                 rowNum = tt.getSpreadSheetsQuestDirection().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsQuestDirection().getId();
             } else if (tt.getSpreadSheetsActivator() != null) {
                 targetTabId = activatorTable;
                 targetTable = activatorTable;
                 rowNum = tt.getSpreadSheetsActivator().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsActivator().getId();
             } else if (tt.getSpreadSheetsJournalEntry() != null) {
                 targetTabId = journalEntryTable;
                 targetTable = journalEntryTable;
                 rowNum = tt.getSpreadSheetsJournalEntry().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsJournalEntry().getId();
             } else if (tt.getSpreadSheetsItemName() != null) {
                 targetTabId = itemNameLayout;
                 targetTable = itemNameTable;
                 rowNum = tt.getSpreadSheetsItemName().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsItemName().getId();
             } else if (tt.getSpreadSheetsItemDescription() != null) {
                 targetTabId = itemDescriptionTable;
                 targetTable = itemDescriptionTable;
                 rowNum = tt.getSpreadSheetsItemDescription().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsItemDescription().getId();
             }
             rowNum--;
             if (rowNum > 0) {
@@ -821,7 +859,42 @@ public class DirectTableEditTab extends VerticalLayout {
             if (targetTabId != null) {
                 tableTabs.setSelectedTab(targetTabId);
                 targetTable.setCurrentPageFirstItemIndex(rowNum);
+                targetTable.select(itemId);
             }
+        }
+
+    }
+
+    private class WeightConverter implements Converter<String, Integer> {
+
+        @Override
+        public Integer convertToModel(String value, Class<? extends Integer> targetType, Locale locale) throws ConversionException {
+            Integer result = null;
+            try {
+                result = new Integer(value);
+            } catch (NumberFormatException ex) {
+
+            }
+            return result;
+        }
+
+        @Override
+        public String convertToPresentation(Integer value, Class<? extends String> targetType, Locale locale) throws ConversionException {
+            if (value != null) {
+                return value.toString();
+            } else {
+                return "";
+            }
+        }
+
+        @Override
+        public Class<Integer> getModelType() {
+            return Integer.class;
+        }
+
+        @Override
+        public Class<String> getPresentationType() {
+            return String.class;
         }
 
     }

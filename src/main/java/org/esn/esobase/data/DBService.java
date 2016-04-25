@@ -2470,6 +2470,7 @@ public class DBService {
 
     @Transactional
     public void acceptTranslatedText(TranslatedText entity) {
+        Session session = (Session) em.getDelegate();
         entity.setText(entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n", "$"));
         Npc npc = null;
         boolean isSucceeded = false;
@@ -2558,6 +2559,13 @@ public class DBService {
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
+            Criteria locationCriteria = session.createCriteria(Location.class);
+            locationCriteria.add(Restrictions.ilike("name", gs.getTextEn()));
+            List<Location> locations = locationCriteria.list();
+            for (Location l : locations) {
+                l.setNameRu(gs.getTextRu());
+                em.merge(l);
+            }
             isSucceeded = true;
         } else if (entity.getSpreadSheetsNpcName() != null) {
             GSpreadSheetsNpcName gs = em.find(GSpreadSheetsNpcName.class, entity.getSpreadSheetsNpcName().getId());
@@ -2565,6 +2573,13 @@ public class DBService {
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
+            Criteria npcCriteria = session.createCriteria(Npc.class);
+            npcCriteria.add(Restrictions.ilike("name", gs.getTextEn()));
+            List<Npc> npcs = npcCriteria.list();
+            for (Npc n : npcs) {
+                n.setNameRu(gs.getTextRu());
+                em.merge(n);
+            }
             isSucceeded = true;
         } else if (entity.getSpreadSheetsNpcPhrase() != null) {
             GSpreadSheetsNpcPhrase gs = em.find(GSpreadSheetsNpcPhrase.class, entity.getSpreadSheetsNpcPhrase().getId());
@@ -2600,6 +2615,13 @@ public class DBService {
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
+            Criteria questCriteria = session.createCriteria(Quest.class);
+            questCriteria.add(Restrictions.ilike("name", gs.getTextEn()));
+            List<Quest> quests = questCriteria.list();
+            for (Quest q : quests) {
+                q.setNameRu(gs.getTextRu());
+                em.merge(q);
+            }
             isSucceeded = true;
         }
         if (isSucceeded) {
