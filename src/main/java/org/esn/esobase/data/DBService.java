@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,10 +26,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
@@ -75,6 +79,7 @@ public class DBService {
 
     @PersistenceContext
     private EntityManager em;
+    private static final Logger LOG = Logger.getLogger(DBService.class.getName());
 
     @Transactional
     public void createRoles() {
@@ -97,6 +102,7 @@ public class DBService {
         roles.add(new SysAccountRole(16L, "ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS", "Прямое редактирование описаний предметов"));
         roles.add(new SysAccountRole(17L, "ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS", "Прямое редактирование целей заданий"));
         roles.add(new SysAccountRole(18L, "ROLE_SPELL_CHECK", "Проверка орфографии"));
+        roles.add(new SysAccountRole(19L, "ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES", "Прямое редактирование строк интерфейса"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -925,7 +931,28 @@ public class DBService {
         Map<String, GSpreadSheetsNpcName> npcsMap = new HashMap<>();
         List<GSpreadSheetsNpcName> allNpcs = crit.list();
         for (GSpreadSheetsNpcName npc : allNpcs) {
-            npcsMap.put(npc.getTextEn().toLowerCase(), npc);
+            String textEn = npc.getTextEn();
+            switch (npc.getSex()) {
+                case F:
+                    textEn += "^F";
+                    break;
+                case f:
+                    textEn += "^f";
+                    break;
+                case M:
+                    textEn += "^M";
+                    break;
+                case m:
+                    textEn += "^m";
+                    break;
+                case N:
+                    textEn += "^N";
+                    break;
+                case n:
+                    textEn += "^n";
+                    break;
+            }
+            npcsMap.put(textEn, npc);
         }
         int total = npcs.size();
         int count = 0;
@@ -937,14 +964,23 @@ public class DBService {
                 case F:
                     textEn += "^F";
                     break;
+                case f:
+                    textEn += "^f";
+                    break;
                 case M:
                     textEn += "^M";
+                    break;
+                case m:
+                    textEn += "^m";
                     break;
                 case N:
                     textEn += "^N";
                     break;
+                case n:
+                    textEn += "^n";
+                    break;
             }
-            GSpreadSheetsNpcName result = npcsMap.get(textEn.toLowerCase());
+            GSpreadSheetsNpcName result = npcsMap.get(textEn);
             if (result != null) {
                 boolean isMerge = false;
                 if (npc.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(npc.getWeight()))) {
@@ -957,13 +993,39 @@ public class DBService {
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for npc: {0}", npc.getTextEn());
                     result.setRowNum(npc.getRowNum());
                 }
+                if (result.getSex() != npc.getSex()) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "sex changed for npc: {0}", npc.getTextEn());
+                    result.setSex(npc.getSex());
+                }
                 if (isMerge) {
                     em.merge(result);
                 }
             }
         }
         for (GSpreadSheetsNpcName npc : npcs) {
-            GSpreadSheetsNpcName result = npcsMap.get(npc.getTextEn());
+            String textEn = npc.getTextEn();
+            switch (npc.getSex()) {
+                case F:
+                    textEn += "^F";
+                    break;
+                case f:
+                    textEn += "^f";
+                    break;
+                case M:
+                    textEn += "^M";
+                    break;
+                case m:
+                    textEn += "^m";
+                    break;
+                case N:
+                    textEn += "^N";
+                    break;
+                case n:
+                    textEn += "^n";
+                    break;
+            }
+            GSpreadSheetsNpcName result = npcsMap.get(textEn);
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting npc for rowNum {0}", npc.getRowNum());
                 em.persist(npc);
@@ -972,10 +1034,52 @@ public class DBService {
 
         Map<String, GSpreadSheetsNpcName> spreadSheetNpcsMap = new HashMap<>();
         for (GSpreadSheetsNpcName npc : npcs) {
-            spreadSheetNpcsMap.put(npc.getTextEn(), npc);
+            String textEn = npc.getTextEn();
+            switch (npc.getSex()) {
+                case F:
+                    textEn += "^F";
+                    break;
+                case f:
+                    textEn += "^f";
+                    break;
+                case M:
+                    textEn += "^M";
+                    break;
+                case m:
+                    textEn += "^m";
+                    break;
+                case N:
+                    textEn += "^N";
+                    break;
+                case n:
+                    textEn += "^n";
+                    break;
+            }
+            spreadSheetNpcsMap.put(textEn, npc);
         }
         for (GSpreadSheetsNpcName npc : allNpcs) {
-            GSpreadSheetsNpcName result = spreadSheetNpcsMap.get(npc.getTextEn());
+            String textEn = npc.getTextEn();
+            switch (npc.getSex()) {
+                case F:
+                    textEn += "^F";
+                    break;
+                case f:
+                    textEn += "^f";
+                    break;
+                case M:
+                    textEn += "^M";
+                    break;
+                case m:
+                    textEn += "^m";
+                    break;
+                case N:
+                    textEn += "^N";
+                    break;
+                case n:
+                    textEn += "^n";
+                    break;
+            }
+            GSpreadSheetsNpcName result = spreadSheetNpcsMap.get(textEn);
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing npc rownum={0} :{1}", new Object[]{npc.getRowNum(), npc.getTextEn()});
                 em.remove(npc);
@@ -1041,7 +1145,7 @@ public class DBService {
                 }
                 Criteria subtitleCrit = session.createCriteria(Subtitle.class);
                 subtitleCrit.add(Restrictions.eq("extNpcPhrase", phrase));
-                List<Subtitle> subtitles = npcTopicCrit.list();
+                List<Subtitle> subtitles = subtitleCrit.list();
                 for (Subtitle s : subtitles) {
                     s.setExtNpcPhrase(null);
                     em.merge(s);
@@ -1147,6 +1251,8 @@ public class DBService {
                 } else if (result.getChangeTime() == null && name.getChangeTime() != null) {
                     diffs.add(new NpcNameDiff(name, result, SYNC_TYPE.TO_DB));
                 } else if (result.getChangeTime() == null && name.getChangeTime() == null && (name.getTextRu() != null) && (result.getTextRu() != null) && !name.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new NpcNameDiff(name, result, SYNC_TYPE.TO_DB));
+                } else if (name.getSex() != result.getSex()) {
                     diffs.add(new NpcNameDiff(name, result, SYNC_TYPE.TO_DB));
                 }
             }
@@ -2265,6 +2371,7 @@ public class DBService {
             crit.add(Restrictions.eq("rowNum", name.getRowNum()));
             GSpreadSheetsNpcName result = (GSpreadSheetsNpcName) crit.uniqueResult();
             if (result != null) {
+                result.setSex(name.getSex());
                 result.setChangeTime(name.getChangeTime());
                 result.setTextRu(name.getTextRu());
                 result.setTranslator(name.getTranslator());
@@ -2622,6 +2729,13 @@ public class DBService {
                 q.setNameRu(gs.getTextRu());
                 em.merge(q);
             }
+            isSucceeded = true;
+        } else if (entity.getEsoInterfaceVariable() != null) {
+            EsoInterfaceVariable gs = em.find(EsoInterfaceVariable.class, entity.getEsoInterfaceVariable().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
             isSucceeded = true;
         }
         if (isSucceeded) {
@@ -3010,6 +3124,21 @@ public class DBService {
             item.getItemProperty("translator").setValue(gSpreadSheetsPlayerPhrase.getTranslator());
             item.getItemProperty("catalogType").setValue("Фраза игрока");
         }
+        Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
+        searchTermitems = new ArrayList<>();
+        searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("textRu", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("name", search, MatchMode.ANYWHERE));
+        searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
+        esoInterfaceVariableCrit.add(searchTerms);
+        List<EsoInterfaceVariable> esoInterfaceVariableList = esoInterfaceVariableCrit.list();
+        for (EsoInterfaceVariable i : esoInterfaceVariableList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Строка интерфейса");
+        }
 
         return hc;
     }
@@ -3144,7 +3273,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             String textRu = (String) item.getItemProperty("textRu").getValue();
@@ -3392,12 +3521,32 @@ public class DBService {
     @Transactional
     public void insertEnRawStrings(List<Object[]> rows) {
         for (Object[] row : rows) {
-            Query q = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten)");
-            q.setParameter("aid", row[0]);
-            q.setParameter("bid", row[1]);
-            q.setParameter("cid", row[2]);
-            q.setParameter("texten", row[3]);
-            q.executeUpdate();
+            Query selectQ = em.createNativeQuery("select id,texten from esorawstring where aid=:aid and bid=:bid and cid=:cid");
+            selectQ.setParameter("aid", row[0]);
+            selectQ.setParameter("bid", row[1]);
+            selectQ.setParameter("cid", row[2]);
+            List resultList = selectQ.getResultList();
+            if (resultList != null && !resultList.isEmpty()) {
+                Object[] foundRow = (Object[]) resultList.get(0);
+                BigInteger foundId = (BigInteger) foundRow[0];
+                String foundText = (String) foundRow[1];
+                if (foundText == null || !foundText.equals(row[3])) {
+                    LOG.log(Level.INFO, "text changed, old:{0} new:{1}", new Object[]{foundText, row[3]});
+                    Query updateQ = em.createNativeQuery("update esorawstring set texten=:texten where id=:id");
+                    updateQ.setParameter("texten", row[3]);
+                    updateQ.setParameter("id", foundId);
+                    updateQ.executeUpdate();
+                }
+
+            } else {
+                Query insertQ = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten)");
+                insertQ.setParameter("aid", row[0]);
+                insertQ.setParameter("bid", row[1]);
+                insertQ.setParameter("cid", row[2]);
+                insertQ.setParameter("texten", row[3]);
+                insertQ.executeUpdate();
+            }
+
         }
     }
 
@@ -3448,6 +3597,451 @@ public class DBService {
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public void assignSpreadSheetRowsToRawStrings() {
+
+        TypedQuery<GSpreadSheetsActivator> activatorQuery = em.createQuery("select a from GSpreadSheetsActivator a where aId is null", GSpreadSheetsActivator.class);
+        List<GSpreadSheetsActivator> activatorList = activatorQuery.getResultList();
+        for (GSpreadSheetsActivator item : activatorList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsItemDescription> itemDescriptionQuery = em.createQuery("select a from GSpreadSheetsItemDescription a where aId is null", GSpreadSheetsItemDescription.class);
+        List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionQuery.getResultList();
+        for (GSpreadSheetsItemDescription item : itemDescriptionList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{139139780L, 228378404L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsItemName> itemNameQuery = em.createQuery("select a from GSpreadSheetsItemName a where aId is null", GSpreadSheetsItemName.class);
+        List<GSpreadSheetsItemName> itemNameList = itemNameQuery.getResultList();
+        for (GSpreadSheetsItemName item : itemNameList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{242841733L, 267697733L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsJournalEntry> journalEntryQuery = em.createQuery("select a from GSpreadSheetsJournalEntry a where aId is null", GSpreadSheetsJournalEntry.class);
+        List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryQuery.getResultList();
+        for (GSpreadSheetsJournalEntry item : journalEntryList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{103224356L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsLocationName> locationNameQuery = em.createQuery("select a from GSpreadSheetsLocationName a where aId is null", GSpreadSheetsLocationName.class);
+        List<GSpreadSheetsLocationName> locationNameList = locationNameQuery.getResultList();
+        for (GSpreadSheetsLocationName item : locationNameList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsNpcName> npcNameQuery = em.createQuery("select a from GSpreadSheetsNpcName a where aId is null", GSpreadSheetsNpcName.class);
+        npcNameQuery.setMaxResults(1000);
+        List<GSpreadSheetsNpcName> npcNameList = npcNameQuery.getResultList();
+        for (GSpreadSheetsNpcName item : npcNameList) {
+            String textEn = item.getTextEn();
+            String textEn2 = item.getTextEn();
+            if (item.getSex() != null) {
+                switch (item.getSex()) {
+                    case U:
+                        textEn = item.getTextEn();
+                        textEn2 = item.getTextEn();
+                        break;
+                    case F:
+                        textEn = item.getTextEn() + "^F";
+                        textEn2 = item.getTextEn() + "^f";
+                        break;
+                    case M:
+                        textEn = item.getTextEn() + "^M";
+                        textEn2 = item.getTextEn() + "^m";
+                        break;
+                    case N:
+                        textEn = item.getTextEn() + "^N";
+                        textEn2 = item.getTextEn() + "^n";
+                        break;
+                }
+            }
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where (textEn=:textEn or textEn=:textEn2) and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", textEn);
+            rawQ.setParameter("textEn2", textEn2);
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{8290981L, 191999749L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsNpcPhrase> npcPhraseQuery = em.createQuery("select a from GSpreadSheetsNpcPhrase a where aId is null order by changeTime", GSpreadSheetsNpcPhrase.class);
+        npcPhraseQuery.setMaxResults(100);
+        List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseQuery.getResultList();
+        for (GSpreadSheetsNpcPhrase item : npcPhraseList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{55049764L, 115740052L, 149328292L, 3952276L, 165399380L, 200879108L, 116521668L, 211899940L, 234743124L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                item.setaId(s.getaId());
+                item.setbId(s.getbId());
+                item.setcId(s.getcId());
+                em.merge(item);
+            }
+        }
+        TypedQuery<GSpreadSheetsPlayerPhrase> PlayerPhraseQuery = em.createQuery("select a from GSpreadSheetsPlayerPhrase a where aId is null order by changeTime", GSpreadSheetsPlayerPhrase.class);
+        PlayerPhraseQuery.setMaxResults(100);
+        List<GSpreadSheetsPlayerPhrase> PlayerPhraseList = PlayerPhraseQuery.getResultList();
+        for (GSpreadSheetsPlayerPhrase item : PlayerPhraseList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{204987124L, 20958740L, 249936564L, 228103012L, 232026500L, 150525940L, 99155012L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+        TypedQuery<GSpreadSheetsQuestDescription> GSpreadSheetsQuestQuery = em.createQuery("select a from GSpreadSheetsQuestDescription a where aId is null order by changeTime", GSpreadSheetsQuestDescription.class);
+        GSpreadSheetsQuestQuery.setMaxResults(100);
+        List<GSpreadSheetsQuestDescription> GSpreadSheetsQuestList = GSpreadSheetsQuestQuery.getResultList();
+        for (GSpreadSheetsQuestDescription item : GSpreadSheetsQuestList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{265851556L, 205344756L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+        TypedQuery<GSpreadSheetsQuestDirection> QuestDirectionQuery = em.createQuery("select a from GSpreadSheetsQuestDirection a where aId is null order by changeTime", GSpreadSheetsQuestDirection.class);
+        QuestDirectionQuery.setMaxResults(100);
+        List<GSpreadSheetsQuestDirection> QuestDirectionList = QuestDirectionQuery.getResultList();
+        for (GSpreadSheetsQuestDirection item : QuestDirectionList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{7949764L, 256430276L, 121487972L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+
+        TypedQuery<GSpreadSheetsQuestName> QuestNameQuery = em.createQuery("select a from GSpreadSheetsQuestName a where aId is null order by changeTime", GSpreadSheetsQuestName.class);
+        QuestNameQuery.setMaxResults(100);
+        List<GSpreadSheetsQuestName> QuestNameList = QuestNameQuery.getResultList();
+        for (GSpreadSheetsQuestName item : QuestNameList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{52420949L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+    }
+
+    @Transactional
+    public void setAidBidCid(DAO e, Long aId, Long bId, Long cId) {
+        em.refresh(e);
+        setField(e, "aId", aId);
+        setField(e, "bId", bId);
+        setField(e, "cId", cId);
+        em.merge(e);
+    }
+
+    private void setField(Object object, String fieldName, Object fieldValue) {
+        Class<?> clazz = object.getClass();
+        try {
+            java.lang.reflect.Field field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(object, fieldValue);
+        } catch (NoSuchFieldException e) {
+            clazz = clazz.getSuperclass();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Transactional
+    public void importInterfaceStrings(List<EsoInterfaceVariable> list) {
+        for (EsoInterfaceVariable i : list) {
+            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class);
+            q.setParameter("name", i.getName());
+            try {
+                EsoInterfaceVariable r = q.getSingleResult();
+                if (!r.getTextEn().equals(i.getTextEn())) {
+                    r.setTextEn(i.getTextEn());
+                    r.setChanged(Boolean.TRUE);
+                    em.merge(r);
+                }
+            } catch (javax.persistence.NoResultException ex) {
+                i.setChanged(Boolean.TRUE);
+                em.persist(i);
+            }
+        }
+    }
+
+    @Transactional
+    public void importRuInterfaceStrings(List<EsoInterfaceVariable> list) {
+        for (EsoInterfaceVariable i : list) {
+            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class);
+            q.setParameter("name", i.getName());
+            try {
+                EsoInterfaceVariable r = q.getSingleResult();
+                r.setTextRu(i.getTextRu());
+                em.merge(r);
+            } catch (javax.persistence.NoResultException ex) {
+
+            }
+        }
+    }
+
+    @Transactional
+    public void updateGspreadSheetTextEn() {
+        List<Object[]> resultList;
+        Query activatorsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsactivator g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = activatorsQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsactivator set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query itemDescriptionsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsitemdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = itemDescriptionsQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsitemdescription set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query itemNamesQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsitemname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = itemNamesQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsitemname set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetsjournalentryQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsjournalentry g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsjournalentryQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsjournalentry set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetslocationnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetslocationname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetslocationnameQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetslocationname set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetsnpcnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten,g.sex from gspreadsheetsnpcname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsnpcnameQ.getResultList();
+        Pattern MalePattern = Pattern.compile("\\^[M]");
+        Pattern malePattern = Pattern.compile("\\^[m]");
+        Pattern FemalePattern = Pattern.compile("\\^[F]");
+        Pattern femalePattern = Pattern.compile("\\^[f]");
+        Pattern NPattern = Pattern.compile("\\^[N]");
+        Pattern nPattern = Pattern.compile("\\^[n]");
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            String sex = ((String) row[3]);
+            NPC_SEX gSex = NPC_SEX.valueOf(sex);
+            NPC_SEX eSex = NPC_SEX.U;
+
+            Matcher MaleMatcher = MalePattern.matcher(eTextEn);
+            if (MaleMatcher.find()) {
+                eSex = NPC_SEX.M;
+                eTextEn = eTextEn.replaceAll("\\^M", "").replaceAll("\\^m", "");
+            }
+            Matcher maleMatcher = malePattern.matcher(eTextEn);
+            if (maleMatcher.find()) {
+                eSex = NPC_SEX.m;
+                eTextEn = eTextEn.replaceAll("\\^M", "").replaceAll("\\^m", "");
+            }
+            Matcher FemaleMatcher = FemalePattern.matcher(eTextEn);
+            if (FemaleMatcher.find()) {
+                eSex = NPC_SEX.F;
+                eTextEn = eTextEn.replaceAll("\\^F", "").replaceAll("\\^f", "");
+            }
+            Matcher femaleMatcher = femalePattern.matcher(eTextEn);
+            if (femaleMatcher.find()) {
+                eSex = NPC_SEX.f;
+                eTextEn = eTextEn.replaceAll("\\^F", "").replaceAll("\\^f", "");
+            }
+            Matcher NMatcher = NPattern.matcher(eTextEn);
+            if (NMatcher.find()) {
+                eSex = NPC_SEX.N;
+                eTextEn = eTextEn.replaceAll("\\^N", "").replaceAll("\\^n", "");
+            }
+            Matcher nMatcher = nPattern.matcher(eTextEn);
+            if (nMatcher.find()) {
+                eSex = NPC_SEX.n;
+                eTextEn = eTextEn.replaceAll("\\^N", "").replaceAll("\\^n", "");
+            }
+            if (!gTextEn.equals(eTextEn) || eSex != gSex) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsnpcname set texten=:texten,sex=:sex where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("sex", eSex.name());
+                updateQ.executeUpdate();
+            }
+        }
+
+        Query gspreadsheetsnpcphraseQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsnpcphrase g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsnpcphraseQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsnpcphrase set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetsplayerphraseQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsplayerphrase g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsplayerphraseQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsplayerphrase set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetsquestdescriptionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsquestdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsquestdescriptionQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsquestdescription set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetsquestdirectionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsquestdirection g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsquestdirectionQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsquestdirection set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetsquestnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsquestname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetsquestnameQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsquestname set texten=:texten where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("texten", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
     }
 
 }

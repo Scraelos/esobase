@@ -76,6 +76,8 @@ public class TranslatedText extends DAO {
     private GSpreadSheetsQuestDirection spreadSheetsQuestDirection;
     @ManyToOne
     private GSpreadSheetsQuestName spreadSheetsQuestName;
+    @ManyToOne
+    private EsoInterfaceVariable esoInterfaceVariable;
 
     @Override
     public Long getId() {
@@ -261,6 +263,14 @@ public class TranslatedText extends DAO {
 
     public void setSpreadSheetsQuestName(GSpreadSheetsQuestName spreadSheetsQuestName) {
         this.spreadSheetsQuestName = spreadSheetsQuestName;
+    }
+
+    public EsoInterfaceVariable getEsoInterfaceVariable() {
+        return esoInterfaceVariable;
+    }
+
+    public void setEsoInterfaceVariable(EsoInterfaceVariable esoInterfaceVariable) {
+        this.esoInterfaceVariable = esoInterfaceVariable;
     }
 
 }

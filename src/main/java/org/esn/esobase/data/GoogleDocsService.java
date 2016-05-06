@@ -143,7 +143,7 @@ public class GoogleDocsService {
                             } catch (java.text.ParseException ex) {
 
                             } catch (java.lang.NumberFormatException ex) {
-                                
+
                             }
                         }
                         break;
@@ -450,7 +450,7 @@ public class GoogleDocsService {
         }
         return items;
     }
-    
+
     public List<GSpreadSheetsQuestDirection> getQuestDirections() {
         List<GSpreadSheetsQuestDirection> items = new ArrayList<>();
         try {
@@ -923,9 +923,12 @@ public class GoogleDocsService {
 
     public List<GSpreadSheetsNpcName> getNpcNames() {
         List<GSpreadSheetsNpcName> names = new ArrayList<>();
-        Pattern malePattern = Pattern.compile("\\^[Mm]");
-        Pattern femalePattern = Pattern.compile("\\^[Ff]");
-        Pattern nPattern = Pattern.compile("\\^[Nn]");
+        Pattern MalePattern = Pattern.compile("\\^[M]");
+        Pattern malePattern = Pattern.compile("\\^[m]");
+        Pattern FemalePattern = Pattern.compile("\\^[F]");
+        Pattern femalePattern = Pattern.compile("\\^[f]");
+        Pattern NPattern = Pattern.compile("\\^[N]");
+        Pattern nPattern = Pattern.compile("\\^[n]");
         try {
             Credential authorize = authorize();
 
@@ -959,10 +962,8 @@ public class GoogleDocsService {
                     counter++;
 
                     if (lastRow > -1) {
-                        textEn = textEn.replaceAll("\\^N", "").replaceAll("\\^n", "");
-                        textRu = textRu.replaceAll("\\^N", "").replaceAll("\\^n", "");
-                        Matcher maleMatcher = malePattern.matcher(textEn);
-                        if (maleMatcher.find()) {
+                        Matcher MaleMatcher = MalePattern.matcher(textEn);
+                        if (MaleMatcher.find()) {
                             sex = NPC_SEX.M;
                             if (textEn != null) {
                                 textEn = textEn.replaceAll("\\^M", "").replaceAll("\\^m", "");
@@ -971,8 +972,18 @@ public class GoogleDocsService {
                                 textRu = textRu.replaceAll("\\^M", "").replaceAll("\\^m", "");
                             }
                         }
-                        Matcher femaleMatcher = femalePattern.matcher(textEn);
-                        if (femaleMatcher.find()) {
+                        Matcher maleMatcher = malePattern.matcher(textEn);
+                        if (maleMatcher.find()) {
+                            sex = NPC_SEX.m;
+                            if (textEn != null) {
+                                textEn = textEn.replaceAll("\\^M", "").replaceAll("\\^m", "");
+                            }
+                            if (textRu != null) {
+                                textRu = textRu.replaceAll("\\^M", "").replaceAll("\\^m", "");
+                            }
+                        }
+                        Matcher FemaleMatcher = FemalePattern.matcher(textEn);
+                        if (FemaleMatcher.find()) {
                             sex = NPC_SEX.F;
                             if (textEn != null) {
                                 textEn = textEn.replaceAll("\\^F", "").replaceAll("\\^f", "");
@@ -981,9 +992,29 @@ public class GoogleDocsService {
                                 textRu = textRu.replaceAll("\\^F", "").replaceAll("\\^f", "");
                             }
                         }
+                        Matcher femaleMatcher = femalePattern.matcher(textEn);
+                        if (femaleMatcher.find()) {
+                            sex = NPC_SEX.f;
+                            if (textEn != null) {
+                                textEn = textEn.replaceAll("\\^F", "").replaceAll("\\^f", "");
+                            }
+                            if (textRu != null) {
+                                textRu = textRu.replaceAll("\\^F", "").replaceAll("\\^f", "");
+                            }
+                        }
+                        Matcher NMatcher = NPattern.matcher(textEn);
+                        if (NMatcher.find()) {
+                            sex = NPC_SEX.N;
+                            if (textEn != null) {
+                                textEn = textEn.replaceAll("\\^N", "").replaceAll("\\^n", "");
+                            }
+                            if (textRu != null) {
+                                textRu = textRu.replaceAll("\\^N", "").replaceAll("\\^n", "");
+                            }
+                        }
                         Matcher nMatcher = nPattern.matcher(textEn);
                         if (nMatcher.find()) {
-                            sex = NPC_SEX.N;
+                            sex = NPC_SEX.n;
                             if (textEn != null) {
                                 textEn = textEn.replaceAll("\\^N", "").replaceAll("\\^n", "");
                             }
@@ -1351,11 +1382,20 @@ public class GoogleDocsService {
                                 case F:
                                     textRu += "^F";
                                     break;
+                                case f:
+                                    textRu += "^f";
+                                    break;
                                 case M:
                                     textRu += "^M";
                                     break;
+                                case m:
+                                    textRu += "^m";
+                                    break;
                                 case N:
                                     textRu += "^N";
+                                    break;
+                                case n:
+                                    textRu += "^n";
                                     break;
                             }
                             cellEntry.changeInputValueLocal(textRu);
@@ -1602,7 +1642,7 @@ public class GoogleDocsService {
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void uploadQuestDirections(List<GSpreadSheetsQuestDirection> items) {
         try {
 

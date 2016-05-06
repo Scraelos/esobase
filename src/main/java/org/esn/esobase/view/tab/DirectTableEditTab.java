@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
@@ -109,6 +110,9 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table journalEntryTable;
     private JPAContainer<GSpreadSheetsJournalEntry> journalEntryContainer;
+
+    private Table esoInterfaceTable;
+    private JPAContainer<EsoInterfaceVariable> esoInterfaceContainer;
 
     private ComboBox statusFilter;
     private ComboBox translatorBox;
@@ -522,6 +526,32 @@ public class DirectTableEditTab extends VerticalLayout {
         journalEntryTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(journalEntryTable, "Записи журнала");
 
+        esoInterfaceTable = new Table();
+        esoInterfaceTable.setSizeFull();
+        esoInterfaceTable.setHeight(500f, Unit.PIXELS);
+        esoInterfaceContainer = service.getJPAContainerContainerForClass(EsoInterfaceVariable.class);
+        esoInterfaceContainer.setBuffered(true);
+        esoInterfaceTable.setContainerDataSource(esoInterfaceContainer);
+        esoInterfaceTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
+        esoInterfaceTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
+        esoInterfaceTable.setVisibleColumns(new Object[]{"name", "textEn", "textRu", "saveColumn", "translator", "changeTime", "translateColumn"});
+        esoInterfaceTable.setColumnHeaders(new String[]{"Переменная", "Текст", "Перевод", "", "Переводчик", "Время", ""});
+        esoInterfaceTable.sort(new Object[]{"id"}, new boolean[]{true});
+        esoInterfaceTable.setColumnExpandRatio("name", 3f);
+        esoInterfaceTable.setColumnExpandRatio("textEn", 4f);
+        esoInterfaceTable.setColumnExpandRatio("textRu", 4f);
+        esoInterfaceTable.setColumnExpandRatio("translateColumn", 5f);
+        esoInterfaceTable.setColumnExpandRatio("translator", 1f);
+        esoInterfaceTable.setColumnWidth("translator", 131);
+        esoInterfaceTable.setColumnExpandRatio("changeTime", 1.7f);
+        esoInterfaceTable.setColumnWidth("changeTime", 190);
+        esoInterfaceTable.setColumnExpandRatio("saveColumn", 1.1f);
+        esoInterfaceTable.setColumnWidth("saveColumn", 115);
+        esoInterfaceTable.setEditable(true);
+        esoInterfaceTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
+        esoInterfaceTable.setSortEnabled(false);
+        tableTabs.addTab(esoInterfaceTable, "Строки интерфейса");
+
         this.addComponent(tableTabs);
         this.setExpandRatio(searchTabs, 10f);
         this.setExpandRatio(tableTabs, 90f);
@@ -596,6 +626,8 @@ public class DirectTableEditTab extends VerticalLayout {
                 tt.setSpreadSheetsQuestDirection((GSpreadSheetsQuestDirection) entity);
             } else if (entity instanceof GSpreadSheetsQuestName) {
                 tt.setSpreadSheetsQuestName((GSpreadSheetsQuestName) entity);
+            } else if (entity instanceof EsoInterfaceVariable) {
+                tt.setEsoInterfaceVariable((EsoInterfaceVariable) entity);
             }
             vl.addComponent(new TranslationCell(tt, container, item, table));
             event.getButton().setVisible(false);
@@ -772,16 +804,30 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = itemDescriptionTable;
                 rowNum = ((GSpreadSheetsItemDescription) entity).getRowNum().intValue();
                 itemId = ((GSpreadSheetsItemDescription) entity).getId();
+            } else if (entity instanceof EsoInterfaceVariable) {
+                targetTabId = esoInterfaceTable;
+                targetTable = esoInterfaceTable;
+                rowNum = null;
+                itemId = ((EsoInterfaceVariable) entity).getId();
             }
-            rowNum--;
-            if (rowNum > 0) {
+            if (rowNum != null) {
                 rowNum--;
+                if (rowNum > 0) {
+                    rowNum--;
+                }
+                if (targetTabId != null) {
+                    tableTabs.setSelectedTab(targetTabId);
+                    targetTable.setCurrentPageFirstItemIndex(rowNum);
+                    targetTable.select(itemId);
+                }
+            } else {
+                if (targetTabId != null) {
+                    tableTabs.setSelectedTab(targetTabId);
+                    targetTable.select(itemId);
+                    targetTable.setCurrentPageFirstItemId(itemId);
+                }
             }
-            if (targetTabId != null) {
-                tableTabs.setSelectedTab(targetTabId);
-                targetTable.setCurrentPageFirstItemIndex(rowNum);
-                targetTable.select(itemId);
-            }
+
         }
 
     }
@@ -851,15 +897,28 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = itemDescriptionTable;
                 rowNum = tt.getSpreadSheetsItemDescription().getRowNum().intValue();
                 itemId = tt.getSpreadSheetsItemDescription().getId();
+            } else if (tt.getEsoInterfaceVariable() != null) {
+                targetTabId = esoInterfaceTable;
+                targetTable = esoInterfaceTable;
+                rowNum = null;
+                itemId = tt.getEsoInterfaceVariable().getId();
             }
-            rowNum--;
-            if (rowNum > 0) {
+            if (rowNum != null) {
                 rowNum--;
-            }
-            if (targetTabId != null) {
-                tableTabs.setSelectedTab(targetTabId);
-                targetTable.setCurrentPageFirstItemIndex(rowNum);
-                targetTable.select(itemId);
+                if (rowNum > 0) {
+                    rowNum--;
+                }
+                if (targetTabId != null) {
+                    tableTabs.setSelectedTab(targetTabId);
+                    targetTable.setCurrentPageFirstItemIndex(rowNum);
+                    targetTable.select(itemId);
+                }
+            } else {
+                if (targetTabId != null) {
+                    tableTabs.setSelectedTab(targetTabId);
+                    targetTable.setCurrentPageFirstItemId(itemId);
+                    targetTable.select(itemId);
+                }
             }
         }
 

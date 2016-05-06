@@ -12,8 +12,11 @@ package org.esn.esobase.model;
 public enum NPC_SEX {
 
     M,
+    m,
     F,
+    f,
     N,
+    n,
     U;
 
     @Override
@@ -22,6 +25,10 @@ public enum NPC_SEX {
             case M:
                 return "Мужской";
             case F:
+                return "Женский";
+            case m:
+                return "Мужской";
+            case f:
                 return "Женский";
         }
         return "?";

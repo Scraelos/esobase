@@ -6,18 +6,14 @@
 package org.esn.esobase.model;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Index;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.persistence.Temporal;
 import org.esn.esobase.model.lib.DAO;
 
@@ -26,23 +22,14 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
-@Table(indexes = {
-    @Index(columnList = "rowNum", unique = false),
-    @Index(columnList = "textEn", unique = false),
-    @Index(columnList = "textRu", unique = false),
-    @Index(columnList = "translator", unique = false),
-    @Index(columnList = "aId,bId,cId", unique = true)})
-public class GSpreadSheetsLocationName extends DAO {
+public class EsoInterfaceVariable extends DAO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
-    private Long aId;
-    private Long bId;
-    private Long cId;
-    private Long rowNum;
+    private String name;
     @Column(columnDefinition = "TEXT")
     private String textEn;
     @Column(columnDefinition = "TEXT")
@@ -50,37 +37,26 @@ public class GSpreadSheetsLocationName extends DAO {
     private String translator;
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date changeTime;
-    private Integer weight;
-    @OneToMany(mappedBy = "spreadSheetsLocationName", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "esoInterfaceVariable")
     private Set<TranslatedText> translatedTexts;
-
-    public GSpreadSheetsLocationName() {
-    }
-
-    public GSpreadSheetsLocationName(Long rowNum, String textEn, String textRu, String translator, Integer weight) {
-        this.rowNum = rowNum;
-        this.textEn = textEn;
-        this.textRu = textRu;
-        this.translator = translator;
-        this.weight = weight;
-    }
+    private Boolean changed;
 
     @Override
     public Long getId() {
-        return id;
+        return this.id;
     }
 
     @Override
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(Long paramObject) {
+        this.id = paramObject;
     }
 
-    public Long getRowNum() {
-        return rowNum;
+    public String getName() {
+        return name;
     }
 
-    public void setRowNum(Long rowNum) {
-        this.rowNum = rowNum;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getTextEn() {
@@ -115,14 +91,6 @@ public class GSpreadSheetsLocationName extends DAO {
         this.changeTime = changeTime;
     }
 
-    public Integer getWeight() {
-        return weight;
-    }
-
-    public void setWeight(Integer weight) {
-        this.weight = weight;
-    }
-
     public Set<TranslatedText> getTranslatedTexts() {
         return translatedTexts;
     }
@@ -131,23 +99,12 @@ public class GSpreadSheetsLocationName extends DAO {
         this.translatedTexts = translatedTexts;
     }
 
-    public void setaId(Long aId) {
-        this.aId = aId;
+    public Boolean getChanged() {
+        return changed;
     }
 
-    public Long getbId() {
-        return bId;
+    public void setChanged(Boolean changed) {
+        this.changed = changed;
     }
 
-    public void setbId(Long bId) {
-        this.bId = bId;
-    }
-
-    public Long getcId() {
-        return cId;
-    }
-
-    public void setcId(Long cId) {
-        this.cId = cId;
-    }
 }

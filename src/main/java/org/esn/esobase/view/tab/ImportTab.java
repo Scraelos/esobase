@@ -11,21 +11,27 @@ import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.Receiver;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
+import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
@@ -40,6 +46,7 @@ import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.security.SpringSecurityHelper;
+import org.esn.esobase.tools.EsnDecoder;
 import org.esn.esobase.tools.LuaDecoder;
 
 /**
@@ -65,9 +72,13 @@ public class ImportTab extends VerticalLayout {
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
     private Button calculateNpcStatistics;
+    private Button assignTablesToRaw;
     private Upload uploadXlsEn;
     private Upload uploadXlsFr;
     private Upload uploadXlsDe;
+    private Upload uploadInterfaceLua;
+    private Upload uploadRuInterfaceLua;
+    private Button updateGspreadSheetsWithRawText;
 
     public ImportTab(DBService service_) {
         this.service = service_;
@@ -239,9 +250,9 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    BeanItemContainer<Npc> c=new BeanItemContainer<>(Npc.class);
-                    c=service.getNpcs(c, false, null);
-                    for(Npc n:c.getItemIds()) {
+                    BeanItemContainer<Npc> c = new BeanItemContainer<>(Npc.class);
+                    c = service.getNpcs(c, false, null);
+                    for (Npc n : c.getItemIds()) {
                         service.calculateNpcProgress(n);
                     }
                 }
@@ -262,6 +273,40 @@ public class ImportTab extends VerticalLayout {
             uploadXlsDe.addSucceededListener(raswStringReceiverDe);
             uploadXlsDe.setImmediate(true);
             this.addComponent(uploadXlsDe);
+            assignTablesToRaw = new Button("Привязать строки таблиц к строкам raw");
+            assignTablesToRaw.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    for(int i=0;i<100;i++) {
+                        service.assignSpreadSheetRowsToRawStrings();
+                    }
+                    
+                }
+            });
+            this.addComponent(assignTablesToRaw);
+            updateGspreadSheetsWithRawText = new Button("Обновить текст строк таблиц из raw");
+            updateGspreadSheetsWithRawText.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    for(int i=0;i<100;i++) {
+                        service.updateGspreadSheetTextEn();
+                    }
+                    
+                }
+            });
+            this.addComponent(updateGspreadSheetsWithRawText);
+            InterfaceLuaReceiver interfaceLuaReceiver = new InterfaceLuaReceiver(service);
+            uploadInterfaceLua = new Upload("Загрузите lua-файл интерфейса", interfaceLuaReceiver);
+            uploadInterfaceLua.addSucceededListener(interfaceLuaReceiver);
+            uploadInterfaceLua.setImmediate(true);
+            this.addComponent(uploadInterfaceLua);
+            InterfaceRuLuaReceiver interfaceRuLuaReceiver=new InterfaceRuLuaReceiver(service);
+            uploadRuInterfaceLua = new Upload("Загрузите файл с русскими строчками интерфейса", interfaceRuLuaReceiver);
+            uploadRuInterfaceLua.addSucceededListener(interfaceRuLuaReceiver);
+            uploadRuInterfaceLua.setImmediate(true);
+            this.addComponent(uploadRuInterfaceLua);
         }
     }
 
@@ -272,7 +317,8 @@ public class ImportTab extends VerticalLayout {
                 result = c.getStringCellValue();
                 break;
             case Cell.CELL_TYPE_NUMERIC:
-                result = Double.toString(c.getNumericCellValue());
+                Double numValue=c.getNumericCellValue();
+                result = Integer.toString(numValue.intValue());
         }
         return result;
     }
@@ -471,6 +517,86 @@ public class ImportTab extends VerticalLayout {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
 
+        }
+
+    }
+
+    private class InterfaceLuaReceiver implements Receiver, SucceededListener {
+
+        private final DBService service;
+        private ByteArrayOutputStream baos;
+
+        public InterfaceLuaReceiver(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                List<EsoInterfaceVariable> list = new ArrayList<>();
+                Pattern p = Pattern.compile("^SafeAddString\\((.*)\\,\\s+\"(.*)\"\\,\\s\\d+\\)$");
+                Reader r = new InputStreamReader(new ByteArrayInputStream(baos.toByteArray()));
+                BufferedReader br = new BufferedReader(r);
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    Matcher m = p.matcher(line);
+                    if (m.matches()) {
+                        EsoInterfaceVariable i = new EsoInterfaceVariable();
+                        i.setName(m.group(1));
+                        i.setTextEn(m.group(2));
+                        list.add(i);
+                    }
+                }
+                service.importInterfaceStrings(list);
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
+    
+    private class InterfaceRuLuaReceiver implements Receiver, SucceededListener {
+
+        private final DBService service;
+        private ByteArrayOutputStream baos;
+
+        public InterfaceRuLuaReceiver(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                List<EsoInterfaceVariable> list = new ArrayList<>();
+                Pattern p = Pattern.compile("^\\[(.*)\\]\\s=\\s\"(.*)\"$");
+                Reader r = new InputStreamReader(new ByteArrayInputStream(baos.toByteArray()));
+                BufferedReader br = new BufferedReader(r);
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    Matcher m = p.matcher(line);
+                    if (m.matches()) {
+                        EsoInterfaceVariable i = new EsoInterfaceVariable();
+                        i.setName(m.group(1));
+                        i.setTextRu(EsnDecoder.decode(m.group(2)));
+                        list.add(i);
+                    }
+                }
+                service.importRuInterfaceStrings(list);
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
     }
