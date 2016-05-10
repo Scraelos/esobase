@@ -5,6 +5,10 @@
  */
 package org.esn.esobase.view;
 
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.event.ShortcutAction.ModifierKey;
+import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
@@ -80,6 +84,28 @@ public class MainView extends Panel implements View, Command {
     private SearchInRawStringsTab searchInRawStringsTabContent;
     private SpellerTestTab spellerTestTabContent;
 
+    protected final ShortcutListener shiftTwoListener;
+    protected final ShortcutListener shiftThreeListener;
+
+    public MainView() {
+        this.shiftTwoListener = new ShortcutListener("Search in catalogs(shift+2)", KeyCode.NUM2, new int[]{ModifierKey.SHIFT}) {
+
+            @Override
+            public void handleAction(Object sender, Object target) {
+                openSearchInCatalogs();
+            }
+
+        };
+        this.shiftThreeListener = new ShortcutListener("Search in catalogs(shift+3)", KeyCode.NUM3, new int[]{ModifierKey.SHIFT}) {
+
+            @Override
+            public void handleAction(Object sender, Object target) {
+                openSearchInRaw();
+            }
+
+        };
+    }
+
     @PostConstruct
     public void PostConstruct() {
         setSizeFull();
@@ -121,6 +147,8 @@ public class MainView extends Panel implements View, Command {
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
         portalInfoMenuItem = mainMenu.addItem("Инфо", this);
+        this.addShortcutListener(shiftTwoListener);
+        this.addShortcutListener(shiftThreeListener);
     }
 
     private void buildHeader() {
@@ -140,6 +168,36 @@ public class MainView extends Panel implements View, Command {
     public void enter(ViewChangeListener.ViewChangeEvent event) {
         User principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         loginLabel.setCaption(principal.getUsername());
+    }
+
+    private void openSearchInCatalogs() {
+        if (searchInCatalogsTabContent == null) {
+            searchInCatalogsTabContent = new SearchInCatalogsTab(service);
+        }
+        Window subWindow = new Window(searchInCatalogsMenuItem.getText());
+        subWindow.setModal(true);
+
+        subWindow.center();
+        this.getUI().addWindow(subWindow);
+        subWindow.setResizable(false);
+        subWindow.setSizeFull();
+        subWindow.setContent(searchInCatalogsTabContent);
+        searchInCatalogsTabContent.setWidth();
+    }
+
+    private void openSearchInRaw() {
+        if (searchInRawStringsTabContent == null) {
+            searchInRawStringsTabContent = new SearchInRawStringsTab(service);
+        }
+        Window subWindow = new Window(searchInRawStringsMenuItem.getText());
+        subWindow.setModal(true);
+
+        subWindow.center();
+        this.getUI().addWindow(subWindow);
+        subWindow.setResizable(false);
+        subWindow.setSizeFull();
+        subWindow.setContent(searchInRawStringsTabContent);
+        searchInRawStringsTabContent.setWidth();
     }
 
     @Override
@@ -197,31 +255,9 @@ public class MainView extends Panel implements View, Command {
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == searchInCatalogsMenuItem) {
-            if (searchInCatalogsTabContent == null) {
-                searchInCatalogsTabContent = new SearchInCatalogsTab(service);
-            }
-            Window subWindow = new Window(selectedItem.getText());
-            subWindow.setModal(true);
-
-            subWindow.center();
-            this.getUI().addWindow(subWindow);
-            subWindow.setResizable(false);
-            subWindow.setSizeFull();
-            subWindow.setContent(searchInCatalogsTabContent);
-            searchInCatalogsTabContent.setWidth();
+            openSearchInCatalogs();
         } else if (selectedItem == searchInRawStringsMenuItem) {
-            if (searchInRawStringsTabContent == null) {
-                searchInRawStringsTabContent = new SearchInRawStringsTab(service);
-            }
-            Window subWindow = new Window(selectedItem.getText());
-            subWindow.setModal(true);
-
-            subWindow.center();
-            this.getUI().addWindow(subWindow);
-            subWindow.setResizable(false);
-            subWindow.setSizeFull();
-            subWindow.setContent(searchInRawStringsTabContent);
-            searchInRawStringsTabContent.setWidth();
+            openSearchInRaw();
         } else if (selectedItem == changePasswordMenuItem) {
             if (changePasswordTabContent != null) {
                 TabSheet.Tab tab = tabs.getTab(changePasswordTabContent);
