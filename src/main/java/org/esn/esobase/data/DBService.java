@@ -2746,6 +2746,7 @@ public class DBService {
         }
         if (npc != null) {
             calculateNpcProgress(npc);
+            calculateLocationProgress(npc.getLocation());
             updateNpcHasTranslated(npc);
         }
     }
@@ -2975,6 +2976,30 @@ public class DBService {
             n.setProgress(BigDecimal.ZERO);
         }
         em.merge(n);
+    }
+
+    @Transactional
+    public void calculateLocationProgress(Location l) {
+        BigDecimal totalProgress = BigDecimal.ZERO;
+        Location loc = em.find(Location.class, l.getId());
+        for (Npc npc : loc.getNpcs()) {
+            if (npc.getProgress() != null) {
+                totalProgress = totalProgress.add(npc.getProgress());
+            }
+        }
+        float r = 0;
+        BigDecimal averageProgress = totalProgress.divide(new BigDecimal(loc.getNpcs().size()), 2, RoundingMode.UP);
+        loc.setProgress(averageProgress);
+        em.merge(loc);
+    }
+
+    @Transactional
+    public List<Location> getLocations() {
+        List<Location> result = null;
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(Location.class);
+        result = crit.list();
+        return result;
     }
 
     @Transactional

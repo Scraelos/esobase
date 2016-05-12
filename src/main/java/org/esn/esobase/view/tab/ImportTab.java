@@ -72,6 +72,7 @@ public class ImportTab extends VerticalLayout {
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
     private Button calculateNpcStatistics;
+    private Button calculateLocationStatistics;
     private Button assignTablesToRaw;
     private Upload uploadXlsEn;
     private Upload uploadXlsFr;
@@ -258,6 +259,18 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(calculateNpcStatistics);
+            calculateLocationStatistics = new Button("Пересчитать счётчики Локаций");
+            calculateLocationStatistics.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    List<Location> locs=service.getLocations();
+                    for (Location l : locs) {
+                        service.calculateLocationProgress(l);
+                    }
+                }
+            });
+            this.addComponent(calculateLocationStatistics);
             RaswStringReceiverEn raswStringReceiverEn = new RaswStringReceiverEn(service);
             uploadXlsEn = new Upload("Загрузите en-файл xlsx", raswStringReceiverEn);
             uploadXlsEn.addSucceededListener(raswStringReceiverEn);

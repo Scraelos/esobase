@@ -76,6 +76,7 @@ public class TranslateTab extends VerticalLayout {
     private CheckBox onlyWithTranslations;
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
+    private Button refreshButton;
 
     public TranslateTab(DBService service) {
         TopicNpcColumnGenerator topicNpcColumnGenerator = new TopicNpcColumnGenerator();
@@ -149,10 +150,22 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
+        refreshButton = new Button("Обновить");
+        refreshButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                LoadNpcContent();
+            }
+        });
         FormLayout questAndWithNewTranslations = new FormLayout(questTable, onlyWithTranslations, translatorBox);
         questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
         questAndWithNewTranslations.setWidth(95f, Unit.PERCENTAGE);
         npcListlayout.addComponent(questAndWithNewTranslations);
+        npcListlayout.addComponent(refreshButton);
+        npcListlayout.setExpandRatio(locationAndNpc, 0.4f);
+        npcListlayout.setExpandRatio(questAndWithNewTranslations, 0.4f);
+        npcListlayout.setExpandRatio(refreshButton, 0.1f);
         npcContentLayout = new VerticalLayout();
         npcContentLayout.setWidth(100, Unit.PERCENTAGE);
         npcTabSheet = new TabSheet();
@@ -554,7 +567,7 @@ public class TranslateTab extends VerticalLayout {
                     text = ((Topic) itemId).getNpcText();
                 }
             }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty()&&SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Greeting) {
