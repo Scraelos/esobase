@@ -3716,14 +3716,26 @@ public class DBService {
                         break;
                     case F:
                         textEn = item.getTextEn() + "^F";
+                        textEn2 = item.getTextEn() + "^F";
+                        break;
+                    case f:
+                        textEn = item.getTextEn() + "^f";
                         textEn2 = item.getTextEn() + "^f";
                         break;
                     case M:
                         textEn = item.getTextEn() + "^M";
+                        textEn2 = item.getTextEn() + "^M";
+                        break;
+                    case m:
+                        textEn = item.getTextEn() + "^m";
                         textEn2 = item.getTextEn() + "^m";
                         break;
                     case N:
                         textEn = item.getTextEn() + "^N";
+                        textEn2 = item.getTextEn() + "^N";
+                        break;
+                    case n:
+                        textEn = item.getTextEn() + "^n";
                         textEn2 = item.getTextEn() + "^n";
                         break;
                 }
