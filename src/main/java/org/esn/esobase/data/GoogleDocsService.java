@@ -140,9 +140,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
-
-                            } catch (java.lang.NumberFormatException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -236,7 +234,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -330,7 +328,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -424,7 +422,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -518,7 +516,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -612,7 +610,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -706,7 +704,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -800,7 +798,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -894,7 +892,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -1057,7 +1055,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
@@ -1184,7 +1182,7 @@ public class GoogleDocsService {
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException ex) {
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
 
                             }
                         }
