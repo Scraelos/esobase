@@ -116,6 +116,7 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private ComboBox statusFilter;
     private ComboBox translatorBox;
+    private ComboBox translateTypeBox;
     private Button filterTranslationButton;
     private Table newTranslationsTable;
     private JPAContainer<TranslatedText> newTranslationsContainer;
@@ -183,6 +184,35 @@ public class DirectTableEditTab extends VerticalLayout {
         translatorBox.setContainerDataSource(sysAccountContainer);
         translatorBox.setFilteringMode(FilteringMode.CONTAINS);
         traslationsFilterslayout.addComponent(translatorBox);
+        translateTypeBox = new ComboBox("Таблица");
+        translateTypeBox.setNullSelectionAllowed(true);
+        translateTypeBox.setPageLength(15);
+        translateTypeBox.addItem("GSpreadSheetsActivator");
+        translateTypeBox.setItemCaption("GSpreadSheetsActivator", "Активаторы");
+        translateTypeBox.addItem("GSpreadSheetsItemDescription");
+        translateTypeBox.setItemCaption("GSpreadSheetsItemDescription", "Описания предметов");
+        translateTypeBox.addItem("GSpreadSheetsItemName");
+        translateTypeBox.setItemCaption("GSpreadSheetsItemName", "Названия предметов");
+        translateTypeBox.addItem("GSpreadSheetsJournalEntry");
+        translateTypeBox.setItemCaption("GSpreadSheetsJournalEntry", "Записи в журнале");
+        translateTypeBox.addItem("GSpreadSheetsLocationName");
+        translateTypeBox.setItemCaption("GSpreadSheetsLocationName", "Названия локаций");
+        translateTypeBox.addItem("GSpreadSheetsNpcName");
+        translateTypeBox.setItemCaption("GSpreadSheetsNpcName", "Имена NPC");
+        translateTypeBox.addItem("GSpreadSheetsNpcPhrase");
+        translateTypeBox.setItemCaption("GSpreadSheetsNpcPhrase", "Фразы NPC");
+        translateTypeBox.addItem("GSpreadSheetsPlayerPhrase");
+        translateTypeBox.setItemCaption("GSpreadSheetsPlayerPhrase", "Фразы игрока");
+        translateTypeBox.addItem("GSpreadSheetsQuestDescription");
+        translateTypeBox.setItemCaption("GSpreadSheetsQuestDescription", "Описания квестов");
+        translateTypeBox.addItem("GSpreadSheetsQuestDirection");
+        translateTypeBox.setItemCaption("GSpreadSheetsQuestDirection", "Цели квестов");
+        translateTypeBox.addItem("GSpreadSheetsQuestName");
+        translateTypeBox.setItemCaption("GSpreadSheetsQuestName", "Названия квестов");
+        translateTypeBox.addItem("EsoInterfaceVariable");
+        translateTypeBox.setItemCaption("EsoInterfaceVariable", "Строки интерфейса");
+        translateTypeBox.setFilteringMode(FilteringMode.CONTAINS);
+        traslationsFilterslayout.addComponent(translateTypeBox);
         filterTranslationButton = new Button("Поиск");
         filterTranslationButton.addClickListener(new ClickListener() {
 
@@ -572,6 +602,44 @@ public class DirectTableEditTab extends VerticalLayout {
         newTranslationsContainer.addContainerFilter(new Compare.Equal("status", statusFilter.getValue()));
         if (translatorBox.getValue() != null) {
             newTranslationsContainer.addContainerFilter(new Compare.Equal("author", translatorBox.getValue()));
+        }
+        if (translateTypeBox.getValue() != null) {
+            if (translateTypeBox.getValue().equals("GSpreadSheetsActivator")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsActivator")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsItemDescription")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsItemDescription")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsItemName")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsItemName")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsJournalEntry")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsJournalEntry")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsLocationName")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsLocationName")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsNpcName")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNpcName")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsNpcPhrase")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNpcPhrase")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsPlayerPhrase")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsPlayerPhrase")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsQuestDescription")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestDescription")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsQuestDirection")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestDirection")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsQuestName")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestName")));
+            }
+            if (translateTypeBox.getValue().equals("EsoInterfaceVariable")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("esoInterfaceVariable")));
+            }
         }
     }
 
