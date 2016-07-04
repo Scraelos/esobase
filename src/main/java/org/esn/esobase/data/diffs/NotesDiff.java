@@ -3,31 +3,32 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.esn.esobase.data;
+package org.esn.esobase.data.diffs;
 
-import org.esn.esobase.model.GSpreadSheetsItemName;
+import org.esn.esobase.data.SYNC_TYPE;
+import org.esn.esobase.model.GSpreadSheetsNote;
 
 /**
  *
  * @author scraelos
  */
-public class ItemNamesDiff {
+public class NotesDiff {
 
-    private final GSpreadSheetsItemName spreadsheetsName;
-    private final GSpreadSheetsItemName dbName;
+    private final GSpreadSheetsNote spreadsheetsName;
+    private final GSpreadSheetsNote dbName;
     private final SYNC_TYPE syncType;
 
-    public ItemNamesDiff(GSpreadSheetsItemName spreadsheetsPhrase, GSpreadSheetsItemName dbPhrase, SYNC_TYPE syncType) {
+    public NotesDiff(GSpreadSheetsNote spreadsheetsPhrase, GSpreadSheetsNote dbPhrase, SYNC_TYPE syncType) {
         this.spreadsheetsName = spreadsheetsPhrase;
         this.dbName = dbPhrase;
         this.syncType = syncType;
     }
 
-    public GSpreadSheetsItemName getSpreadsheetsName() {
+    public GSpreadSheetsNote getSpreadsheetsName() {
         return spreadsheetsName;
     }
 
-    public GSpreadSheetsItemName getDbName() {
+    public GSpreadSheetsNote getDbName() {
         return dbName;
     }
 

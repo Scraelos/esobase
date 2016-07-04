@@ -1,0 +1,37 @@
+.valothemeui #themeSelect {
+	position: fixed;
+	z-index: 1000;
+	top: 0;
+	right: 0;
+	padding: 0 10px;
+	background-color: #ededed;
+	background-color: rgba(237, 237, 237, 0.9);
+	color: #464646;
+	border-radius: 0 0 0 4px;
+}
+
+.valothemeui #themeSelect:before {
+	content: "Theme:";
+}
+
+.valothemeui #themeSelect select {
+	background: transparent;
+	color: inherit;
+	border: none;
+	display: inline-block;
+}
+
+.valothemeui .v-ui[width-range~="0-800px"] #themeSelect {
+	top: 37px;
+}
+
+.valothemeui .v-splitpanel-vertical, 
+.valothemeui .v-splitpanel-horizontal {
+	outline: 1px dotted rgba(128, 128, 128, 0.2);
+}
+
+.valothemeui .valo-content > .v-layout {
+	max-width: 960px;
+	display: block;
+	margin: 0 auto;
+}

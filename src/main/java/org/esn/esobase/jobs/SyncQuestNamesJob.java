@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.OriginalTextMismatchException;
-import org.esn.esobase.data.QuestNamesDiff;
+import org.esn.esobase.data.diffs.QuestNamesDiff;
 import org.esn.esobase.data.SYNC_TYPE;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.springframework.beans.factory.annotation.Autowired;

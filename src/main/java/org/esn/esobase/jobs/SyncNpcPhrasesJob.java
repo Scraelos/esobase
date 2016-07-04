@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
-import org.esn.esobase.data.NpcPhraseDiff;
+import org.esn.esobase.data.diffs.NpcPhraseDiff;
 import org.esn.esobase.data.OriginalTextMismatchException;
 import org.esn.esobase.data.SYNC_TYPE;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;

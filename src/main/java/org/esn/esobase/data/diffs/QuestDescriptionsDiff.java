@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.esn.esobase.data;
+package org.esn.esobase.data.diffs;
 
+import org.esn.esobase.data.SYNC_TYPE;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
 
 /**

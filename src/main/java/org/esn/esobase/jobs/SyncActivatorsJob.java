@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.esn.esobase.data.ActivatorsDiff;
+import org.esn.esobase.data.diffs.ActivatorsDiff;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.OriginalTextMismatchException;

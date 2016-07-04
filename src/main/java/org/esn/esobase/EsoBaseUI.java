@@ -21,7 +21,7 @@ import ru.xpoft.vaadin.DiscoveryNavigator;
  */
 @Component
 @Scope("prototype")
-@Theme("valo")
+@Theme("tests-valo-reindeer")
 @PreserveOnRefresh
 public class EsoBaseUI extends UI {
 

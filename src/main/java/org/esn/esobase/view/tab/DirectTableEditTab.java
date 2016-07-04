@@ -46,11 +46,14 @@ import java.util.Locale;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.EsoInterfaceVariable;
+import org.esn.esobase.model.GSpreadSheetsAchievement;
+import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
+import org.esn.esobase.model.GSpreadSheetsNote;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
@@ -110,6 +113,15 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table journalEntryTable;
     private JPAContainer<GSpreadSheetsJournalEntry> journalEntryContainer;
+
+    private Table achievementTable;
+    private JPAContainer<GSpreadSheetsAchievement> achievementContainer;
+
+    private Table achievementDescriptionTable;
+    private JPAContainer<GSpreadSheetsAchievementDescription> achievementDescriptionContainer;
+
+    private Table noteTable;
+    private JPAContainer<GSpreadSheetsNote> noteContainer;
 
     private Table esoInterfaceTable;
     private JPAContainer<EsoInterfaceVariable> esoInterfaceContainer;
@@ -189,6 +201,12 @@ public class DirectTableEditTab extends VerticalLayout {
         translateTypeBox.setPageLength(15);
         translateTypeBox.addItem("GSpreadSheetsActivator");
         translateTypeBox.setItemCaption("GSpreadSheetsActivator", "Активаторы");
+        translateTypeBox.addItem("GSpreadSheetsAchievement");
+        translateTypeBox.setItemCaption("GSpreadSheetsAchievement", "Достижения");
+        translateTypeBox.addItem("GSpreadSheetsAchievementDescription");
+        translateTypeBox.setItemCaption("GSpreadSheetsAchievementDescription", "Описания достижений");
+        translateTypeBox.addItem("GSpreadSheetsNote");
+        translateTypeBox.setItemCaption("GSpreadSheetsNote", "Записки");
         translateTypeBox.addItem("GSpreadSheetsItemDescription");
         translateTypeBox.setItemCaption("GSpreadSheetsItemDescription", "Описания предметов");
         translateTypeBox.addItem("GSpreadSheetsItemName");
@@ -556,6 +574,90 @@ public class DirectTableEditTab extends VerticalLayout {
         journalEntryTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(journalEntryTable, "Записи журнала");
 
+        achievementTable = new Table();
+        achievementTable.setSizeFull();
+        achievementTable.setHeight(500f, Unit.PIXELS);
+        achievementContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAchievement.class);
+        achievementContainer.setBuffered(true);
+        achievementTable.setContainerDataSource(achievementContainer);
+        achievementTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
+        achievementTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
+        achievementTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "weight", "translator", "changeTime", "translateColumn"});
+        achievementTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "Порядок", "Переводчик", "Время", ""});
+        achievementTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        achievementTable.setColumnExpandRatio("rowNum", 1.5f);
+        achievementTable.setColumnWidth("rowNum", 100);
+        achievementTable.setColumnExpandRatio("textEn", 5f);
+        achievementTable.setColumnExpandRatio("textRu", 5f);
+        achievementTable.setColumnExpandRatio("translateColumn", 5f);
+        achievementTable.setColumnExpandRatio("translator", 1f);
+        achievementTable.setColumnWidth("translator", 131);
+        achievementTable.setColumnExpandRatio("changeTime", 1.7f);
+        achievementTable.setColumnWidth("changeTime", 190);
+        achievementTable.setColumnExpandRatio("saveColumn", 1.1f);
+        achievementTable.setColumnWidth("saveColumn", 115);
+        achievementTable.setEditable(true);
+        achievementTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
+        achievementTable.setSortEnabled(false);
+        achievementTable.setConverter("weight", new WeightConverter());
+        tableTabs.addTab(achievementTable, "Достижения");
+
+        achievementDescriptionTable = new Table();
+        achievementDescriptionTable.setSizeFull();
+        achievementDescriptionTable.setHeight(500f, Unit.PIXELS);
+        achievementDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAchievementDescription.class);
+        achievementDescriptionContainer.setBuffered(true);
+        achievementDescriptionTable.setContainerDataSource(achievementDescriptionContainer);
+        achievementDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
+        achievementDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
+        achievementDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "weight", "translator", "changeTime", "translateColumn"});
+        achievementDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "Порядок", "Переводчик", "Время", ""});
+        achievementDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        achievementDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
+        achievementDescriptionTable.setColumnWidth("rowNum", 100);
+        achievementDescriptionTable.setColumnExpandRatio("textEn", 5f);
+        achievementDescriptionTable.setColumnExpandRatio("textRu", 5f);
+        achievementDescriptionTable.setColumnExpandRatio("translateColumn", 5f);
+        achievementDescriptionTable.setColumnExpandRatio("translator", 1f);
+        achievementDescriptionTable.setColumnWidth("translator", 131);
+        achievementDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
+        achievementDescriptionTable.setColumnWidth("changeTime", 190);
+        achievementDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
+        achievementDescriptionTable.setColumnWidth("saveColumn", 115);
+        achievementDescriptionTable.setEditable(true);
+        achievementDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
+        achievementDescriptionTable.setSortEnabled(false);
+        achievementDescriptionTable.setConverter("weight", new WeightConverter());
+        tableTabs.addTab(achievementDescriptionTable, "Описания достижений");
+
+        noteTable = new Table();
+        noteTable.setSizeFull();
+        noteTable.setHeight(500f, Unit.PIXELS);
+        noteContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNote.class);
+        noteContainer.setBuffered(true);
+        noteTable.setContainerDataSource(noteContainer);
+        noteTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
+        noteTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_NOTES"));
+        noteTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "weight", "translator", "changeTime", "translateColumn"});
+        noteTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "Порядок", "Переводчик", "Время", ""});
+        noteTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        noteTable.setColumnExpandRatio("rowNum", 1.5f);
+        noteTable.setColumnWidth("rowNum", 100);
+        noteTable.setColumnExpandRatio("textEn", 5f);
+        noteTable.setColumnExpandRatio("textRu", 5f);
+        noteTable.setColumnExpandRatio("translateColumn", 5f);
+        noteTable.setColumnExpandRatio("translator", 1f);
+        noteTable.setColumnWidth("translator", 131);
+        noteTable.setColumnExpandRatio("changeTime", 1.7f);
+        noteTable.setColumnWidth("changeTime", 190);
+        noteTable.setColumnExpandRatio("saveColumn", 1.1f);
+        noteTable.setColumnWidth("saveColumn", 115);
+        noteTable.setEditable(true);
+        noteTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NOTES"));
+        noteTable.setSortEnabled(false);
+        noteTable.setConverter("weight", new WeightConverter());
+        tableTabs.addTab(noteTable, "Записки");
+
         esoInterfaceTable = new Table();
         esoInterfaceTable.setSizeFull();
         esoInterfaceTable.setHeight(500f, Unit.PIXELS);
@@ -606,6 +708,15 @@ public class DirectTableEditTab extends VerticalLayout {
         if (translateTypeBox.getValue() != null) {
             if (translateTypeBox.getValue().equals("GSpreadSheetsActivator")) {
                 newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsActivator")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsAchievement")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsAchievement")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsAchievementDescription")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsDescription")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsNote")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNote")));
             }
             if (translateTypeBox.getValue().equals("GSpreadSheetsItemDescription")) {
                 newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsItemDescription")));
@@ -674,6 +785,12 @@ public class DirectTableEditTab extends VerticalLayout {
             tt.setAuthor(SpringSecurityHelper.getSysAccount());
             if (entity instanceof GSpreadSheetsActivator) {
                 tt.setSpreadSheetsActivator((GSpreadSheetsActivator) entity);
+            } else if (entity instanceof GSpreadSheetsAchievement) {
+                tt.setSpreadSheetsAchievement((GSpreadSheetsAchievement) entity);
+            } else if (entity instanceof GSpreadSheetsAchievementDescription) {
+                tt.setSpreadSheetsAchievementDescription((GSpreadSheetsAchievementDescription) entity);
+            } else if (entity instanceof GSpreadSheetsNote) {
+                tt.setSpreadSheetsNote((GSpreadSheetsNote) entity);
             } else if (entity instanceof GSpreadSheetsItemDescription) {
                 tt.setSpreadSheetsItemDescription((GSpreadSheetsItemDescription) entity);
             } else if (entity instanceof GSpreadSheetsItemName) {
@@ -857,6 +974,21 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = activatorTable;
                 rowNum = ((GSpreadSheetsActivator) entity).getRowNum().intValue();
                 itemId = ((GSpreadSheetsActivator) entity).getId();
+            } else if (entity instanceof GSpreadSheetsAchievement) {
+                targetTabId = achievementTable;
+                targetTable = achievementTable;
+                rowNum = ((GSpreadSheetsAchievement) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsAchievement) entity).getId();
+            } else if (entity instanceof GSpreadSheetsAchievementDescription) {
+                targetTabId = achievementDescriptionTable;
+                targetTable = achievementDescriptionTable;
+                rowNum = ((GSpreadSheetsAchievementDescription) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsAchievementDescription) entity).getId();
+            } else if (entity instanceof GSpreadSheetsNote) {
+                targetTabId = noteTable;
+                targetTable = noteTable;
+                rowNum = ((GSpreadSheetsNote) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsNote) entity).getId();
             } else if (entity instanceof GSpreadSheetsJournalEntry) {
                 targetTabId = journalEntryTable;
                 targetTable = journalEntryTable;
@@ -950,6 +1082,21 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = activatorTable;
                 rowNum = tt.getSpreadSheetsActivator().getRowNum().intValue();
                 itemId = tt.getSpreadSheetsActivator().getId();
+            } else if (tt.getSpreadSheetsAchievement() != null) {
+                targetTabId = achievementTable;
+                targetTable = achievementTable;
+                rowNum = tt.getSpreadSheetsAchievement().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsAchievement().getId();
+            } else if (tt.getSpreadSheetsAchievementDescription() != null) {
+                targetTabId = achievementDescriptionTable;
+                targetTable = achievementDescriptionTable;
+                rowNum = tt.getSpreadSheetsAchievementDescription().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsAchievementDescription().getId();
+            } else if (tt.getSpreadSheetsNote() != null) {
+                targetTabId = noteTable;
+                targetTable = noteTable;
+                rowNum = tt.getSpreadSheetsNote().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsNote().getId();
             } else if (tt.getSpreadSheetsJournalEntry() != null) {
                 targetTabId = journalEntryTable;
                 targetTable = journalEntryTable;

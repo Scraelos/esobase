@@ -78,6 +78,12 @@ public class TranslatedText extends DAO {
     private GSpreadSheetsQuestName spreadSheetsQuestName;
     @ManyToOne
     private EsoInterfaceVariable esoInterfaceVariable;
+    @ManyToOne
+    private GSpreadSheetsAchievement spreadSheetsAchievement;
+    @ManyToOne
+    private GSpreadSheetsAchievementDescription spreadSheetsAchievementDescription;
+    @ManyToOne
+    private GSpreadSheetsNote spreadSheetsNote;
 
     @Override
     public Long getId() {
@@ -271,6 +277,30 @@ public class TranslatedText extends DAO {
 
     public void setEsoInterfaceVariable(EsoInterfaceVariable esoInterfaceVariable) {
         this.esoInterfaceVariable = esoInterfaceVariable;
+    }
+
+    public GSpreadSheetsAchievement getSpreadSheetsAchievement() {
+        return spreadSheetsAchievement;
+    }
+
+    public void setSpreadSheetsAchievement(GSpreadSheetsAchievement spreadSheetsAchievement) {
+        this.spreadSheetsAchievement = spreadSheetsAchievement;
+    }
+
+    public GSpreadSheetsAchievementDescription getSpreadSheetsAchievementDescription() {
+        return spreadSheetsAchievementDescription;
+    }
+
+    public void setSpreadSheetsAchievementDescription(GSpreadSheetsAchievementDescription spreadSheetsAchievementDescription) {
+        this.spreadSheetsAchievementDescription = spreadSheetsAchievementDescription;
+    }
+
+    public GSpreadSheetsNote getSpreadSheetsNote() {
+        return spreadSheetsNote;
+    }
+
+    public void setSpreadSheetsNote(GSpreadSheetsNote spreadSheetsNote) {
+        this.spreadSheetsNote = spreadSheetsNote;
     }
 
 }

@@ -3,31 +3,32 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.esn.esobase.data;
+package org.esn.esobase.data.diffs;
 
-import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
+import org.esn.esobase.data.SYNC_TYPE;
+import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 
 /**
  *
  * @author scraelos
  */
-public class PlayerPhraseDiff {
+public class NpcPhraseDiff {
 
-    private final GSpreadSheetsPlayerPhrase spreadsheetsPhrase;
-    private final GSpreadSheetsPlayerPhrase dbPhrase;
+    private final GSpreadSheetsNpcPhrase spreadsheetsPhrase;
+    private final GSpreadSheetsNpcPhrase dbPhrase;
     private final SYNC_TYPE syncType;
 
-    public PlayerPhraseDiff(GSpreadSheetsPlayerPhrase spreadsheetsPhrase, GSpreadSheetsPlayerPhrase dbPhrase, SYNC_TYPE syncType) {
+    public NpcPhraseDiff(GSpreadSheetsNpcPhrase spreadsheetsPhrase, GSpreadSheetsNpcPhrase dbPhrase, SYNC_TYPE syncType) {
         this.spreadsheetsPhrase = spreadsheetsPhrase;
         this.dbPhrase = dbPhrase;
         this.syncType = syncType;
     }
 
-    public GSpreadSheetsPlayerPhrase getSpreadsheetsPhrase() {
+    public GSpreadSheetsNpcPhrase getSpreadsheetsPhrase() {
         return spreadsheetsPhrase;
     }
 
-    public GSpreadSheetsPlayerPhrase getDbPhrase() {
+    public GSpreadSheetsNpcPhrase getDbPhrase() {
         return dbPhrase;
     }
 

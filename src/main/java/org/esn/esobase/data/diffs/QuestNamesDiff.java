@@ -3,31 +3,32 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.esn.esobase.data;
+package org.esn.esobase.data.diffs;
 
-import org.esn.esobase.model.GSpreadSheetsNpcName;
+import org.esn.esobase.data.SYNC_TYPE;
+import org.esn.esobase.model.GSpreadSheetsQuestName;
 
 /**
  *
  * @author scraelos
  */
-public class NpcNameDiff {
+public class QuestNamesDiff {
 
-    private final GSpreadSheetsNpcName spreadsheetsName;
-    private final GSpreadSheetsNpcName dbName;
+    private final GSpreadSheetsQuestName spreadsheetsName;
+    private final GSpreadSheetsQuestName dbName;
     private final SYNC_TYPE syncType;
 
-    public NpcNameDiff(GSpreadSheetsNpcName spreadsheetsPhrase, GSpreadSheetsNpcName dbPhrase, SYNC_TYPE syncType) {
+    public QuestNamesDiff(GSpreadSheetsQuestName spreadsheetsPhrase, GSpreadSheetsQuestName dbPhrase, SYNC_TYPE syncType) {
         this.spreadsheetsName = spreadsheetsPhrase;
         this.dbName = dbPhrase;
         this.syncType = syncType;
     }
 
-    public GSpreadSheetsNpcName getSpreadsheetsName() {
+    public GSpreadSheetsQuestName getSpreadsheetsName() {
         return spreadsheetsName;
     }
 
-    public GSpreadSheetsNpcName getDbName() {
+    public GSpreadSheetsQuestName getDbName() {
         return dbName;
     }
 

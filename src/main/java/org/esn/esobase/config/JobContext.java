@@ -1,10 +1,13 @@
 package org.esn.esobase.config;
 
+import org.esn.esobase.jobs.SyncAchievementDescriptionsJob;
+import org.esn.esobase.jobs.SyncAchievementsJob;
 import org.esn.esobase.jobs.SyncActivatorsJob;
 import org.esn.esobase.jobs.SyncItemDescriptionsJob;
 import org.esn.esobase.jobs.SyncItemNamesJob;
 import org.esn.esobase.jobs.SyncJournalEntriesJob;
 import org.esn.esobase.jobs.SyncLocationNamesJob;
+import org.esn.esobase.jobs.SyncNotesJob;
 import org.esn.esobase.jobs.SyncNpcNamesJob;
 import org.esn.esobase.jobs.SyncNpcPhrasesJob;
 import org.esn.esobase.jobs.SyncPlayerPhrasesJob;
@@ -73,5 +76,20 @@ public class JobContext {
     @Bean
     public SyncQuestDirectionsJob syncQuestDirectionsJob() {
         return new SyncQuestDirectionsJob();
+    }
+    
+    @Bean
+    public SyncAchievementsJob syncAchievementsJob() {
+       return new SyncAchievementsJob();
+    }
+    
+    @Bean
+    public SyncAchievementDescriptionsJob syncAchievementDescriptionsJob() {
+       return new SyncAchievementDescriptionsJob();
+    }
+    
+    @Bean
+    public SyncNotesJob syncNotesJob() {
+        return new SyncNotesJob();
     }
 }

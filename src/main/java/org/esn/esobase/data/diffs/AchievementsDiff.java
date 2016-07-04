@@ -3,31 +3,32 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.esn.esobase.data;
+package org.esn.esobase.data.diffs;
 
-import org.esn.esobase.model.GSpreadSheetsLocationName;
+import org.esn.esobase.data.SYNC_TYPE;
+import org.esn.esobase.model.GSpreadSheetsAchievement;
 
 /**
  *
  * @author scraelos
  */
-public class LocationsDiff {
+public class AchievementsDiff {
 
-    private final GSpreadSheetsLocationName spreadsheetsName;
-    private final GSpreadSheetsLocationName dbName;
+    private final GSpreadSheetsAchievement spreadsheetsName;
+    private final GSpreadSheetsAchievement dbName;
     private final SYNC_TYPE syncType;
 
-    public LocationsDiff(GSpreadSheetsLocationName spreadsheetsPhrase, GSpreadSheetsLocationName dbPhrase, SYNC_TYPE syncType) {
+    public AchievementsDiff(GSpreadSheetsAchievement spreadsheetsPhrase, GSpreadSheetsAchievement dbPhrase, SYNC_TYPE syncType) {
         this.spreadsheetsName = spreadsheetsPhrase;
         this.dbName = dbPhrase;
         this.syncType = syncType;
     }
 
-    public GSpreadSheetsLocationName getSpreadsheetsName() {
+    public GSpreadSheetsAchievement getSpreadsheetsName() {
         return spreadsheetsName;
     }
 
-    public GSpreadSheetsLocationName getDbName() {
+    public GSpreadSheetsAchievement getDbName() {
         return dbName;
     }
 

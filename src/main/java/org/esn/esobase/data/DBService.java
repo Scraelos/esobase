@@ -5,6 +5,17 @@
  */
 package org.esn.esobase.data;
 
+import org.esn.esobase.data.diffs.ActivatorsDiff;
+import org.esn.esobase.data.diffs.NpcNameDiff;
+import org.esn.esobase.data.diffs.NpcPhraseDiff;
+import org.esn.esobase.data.diffs.LocationsDiff;
+import org.esn.esobase.data.diffs.QuestDescriptionsDiff;
+import org.esn.esobase.data.diffs.QuestDirectionsDiff;
+import org.esn.esobase.data.diffs.ItemNamesDiff;
+import org.esn.esobase.data.diffs.QuestNamesDiff;
+import org.esn.esobase.data.diffs.ItemDescriptionsDiff;
+import org.esn.esobase.data.diffs.JournalEntriesDiff;
+import org.esn.esobase.data.diffs.PlayerPhraseDiff;
 import com.vaadin.addon.jpacontainer.EntityItem;
 import com.vaadin.addon.jpacontainer.JPAContainer;
 import com.vaadin.addon.jpacontainer.JPAContainerFactory;
@@ -32,13 +43,19 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import org.esn.esobase.data.diffs.AchievementDescriptionsDiff;
+import org.esn.esobase.data.diffs.AchievementsDiff;
+import org.esn.esobase.data.diffs.NotesDiff;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.EsoRawString;
+import org.esn.esobase.model.GSpreadSheetsAchievement;
+import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
+import org.esn.esobase.model.GSpreadSheetsNote;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
@@ -103,6 +120,9 @@ public class DBService {
         roles.add(new SysAccountRole(17L, "ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS", "Прямое редактирование целей заданий"));
         roles.add(new SysAccountRole(18L, "ROLE_SPELL_CHECK", "Проверка орфографии"));
         roles.add(new SysAccountRole(19L, "ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES", "Прямое редактирование строк интерфейса"));
+        roles.add(new SysAccountRole(20L, "ROLE_DIRECT_ACCESS_ACHIEVEMENTS", "Прямое редактирование достижений"));
+        roles.add(new SysAccountRole(21L, "ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS", "Прямое редактирование описаний достижений"));
+        roles.add(new SysAccountRole(22L, "ROLE_DIRECT_ACCESS_NOTES", "Прямое редактирование записок"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -873,6 +893,162 @@ public class DBService {
     }
 
     @Transactional
+    public void loadAchievementsFromSpreadSheet(List<GSpreadSheetsAchievement> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsAchievement.class);
+        Map<String, GSpreadSheetsAchievement> itemMap = new HashMap<>();
+        List<GSpreadSheetsAchievement> allItems = crit.list();
+        for (GSpreadSheetsAchievement item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsAchievement item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "achievement {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsAchievement result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for achievement: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for achievement: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsAchievement item : items) {
+            GSpreadSheetsAchievement result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting achievement for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsAchievement> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsAchievement item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsAchievement item : allItems) {
+            GSpreadSheetsAchievement result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing achievement rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadAchievementDescriptionsFromSpreadSheet(List<GSpreadSheetsAchievementDescription> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+        Map<String, GSpreadSheetsAchievementDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsAchievementDescription> allItems = crit.list();
+        for (GSpreadSheetsAchievementDescription item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsAchievementDescription item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "achievement description {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsAchievementDescription result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for achievement description: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for achievement description: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsAchievementDescription item : items) {
+            GSpreadSheetsAchievementDescription result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting achievement description for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsAchievementDescription> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsAchievementDescription item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsAchievementDescription item : allItems) {
+            GSpreadSheetsAchievementDescription result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing achievement description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadNotesFromSpreadSheet(List<GSpreadSheetsNote> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsNote.class);
+        Map<String, GSpreadSheetsNote> itemMap = new HashMap<>();
+        List<GSpreadSheetsNote> allItems = crit.list();
+        for (GSpreadSheetsNote item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsNote item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "note {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsNote result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for note: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for note: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsNote item : items) {
+            GSpreadSheetsNote result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting note for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsNote> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsNote item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsNote item : allItems) {
+            GSpreadSheetsNote result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing note rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
     public void loadJournalEntriesFromSpreadSheet(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
@@ -1629,6 +1805,165 @@ public class DBService {
             }
         }
         for (ActivatorsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getAchievementsDiff(List<GSpreadSheetsAchievement> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<AchievementsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsAchievement.class);
+        Map<Long, GSpreadSheetsAchievement> itemMap = new HashMap<>();
+        List<GSpreadSheetsAchievement> allItems = crit.list();
+        for (GSpreadSheetsAchievement item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsAchievement item : items) {
+            GSpreadSheetsAchievement result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new AchievementsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new AchievementsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new AchievementsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new AchievementsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new AchievementsDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (AchievementsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getAchievementDescriptionsDiff(List<GSpreadSheetsAchievementDescription> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<AchievementDescriptionsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+        Map<Long, GSpreadSheetsAchievementDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsAchievementDescription> allItems = crit.list();
+        for (GSpreadSheetsAchievementDescription item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsAchievementDescription item : items) {
+            GSpreadSheetsAchievementDescription result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new AchievementDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new AchievementDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new AchievementDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new AchievementDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new AchievementDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (AchievementDescriptionsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getNotesDiff(List<GSpreadSheetsNote> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<NotesDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsNote.class);
+        Map<Long, GSpreadSheetsNote> itemMap = new HashMap<>();
+        List<GSpreadSheetsNote> allItems = crit.list();
+        for (GSpreadSheetsNote item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsNote item : items) {
+            GSpreadSheetsNote result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new NotesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new NotesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new NotesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new NotesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new NotesDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (NotesDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -2539,6 +2874,60 @@ public class DBService {
     }
 
     @Transactional
+    public void saveAchievements(List<GSpreadSheetsAchievement> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsAchievement item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsAchievement.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsAchievement result = (GSpreadSheetsAchievement) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void saveAchievementDescriptions(List<GSpreadSheetsAchievementDescription> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsAchievementDescription item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsAchievementDescription result = (GSpreadSheetsAchievementDescription) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void saveNotes(List<GSpreadSheetsNote> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsNote item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsNote.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsNote result = (GSpreadSheetsNote) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
     public void saveJournalEntries(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
         for (GSpreadSheetsJournalEntry item : items) {
@@ -2634,6 +3023,27 @@ public class DBService {
 
         } else if (entity.getSpreadSheetsActivator() != null) {
             GSpreadSheetsActivator gs = em.find(GSpreadSheetsActivator.class, entity.getSpreadSheetsActivator().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsAchievement() != null) {
+            GSpreadSheetsAchievement gs = em.find(GSpreadSheetsAchievement.class, entity.getSpreadSheetsAchievement().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsAchievementDescription() != null) {
+            GSpreadSheetsAchievementDescription gs = em.find(GSpreadSheetsAchievementDescription.class, entity.getSpreadSheetsAchievementDescription().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsNote() != null) {
+            GSpreadSheetsNote gs = em.find(GSpreadSheetsNote.class, entity.getSpreadSheetsNote().getId());
             gs.setTextRu(entity.getText());
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
@@ -3149,6 +3559,39 @@ public class DBService {
             item.getItemProperty("translator").setValue(gSpreadSheetsPlayerPhrase.getTranslator());
             item.getItemProperty("catalogType").setValue("Фраза игрока");
         }
+        Criteria achievementCrit = session.createCriteria(GSpreadSheetsAchievement.class);
+        achievementCrit.add(searchTerms);
+        List<GSpreadSheetsAchievement> achievementList = achievementCrit.list();
+        for (GSpreadSheetsAchievement i : achievementList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Достижение");
+        }
+        Criteria achievementDescriptionCrit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+        achievementDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionCrit.list();
+        for (GSpreadSheetsAchievementDescription i : achievementDescriptionList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание достижения");
+        }
+        Criteria noteCrit = session.createCriteria(GSpreadSheetsNote.class);
+        noteCrit.add(searchTerms);
+        List<GSpreadSheetsNote> noteList = noteCrit.list();
+        for (GSpreadSheetsNote i : noteList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Записка");
+        }
         Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
         searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
@@ -3298,7 +3741,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             String textRu = (String) item.getItemProperty("textRu").getValue();
@@ -3347,7 +3790,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(Object itemId, String textRu) {
-        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection)) {
+        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote)) {
             if (itemId instanceof GSpreadSheetsNpcName) {
                 ((GSpreadSheetsNpcName) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsNpcName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
@@ -3380,6 +3823,18 @@ public class DBService {
                 ((GSpreadSheetsActivator) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsActivator) itemId).setTextRu(textRu);
                 ((GSpreadSheetsActivator) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsAchievement) {
+                ((GSpreadSheetsAchievement) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsAchievement) itemId).setTextRu(textRu);
+                ((GSpreadSheetsAchievement) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsAchievementDescription) {
+                ((GSpreadSheetsAchievementDescription) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsAchievementDescription) itemId).setTextRu(textRu);
+                ((GSpreadSheetsAchievementDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsNote) {
+                ((GSpreadSheetsNote) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsNote) itemId).setTextRu(textRu);
+                ((GSpreadSheetsNote) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
             } else if (itemId instanceof GSpreadSheetsJournalEntry) {
                 ((GSpreadSheetsJournalEntry) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsJournalEntry) itemId).setTextRu(textRu);
@@ -3480,6 +3935,9 @@ public class DBService {
         result.addContainerProperty("value", String.class, null);
         Query gdpreadsheetsStatsQuery = em.createNativeQuery("select 'Перевод названий локаций', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetslocationname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetslocationname) as qres union all\n"
                 + "select 'Перевод активаторов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsactivator where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsactivator) as qres union all\n"
+                + "select 'Перевод достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievement where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievement) as qres union all\n"
+                + "select 'Перевод описаний достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievementdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievementdescription) as qres union all\n"
+                + "select 'Перевод записок', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnote where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnote) as qres union all\n"
                 + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
                 + "select 'Перевод названий квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestname) as qres union all\n"
                 + "select 'Перевод описаний квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestdescription) as qres union all\n"
@@ -3632,7 +4090,7 @@ public class DBService {
         for (GSpreadSheetsActivator item : activatorList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L, 14464837L}));
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -3692,7 +4150,7 @@ public class DBService {
         for (GSpreadSheetsLocationName item : locationNameList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L, 268015829L}));
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);

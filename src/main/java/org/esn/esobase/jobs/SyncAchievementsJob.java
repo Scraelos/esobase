@@ -14,9 +14,9 @@ import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.OriginalTextMismatchException;
-import org.esn.esobase.data.diffs.QuestDirectionsDiff;
 import org.esn.esobase.data.SYNC_TYPE;
-import org.esn.esobase.model.GSpreadSheetsQuestDirection;
+import org.esn.esobase.data.diffs.AchievementsDiff;
+import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -24,14 +24,14 @@ import org.springframework.scheduling.annotation.Scheduled;
  *
  * @author scraelos
  */
-public class SyncQuestDirectionsJob {
+public class SyncAchievementsJob {
 
     @Autowired
     private DBService dbService;
     @Autowired
     private GoogleDocsService docsService;
-    private static final Logger LOG = Logger.getLogger(SyncQuestDirectionsJob.class.getName());
-    private static final String TABLE_NAME = "quest directions";
+    private static final Logger LOG = Logger.getLogger(SyncAchievementsJob.class.getName());
+    private static final String TABLE_NAME = "achievements";
 
     @Scheduled(fixedDelay = 1800000, initialDelay = 2000)
     public void execute() throws OriginalTextMismatchException {
@@ -46,13 +46,13 @@ public class SyncQuestDirectionsJob {
             hc.addContainerProperty("dbDate", Date.class, null);
             hc.addContainerProperty("syncType", String.class, null);
             LOG.info("loading " + TABLE_NAME);
-            List<GSpreadSheetsQuestDirection> items = docsService.getQuestDirections();
+            List<GSpreadSheetsAchievement> items = docsService.getAchievements();
             LOG.info("making diff for " + TABLE_NAME);
-            hc = dbService.getQuestDirectionsDiff(items, hc);
-            List<QuestDirectionsDiff> diffs = (List<QuestDirectionsDiff>) hc.getItemIds();
-            List<GSpreadSheetsQuestDirection> itemsToSh = new ArrayList<>();
-            List<GSpreadSheetsQuestDirection> itemsToDb = new ArrayList<>();
-            for (QuestDirectionsDiff diff : diffs) {
+            hc = dbService.getAchievementsDiff(items, hc);
+            List<AchievementsDiff> diffs = (List<AchievementsDiff>) hc.getItemIds();
+            List<GSpreadSheetsAchievement> itemsToSh = new ArrayList<>();
+            List<GSpreadSheetsAchievement> itemsToDb = new ArrayList<>();
+            for (AchievementsDiff diff : diffs) {
                 if (diff.getSyncType() == SYNC_TYPE.TO_SPREADSHEET) {
                     itemsToSh.add(diff.getDbName());
                 } else if (diff.getSyncType() == SYNC_TYPE.TO_DB) {
@@ -60,10 +60,10 @@ public class SyncQuestDirectionsJob {
                 }
             }
             LOG.log(Level.INFO, "uploading {0}" + " " + TABLE_NAME, itemsToSh.size());
-            docsService.uploadQuestDirections(itemsToSh);
+            docsService.uploadAchievements(itemsToSh);
             LOG.log(Level.INFO, "saving to db {0}" + " " + TABLE_NAME, itemsToDb.size());
-            dbService.saveQuestDirections(itemsToDb);
-            LOG.info("sync finished for "+TABLE_NAME);
+            dbService.saveAchievements(itemsToDb);
+            LOG.info("sync finished for " + TABLE_NAME);
             hc.removeAllItems();
         } else {
             LOG.info("automatic sync disabled");

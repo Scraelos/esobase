@@ -32,11 +32,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.model.EsoInterfaceVariable;
+import org.esn.esobase.model.GSpreadSheetsAchievement;
+import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
+import org.esn.esobase.model.GSpreadSheetsNote;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
@@ -68,6 +71,9 @@ public class ImportTab extends VerticalLayout {
     private Button importJournalEntriesFromG;
     private Button importNpcNamesFromG;
     private Button importActiivatorsFromG;
+    private Button importAchievementsFromG;
+    private Button importAchievementDescriptionsFromG;
+    private Button importNotesFromG;
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
@@ -208,6 +214,42 @@ public class ImportTab extends VerticalLayout {
             });
             this.addComponent(importActiivatorsFromG);
 
+            importAchievementsFromG = new Button("Импорт достижений из гугл-таблиц");
+            importAchievementsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsAchievement> items = docsService.getAchievements();
+                    service.loadAchievementsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importAchievementsFromG);
+
+            importAchievementDescriptionsFromG = new Button("Импорт описаний достижений из гугл-таблиц");
+            importAchievementDescriptionsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsAchievementDescription> items = docsService.getAchievementDescriptions();
+                    service.loadAchievementDescriptionsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importAchievementDescriptionsFromG);
+
+            importNotesFromG = new Button("Импорт записок из гугл-таблиц");
+            importNotesFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsNote> items = docsService.getNotes();
+                    service.loadNotesFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importNotesFromG);
+
             importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
             importNpcNamesFromG.addClickListener(new Button.ClickListener() {
 
@@ -264,7 +306,7 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    List<Location> locs=service.getLocations();
+                    List<Location> locs = service.getLocations();
                     for (Location l : locs) {
                         service.calculateLocationProgress(l);
                     }
@@ -291,10 +333,10 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    for(int i=0;i<100;i++) {
+                    for (int i = 0; i < 100; i++) {
                         service.assignSpreadSheetRowsToRawStrings();
                     }
-                    
+
                 }
             });
             this.addComponent(assignTablesToRaw);
@@ -303,10 +345,10 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    for(int i=0;i<100;i++) {
+                    for (int i = 0; i < 100; i++) {
                         service.updateGspreadSheetTextEn();
                     }
-                    
+
                 }
             });
             this.addComponent(updateGspreadSheetsWithRawText);
@@ -315,7 +357,7 @@ public class ImportTab extends VerticalLayout {
             uploadInterfaceLua.addSucceededListener(interfaceLuaReceiver);
             uploadInterfaceLua.setImmediate(true);
             this.addComponent(uploadInterfaceLua);
-            InterfaceRuLuaReceiver interfaceRuLuaReceiver=new InterfaceRuLuaReceiver(service);
+            InterfaceRuLuaReceiver interfaceRuLuaReceiver = new InterfaceRuLuaReceiver(service);
             uploadRuInterfaceLua = new Upload("Загрузите файл с русскими строчками интерфейса", interfaceRuLuaReceiver);
             uploadRuInterfaceLua.addSucceededListener(interfaceRuLuaReceiver);
             uploadRuInterfaceLua.setImmediate(true);
@@ -330,7 +372,7 @@ public class ImportTab extends VerticalLayout {
                 result = c.getStringCellValue();
                 break;
             case Cell.CELL_TYPE_NUMERIC:
-                Double numValue=c.getNumericCellValue();
+                Double numValue = c.getNumericCellValue();
                 result = Integer.toString(numValue.intValue());
         }
         return result;
@@ -573,7 +615,7 @@ public class ImportTab extends VerticalLayout {
         }
 
     }
-    
+
     private class InterfaceRuLuaReceiver implements Receiver, SucceededListener {
 
         private final DBService service;

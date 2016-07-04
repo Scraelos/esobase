@@ -3,31 +3,32 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.esn.esobase.data;
+package org.esn.esobase.data.diffs;
 
-import org.esn.esobase.model.GSpreadSheetsJournalEntry;
+import org.esn.esobase.data.SYNC_TYPE;
+import org.esn.esobase.model.GSpreadSheetsNpcName;
 
 /**
  *
  * @author scraelos
  */
-public class JournalEntriesDiff {
+public class NpcNameDiff {
 
-    private final GSpreadSheetsJournalEntry spreadsheetsName;
-    private final GSpreadSheetsJournalEntry dbName;
+    private final GSpreadSheetsNpcName spreadsheetsName;
+    private final GSpreadSheetsNpcName dbName;
     private final SYNC_TYPE syncType;
 
-    public JournalEntriesDiff(GSpreadSheetsJournalEntry spreadsheetsPhrase, GSpreadSheetsJournalEntry dbPhrase, SYNC_TYPE syncType) {
+    public NpcNameDiff(GSpreadSheetsNpcName spreadsheetsPhrase, GSpreadSheetsNpcName dbPhrase, SYNC_TYPE syncType) {
         this.spreadsheetsName = spreadsheetsPhrase;
         this.dbName = dbPhrase;
         this.syncType = syncType;
     }
 
-    public GSpreadSheetsJournalEntry getSpreadsheetsName() {
+    public GSpreadSheetsNpcName getSpreadsheetsName() {
         return spreadsheetsName;
     }
 
-    public GSpreadSheetsJournalEntry getDbName() {
+    public GSpreadSheetsNpcName getDbName() {
         return dbName;
     }
 
