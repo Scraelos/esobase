@@ -307,7 +307,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnArea.setValue(topic.getNpcText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnArea.setNullRepresentation("");
                 result.addComponent(textEnArea);// "Текст в игре" 
             }
@@ -316,7 +315,6 @@ public class TranslateTab extends VerticalLayout {
                 textRuArea.setValue(topic.getNpcTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textRuArea.setNullRepresentation("");
                 result.addComponent(textRuArea);//"Перевод в игре" 
             }
@@ -325,7 +323,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setValue(topic.getExtNpcPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//"Текст в таблицах"
                 if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
@@ -333,7 +330,6 @@ public class TranslateTab extends VerticalLayout {
                     textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                     textRuRawArea.setNullRepresentation("");
                     result.addComponent(textRuRawArea);//"Перевод в таблицах"
                 }
@@ -357,7 +353,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnArea.setValue(topic.getPlayerText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnArea.setNullRepresentation("");
                 result.addComponent(textEnArea);//, "Текст в игре" 
             }
@@ -366,7 +361,6 @@ public class TranslateTab extends VerticalLayout {
                 textRuArea.setValue(topic.getPlayerTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textRuArea.setNullRepresentation("");
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
@@ -375,7 +369,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setValue(topic.getExtPlayerPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtPlayerPhrase().getTextRu() != null && !topic.getExtPlayerPhrase().getTextRu().equals(topic.getExtPlayerPhrase().getTextEn())) {
@@ -383,7 +376,6 @@ public class TranslateTab extends VerticalLayout {
                     textRuRawArea.setValue(topic.getExtPlayerPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                     textRuRawArea.setNullRepresentation("");
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах" 
                 }
@@ -409,7 +401,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnArea.setValue(topic.getText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnArea.setNullRepresentation("");
                 result.addComponent(textEnArea);//, "Текст в игре"
             }
@@ -418,7 +409,6 @@ public class TranslateTab extends VerticalLayout {
                 textRuArea.setValue(topic.getTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textRuArea.setNullRepresentation("");
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
@@ -427,7 +417,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setValue(topic.getExtNpcPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
@@ -435,7 +424,6 @@ public class TranslateTab extends VerticalLayout {
                     textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                     textRuRawArea.setNullRepresentation("");
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
@@ -461,7 +449,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnArea.setValue(subtitle.getText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnArea.setNullRepresentation("");
                 result.addComponent(textEnArea);//, "Текст в игре"
             }
@@ -470,7 +457,6 @@ public class TranslateTab extends VerticalLayout {
                 textRuArea.setValue(subtitle.getTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textRuArea.setNullRepresentation("");
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
@@ -480,7 +466,6 @@ public class TranslateTab extends VerticalLayout {
                 textEnRawArea.setValue(subtitle.getExtNpcPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (subtitle.getExtNpcPhrase().getTextRu() != null && !subtitle.getExtNpcPhrase().getTextRu().equals(subtitle.getExtNpcPhrase().getTextEn())) {
@@ -488,7 +473,6 @@ public class TranslateTab extends VerticalLayout {
                     textRuRawArea.setValue(subtitle.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                     textRuRawArea.setNullRepresentation("");
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
@@ -621,7 +605,6 @@ public class TranslateTab extends VerticalLayout {
 
             translation = new TextArea(caption.toString());
             translation.setSizeFull();
-            translation.addStyleName(ValoTheme.TEXTAREA_TINY);
             translation.setNullRepresentation("");
             translation.setImmediate(true);
             translation.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.TIMEOUT);

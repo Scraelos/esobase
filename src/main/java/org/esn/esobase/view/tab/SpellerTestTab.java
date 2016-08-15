@@ -215,16 +215,12 @@ public class SpellerTestTab extends VerticalLayout {
                     result = new TextArea();
                     result.setPropertyDataSource(container.getItem(itemId).getItemProperty(propertyId));
                     result.setSizeFull();
-                    result.addStyleName(ValoTheme.TEXTAREA_SMALL);
-                    result.addStyleName(ValoTheme.TEXTAREA_TINY);
                 }
                 if (!(itemId instanceof SpellError) && propertyId.equals("textEn")) {
                     result = new TextArea();
                     result.setPropertyDataSource(container.getItem(itemId).getItemProperty(propertyId));
                     result.setReadOnly(true);
                     result.setSizeFull();
-                    result.addStyleName(ValoTheme.TEXTAREA_SMALL);
-                    result.addStyleName(ValoTheme.TEXTAREA_TINY);
                 }
                 return result;
             }

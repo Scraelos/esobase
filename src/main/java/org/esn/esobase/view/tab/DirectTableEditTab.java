@@ -142,8 +142,6 @@ public class DirectTableEditTab extends VerticalLayout {
         VerticalLayout searchInCatalogsLayout = new VerticalLayout();
         HorizontalLayout hl = new HorizontalLayout();
         searchField = new TextField();
-        searchField.addStyleName(ValoTheme.TEXTFIELD_SMALL);
-        searchField.addStyleName(ValoTheme.TEXTFIELD_TINY);
         searchField.addShortcutListener(new ShortcutListener("Search shortcut", ShortcutAction.KeyCode.ENTER, null) {
             @Override
             public void handleAction(Object sender, Object target) {
@@ -206,7 +204,7 @@ public class DirectTableEditTab extends VerticalLayout {
         translateTypeBox.addItem("GSpreadSheetsAchievementDescription");
         translateTypeBox.setItemCaption("GSpreadSheetsAchievementDescription", "Описания достижений");
         translateTypeBox.addItem("GSpreadSheetsNote");
-        translateTypeBox.setItemCaption("GSpreadSheetsNote", "Записки");
+        translateTypeBox.setItemCaption("GSpreadSheetsNote", "Письма");
         translateTypeBox.addItem("GSpreadSheetsItemDescription");
         translateTypeBox.setItemCaption("GSpreadSheetsItemDescription", "Описания предметов");
         translateTypeBox.addItem("GSpreadSheetsItemName");
@@ -656,7 +654,7 @@ public class DirectTableEditTab extends VerticalLayout {
         noteTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NOTES"));
         noteTable.setSortEnabled(false);
         noteTable.setConverter("weight", new WeightConverter());
-        tableTabs.addTab(noteTable, "Записки");
+        tableTabs.addTab(noteTable, "Письма");
 
         esoInterfaceTable = new Table();
         esoInterfaceTable.setSizeFull();
@@ -713,7 +711,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsAchievement")));
             }
             if (translateTypeBox.getValue().equals("GSpreadSheetsAchievementDescription")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsDescription")));
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsAchievementDescription")));
             }
             if (translateTypeBox.getValue().equals("GSpreadSheetsNote")) {
                 newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNote")));
@@ -859,8 +857,6 @@ public class DirectTableEditTab extends VerticalLayout {
             if (propertyId.equals("textRu")) {
                 TextArea area = new TextArea();
                 area.setSizeFull();
-                area.addStyleName(ValoTheme.TEXTAREA_SMALL);
-                area.addStyleName(ValoTheme.TEXTAREA_TINY);
                 if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
                     area.setReadOnly(true);
                 }
@@ -868,8 +864,6 @@ public class DirectTableEditTab extends VerticalLayout {
             } else if (propertyId.equals("textEn")) {
                 TextArea area = new TextArea();
                 area.setSizeFull();
-                area.addStyleName(ValoTheme.TEXTAREA_SMALL);
-                area.addStyleName(ValoTheme.TEXTAREA_TINY);
                 area.setReadOnly(true);
                 result = area;
             }
@@ -1202,7 +1196,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
             translation = new TextArea(caption.toString());
             translation.setSizeFull();
-            translation.addStyleName(ValoTheme.TEXTAREA_TINY);
             translation.setNullRepresentation("");
             translation.setImmediate(true);
             translation.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.TIMEOUT);

@@ -3590,7 +3590,7 @@ public class DBService {
             item.getItemProperty("textRu").setValue(i.getTextRu());
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
-            item.getItemProperty("catalogType").setValue("Записка");
+            item.getItemProperty("catalogType").setValue("Письмо");
         }
         Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
         searchTermitems = new ArrayList<>();
@@ -4280,6 +4280,48 @@ public class DBService {
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
             }
         }
+        
+        TypedQuery<GSpreadSheetsAchievement> achievementQuery = em.createQuery("select a from GSpreadSheetsAchievement a where aId is null order by changeTime", GSpreadSheetsAchievement.class);
+        QuestNameQuery.setMaxResults(100);
+        List<GSpreadSheetsAchievement> achievementList = achievementQuery.getResultList();
+        for (GSpreadSheetsAchievement item : achievementList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{12529189L,172030117L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+        
+        TypedQuery<GSpreadSheetsAchievementDescription> achievementDescriptionQuery = em.createQuery("select a from GSpreadSheetsAchievementDescription a where aId is null order by changeTime", GSpreadSheetsAchievementDescription.class);
+        QuestNameQuery.setMaxResults(100);
+        List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionQuery.getResultList();
+        for (GSpreadSheetsAchievementDescription item : achievementDescriptionList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{188155806L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+        
+        TypedQuery<GSpreadSheetsNote> noteQuery = em.createQuery("select a from GSpreadSheetsNote a where aId is null order by changeTime", GSpreadSheetsNote.class);
+        QuestNameQuery.setMaxResults(100);
+        List<GSpreadSheetsNote> noteList = noteQuery.getResultList();
+        for (GSpreadSheetsNote item : noteList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{219317028L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
     }
 
     @Transactional
@@ -4341,7 +4383,7 @@ public class DBService {
     @Transactional
     public void updateGspreadSheetTextEn() {
         List<Object[]> resultList;
-        Query activatorsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsactivator g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query activatorsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsactivator g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = activatorsQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4349,13 +4391,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsactivator set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsactivator set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query itemDescriptionsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsitemdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query itemDescriptionsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsitemdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = itemDescriptionsQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4363,13 +4406,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsitemdescription set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsitemdescription set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query itemNamesQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsitemname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query itemNamesQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsitemname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = itemNamesQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4377,13 +4421,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsitemname set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsitemname set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetsjournalentryQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsjournalentry g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsjournalentryQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsjournalentry g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsjournalentryQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4391,13 +4436,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsjournalentry set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsjournalentry set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetslocationnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetslocationname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetslocationnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetslocationname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetslocationnameQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4405,13 +4451,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetslocationname set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetslocationname set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetsnpcnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten,g.sex from gspreadsheetsnpcname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsnpcnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru,g.sex from gspreadsheetsnpcname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsnpcnameQ.getResultList();
         Pattern MalePattern = Pattern.compile("\\^[M]");
         Pattern malePattern = Pattern.compile("\\^[m]");
@@ -4423,7 +4470,7 @@ public class DBService {
             BigInteger id = (BigInteger) row[0];
             String gTextEn = ((String) row[1]);
             String eTextEn = ((String) row[2]).replace("\n", "$");
-            String sex = ((String) row[3]);
+            String sex = ((String) row[4]);
             NPC_SEX gSex = NPC_SEX.valueOf(sex);
             NPC_SEX eSex = NPC_SEX.U;
 
@@ -4459,15 +4506,16 @@ public class DBService {
             }
             if (!gTextEn.equals(eTextEn) || eSex != gSex) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsnpcname set texten=:texten,sex=:sex where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsnpcname set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null,sex=:sex where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.setParameter("sex", eSex.name());
                 updateQ.executeUpdate();
             }
         }
 
-        Query gspreadsheetsnpcphraseQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsnpcphrase g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsnpcphraseQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsnpcphrase g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsnpcphraseQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4475,13 +4523,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsnpcphrase set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsnpcphrase set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetsplayerphraseQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsplayerphrase g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsplayerphraseQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsplayerphrase g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsplayerphraseQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4489,13 +4538,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsplayerphrase set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsplayerphrase set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetsquestdescriptionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsquestdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsquestdescriptionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsquestdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsquestdescriptionQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4503,13 +4553,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsquestdescription set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsquestdescription set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetsquestdirectionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsquestdirection g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsquestdirectionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsquestdirection g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsquestdirectionQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4517,13 +4568,14 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsquestdirection set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsquestdirection set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }
-        Query gspreadsheetsquestnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten from gspreadsheetsquestname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        Query gspreadsheetsquestnameQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsquestname g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
         resultList = gspreadsheetsquestnameQ.getResultList();
         for (Object[] row : resultList) {
             BigInteger id = (BigInteger) row[0];
@@ -4531,9 +4583,55 @@ public class DBService {
             String eTextEn = ((String) row[2]).replace("\n", "$");
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
-                Query updateQ = em.createNativeQuery("update gspreadsheetsquestname set texten=:texten where id=:id");
+                Query updateQ = em.createNativeQuery("update gspreadsheetsquestname set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
-                updateQ.setParameter("texten", eTextEn);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetachievementQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsachievement g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetachievementQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsachievement set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetachievementDescriptionQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsachievementdescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetachievementDescriptionQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsachievementdescription set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetnodesQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsnote g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetnodesQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsnote set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
         }

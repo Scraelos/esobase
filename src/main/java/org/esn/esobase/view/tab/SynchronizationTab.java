@@ -462,7 +462,6 @@ public class SynchronizationTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
             TextField tf = new TextField();
             tf.setSizeFull();
-            tf.addStyleName(ValoTheme.TEXTAREA_TINY);
             tf.addStyleName(ValoTheme.TEXTAREA_BORDERLESS);
             tf.setValue((String) source.getItem(itemId).getItemProperty(columnId).getValue());
             tf.setReadOnly(true);

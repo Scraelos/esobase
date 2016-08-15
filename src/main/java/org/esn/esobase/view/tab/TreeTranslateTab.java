@@ -112,7 +112,6 @@ public class TreeTranslateTab extends VerticalLayout {
                 TextArea textArea = new TextArea(container.getItem(itemId).getItemProperty(propertyId));
                 textArea.setWidth(100f, Unit.PERCENTAGE);
                 textArea.addStyleName(ValoTheme.TEXTAREA_BORDERLESS);
-                textArea.addStyleName(ValoTheme.TEXTAREA_TINY);
                 textArea.setNullRepresentation("");
                 textArea.setImmediate(true);
                 result = textArea;
@@ -121,7 +120,7 @@ public class TreeTranslateTab extends VerticalLayout {
                 result.setReadOnly(true);
             }
             if (result instanceof TextField) {
-                ((TextField) result).addStyleName(ValoTheme.TEXTFIELD_TINY);
+                //((TextField) result).addStyleName(ValoTheme.TEXTFIELD_TINY);
                 ((TextField) result).addStyleName(ValoTheme.TEXTFIELD_BORDERLESS);
             }
             return result;
