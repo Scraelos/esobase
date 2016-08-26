@@ -6,10 +6,8 @@
 package org.esn.esobase.view.tab;
 
 import com.vaadin.addon.jpacontainer.EntityItem;
-import com.vaadin.addon.jpacontainer.EntityItemProperty;
 import com.vaadin.addon.jpacontainer.JPAContainer;
 import com.vaadin.data.Container;
-import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.converter.Converter;
@@ -21,14 +19,12 @@ import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.shared.ui.combobox.FilteringMode;
-import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.DateField;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -39,6 +35,7 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +57,6 @@ import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
 import org.esn.esobase.model.GSpreadSheetsQuestDirection;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
-import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.TranslatedText;
@@ -125,6 +121,8 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table esoInterfaceTable;
     private JPAContainer<EsoInterfaceVariable> esoInterfaceContainer;
+
+    private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
     private ComboBox statusFilter;
     private ComboBox translatorBox;
@@ -1193,7 +1191,12 @@ public class DirectTableEditTab extends VerticalLayout {
             if (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED && (translatedText.getApprovedBy() != null) && (translatedText.getApptovedTime() != null)) {
                 caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
             }
-
+            if (translatedText.getCreateTime() != null) {
+                caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
+            }
+            if (translatedText.getChangeTime() != null) {
+                caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
+            }
             translation = new TextArea(caption.toString());
             translation.setSizeFull();
             translation.setNullRepresentation("");
@@ -1223,6 +1226,12 @@ public class DirectTableEditTab extends VerticalLayout {
                     caption.append("Статус: ").append(status).append(", автор: ").append(translatedText.getAuthor().getLogin());
                     if (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED && (translatedText.getApprovedBy() != null) && (translatedText.getApptovedTime() != null)) {
                         caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
+                    }
+                    if (translatedText.getCreateTime() != null) {
+                        caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
+                    }
+                    if (translatedText.getChangeTime() != null) {
+                        caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
                     }
                     translation.setCaption(caption.toString());
                 }

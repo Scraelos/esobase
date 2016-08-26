@@ -25,6 +25,7 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -77,6 +78,7 @@ public class TranslateTab extends VerticalLayout {
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
+    private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
     public TranslateTab(DBService service) {
         TopicNpcColumnGenerator topicNpcColumnGenerator = new TopicNpcColumnGenerator();
@@ -602,7 +604,12 @@ public class TranslateTab extends VerticalLayout {
             if (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED && (translatedText.getApprovedBy() != null) && (translatedText.getApptovedTime() != null)) {
                 caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
             }
-
+            if (translatedText.getCreateTime() != null) {
+                        caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
+                    }
+            if (translatedText.getChangeTime() != null) {
+                caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
+            }
             translation = new TextArea(caption.toString());
             translation.setSizeFull();
             translation.setNullRepresentation("");
@@ -633,6 +640,12 @@ public class TranslateTab extends VerticalLayout {
                     caption.append("Статус: ").append(status).append(", автор: ").append(translatedText.getAuthor().getLogin());
                     if (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED && (translatedText.getApprovedBy() != null) && (translatedText.getApptovedTime() != null)) {
                         caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
+                    }
+                    if (translatedText.getCreateTime() != null) {
+                        caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
+                    }
+                    if (translatedText.getChangeTime() != null) {
+                        caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
                     }
                     translation.setCaption(caption.toString());
                 }
