@@ -109,8 +109,9 @@ public class MainView extends Panel implements View, Command {
     @PostConstruct
     public void PostConstruct() {
         setSizeFull();
-
+        this.setHeight(100f, Unit.PERCENTAGE);
         VerticalLayout layout = new VerticalLayout();
+        layout.setHeight(100f, Unit.PERCENTAGE);
         layout.setSpacing(true);
         layout.setMargin(true);
         layout.addComponent(headerLayout);
@@ -118,9 +119,12 @@ public class MainView extends Panel implements View, Command {
         layout.addComponent(mainMenu);
         buildMenu();
         layout.addComponent(tabs);
+        layout.setExpandRatio(tabs, 40f);
         buildTabs();
 
+        
         setContent(layout);
+        
     }
 
     private void buildMenu() {
@@ -162,6 +166,7 @@ public class MainView extends Panel implements View, Command {
 
     private void buildTabs() {
         tabs.setWidth(100f, Unit.PERCENTAGE);
+        tabs.setHeight(100f, Unit.PERCENTAGE);
     }
 
     @Override

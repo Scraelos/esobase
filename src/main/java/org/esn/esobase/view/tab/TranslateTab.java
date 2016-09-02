@@ -48,7 +48,6 @@ import org.esn.esobase.security.SpringSecurityHelper;
 public class TranslateTab extends VerticalLayout {
 
     private final DBService service;
-    private VerticalLayout contentLayout;
     private HorizontalLayout npcListlayout;
     private VerticalLayout npcContentLayout;
     private ComboBox locationTable;
@@ -88,14 +87,12 @@ public class TranslateTab extends VerticalLayout {
         TranslationColumnGenerator translationColumnGenerator = new TranslationColumnGenerator();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
         this.setWidth(100f, Unit.PERCENTAGE);
+        this.setHeight(100f, Unit.PERCENTAGE);
         this.service = service;
-        contentLayout = new VerticalLayout();
-        contentLayout.setWidth(100f, Unit.PERCENTAGE);
         npcListlayout = new HorizontalLayout();
-        npcListlayout.setWidth(100f, Unit.PERCENTAGE);
-        npcListlayout.setHeight(100f, Unit.PIXELS);
+        npcListlayout.setSizeFull();
         npcTable = new ComboBox("NPC");
-        npcTable.setPageLength(15);
+        npcTable.setPageLength(20);
 
         npcTable.setWidth(100f, Unit.PERCENTAGE);
         npcTable.addValueChangeListener(new NpcSelectListener());
@@ -169,9 +166,9 @@ public class TranslateTab extends VerticalLayout {
         npcListlayout.setExpandRatio(questAndWithNewTranslations, 0.4f);
         npcListlayout.setExpandRatio(refreshButton, 0.1f);
         npcContentLayout = new VerticalLayout();
-        npcContentLayout.setWidth(100, Unit.PERCENTAGE);
+        npcContentLayout.setSizeFull();
         npcTabSheet = new TabSheet();
-        npcTabSheet.setWidth(100f, Unit.PERCENTAGE);
+        npcTabSheet.setSizeFull();
         npcTabLayout = new VerticalLayout();
         locationName = new TextField("Название локации");
         locationName.setNullRepresentation("");
@@ -188,7 +185,7 @@ public class TranslateTab extends VerticalLayout {
         npcTab = npcTabSheet.addTab(npcTabLayout, "Инфо");
         npcTopicsTable = new Table();
         npcTopicsTable.addStyleName(ValoTheme.TABLE_COMPACT);
-        npcTopicsTable.setWidth(100f, Unit.PERCENTAGE);
+        npcTopicsTable.setSizeFull();
         npcTopicsTable.setPageLength(0);
         topicsContainer = new BeanItemContainer<>(Topic.class);
         npcTopicsTable.setContainerDataSource(topicsContainer);
@@ -207,7 +204,7 @@ public class TranslateTab extends VerticalLayout {
         npcTopicsTable.setColumnWidth("actions", 150);
         npcSubtitlesTable = new Table();
         npcSubtitlesTable.addStyleName(ValoTheme.TABLE_COMPACT);
-        npcSubtitlesTable.setWidth(100f, Unit.PERCENTAGE);
+        npcSubtitlesTable.setSizeFull();
         npcSubtitlesTable.setPageLength(0);
         subtitlesContainer = new BeanItemContainer<>(Subtitle.class);
         npcSubtitlesTable.setContainerDataSource(subtitlesContainer);
@@ -221,7 +218,7 @@ public class TranslateTab extends VerticalLayout {
         npcSubtitlesTable.setColumnWidth("actions", 150);
         npcGreetingsTable = new Table();
         npcGreetingsTable.addStyleName(ValoTheme.TABLE_COMPACT);
-        npcGreetingsTable.setWidth(100f, Unit.PERCENTAGE);
+        npcGreetingsTable.setSizeFull();
         npcGreetingsTable.setPageLength(0);
         greetingsContainer = new BeanItemContainer<>(Greeting.class);
         npcGreetingsTable.setContainerDataSource(greetingsContainer);
@@ -237,11 +234,10 @@ public class TranslateTab extends VerticalLayout {
         npcSubtitlesTab = npcTabSheet.addTab(npcSubtitlesTable, "Субтитры");
         npcGreetingsTab = npcTabSheet.addTab(npcGreetingsTable, "Приветствие");
         npcContentLayout.addComponent(npcTabSheet);
-        contentLayout.addComponent(npcListlayout);
-        contentLayout.addComponent(npcContentLayout);
-        contentLayout.setExpandRatio(npcListlayout, 1.5f);
-        contentLayout.setExpandRatio(npcContentLayout, 9f);
-        this.addComponent(contentLayout);
+        this.addComponent(npcListlayout);
+        this.addComponent(npcContentLayout);
+        this.npcListlayout.setHeight(72f, Unit.PIXELS);
+        this.setExpandRatio(npcContentLayout, 20f);
         LoadFilters();
     }
 

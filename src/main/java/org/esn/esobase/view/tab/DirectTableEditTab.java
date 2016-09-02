@@ -134,10 +134,13 @@ public class DirectTableEditTab extends VerticalLayout {
 
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
-        this.setSizeFull();
+        this.setWidth(100f, Unit.PERCENTAGE);
+        this.setHeight(100f, Unit.PERCENTAGE);
         searchTabs = new TabSheet();
         searchTabs.setSizeFull();
+        searchTabs.setHeight(200f, Unit.PIXELS);
         VerticalLayout searchInCatalogsLayout = new VerticalLayout();
+        searchInCatalogsLayout.setSizeFull();
         HorizontalLayout hl = new HorizontalLayout();
         searchField = new TextField();
         searchField.addShortcutListener(new ShortcutListener("Search shortcut", ShortcutAction.KeyCode.ENTER, null) {
@@ -164,8 +167,6 @@ public class DirectTableEditTab extends VerticalLayout {
         resultTable.addStyleName(ValoTheme.TABLE_SMALL);
         resultTable.addStyleName(ValoTheme.TABLE_COMPACT);
         resultTable.setSizeFull();
-        resultTable.setHeight(200f, Unit.PIXELS);
-
         resultTable.setPageLength(0);
         hc.addContainerProperty("textEn", String.class, null);
         hc.addContainerProperty("textRu", String.class, null);
@@ -178,9 +179,11 @@ public class DirectTableEditTab extends VerticalLayout {
         resultTable.addItemClickListener(new SearchTableRowClickListener());
 
         searchInCatalogsLayout.addComponent(resultTable);
+        searchInCatalogsLayout.setExpandRatio(resultTable, 5f);
 
         searchTabs.addTab(searchInCatalogsLayout, "Поиск");
         VerticalLayout translationsLayout = new VerticalLayout();
+        translationsLayout.setSizeFull();
         HorizontalLayout traslationsFilterslayout = new HorizontalLayout();
         statusFilter = new ComboBox("Статус", Arrays.asList(TRANSLATE_STATUS.values()));
         statusFilter.setNullSelectionAllowed(false);
@@ -239,8 +242,9 @@ public class DirectTableEditTab extends VerticalLayout {
         traslationsFilterslayout.setComponentAlignment(filterTranslationButton, Alignment.BOTTOM_LEFT);
         translationsLayout.addComponent(traslationsFilterslayout);
         newTranslationsTable = new Table();
+        newTranslationsTable.addStyleName(ValoTheme.TABLE_SMALL);
+        newTranslationsTable.addStyleName(ValoTheme.TABLE_COMPACT);
         newTranslationsTable.setSizeFull();
-        newTranslationsTable.setHeight(200f, Unit.PIXELS);
         newTranslationsContainer = service.getJPAContainerContainerForClass(TranslatedText.class);
         filterTranslations();
         newTranslationsContainer.sort(new Object[]{"id"}, new boolean[]{true});
@@ -249,6 +253,7 @@ public class DirectTableEditTab extends VerticalLayout {
         newTranslationsTable.setColumnHeaders(new String[]{"Автор", "Дата", "Перевод"});
         newTranslationsTable.addItemClickListener(new TranslationsTableRowClickListener());
         translationsLayout.addComponent(newTranslationsTable);
+        translationsLayout.setExpandRatio(newTranslationsTable, 5f);
 
         searchTabs.addTab(translationsLayout, "Переводы");
         this.addComponent(searchTabs);
@@ -256,7 +261,6 @@ public class DirectTableEditTab extends VerticalLayout {
         tableTabs.setSizeFull();
         npcNameTable = new Table();
         npcNameTable.setSizeFull();
-        npcNameTable.setHeight(500f, Unit.PIXELS);
         npcNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNpcName.class);
         npcNameContainer.setBuffered(true);
         npcNameTable.setContainerDataSource(npcNameContainer);
@@ -287,7 +291,6 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameTable = new Table();
         locationNameTable.setPageLength(10);
         locationNameTable.setSizeFull();
-        locationNameTable.setHeight(500f, Unit.PIXELS);
         locationNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsLocationName.class);
         locationNameContainer.setBuffered(true);
         locationNameTable.setContainerDataSource(locationNameContainer);
@@ -315,7 +318,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         activatorTable = new Table();
         activatorTable.setSizeFull();
-        activatorTable.setHeight(500f, Unit.PIXELS);
         activatorContainer = service.getJPAContainerContainerForClass(GSpreadSheetsActivator.class);
         activatorContainer.setBuffered(true);
         activatorTable.setContainerDataSource(activatorContainer);
@@ -343,7 +345,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         playerPhraseTable = new Table();
         playerPhraseTable.setSizeFull();
-        playerPhraseTable.setHeight(500f, Unit.PIXELS);
         playerPhraseContainer = service.getJPAContainerContainerForClass(GSpreadSheetsPlayerPhrase.class);
         playerPhraseContainer.setBuffered(true);
         playerPhraseTable.setContainerDataSource(playerPhraseContainer);
@@ -371,7 +372,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         npcPhraseTable = new Table();
         npcPhraseTable.setSizeFull();
-        npcPhraseTable.setHeight(500f, Unit.PIXELS);
         npcPhraseContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNpcPhrase.class);
         npcPhraseContainer.setBuffered(true);
         npcPhraseTable.setContainerDataSource(npcPhraseContainer);
@@ -399,7 +399,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         questNameTable = new Table();
         questNameTable.setSizeFull();
-        questNameTable.setHeight(500f, Unit.PIXELS);
         questNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestName.class);
         questNameContainer.setBuffered(true);
         questNameTable.setContainerDataSource(questNameContainer);
@@ -427,7 +426,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         questDescriptionTable = new Table();
         questDescriptionTable.setSizeFull();
-        questDescriptionTable.setHeight(500f, Unit.PIXELS);
         questDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDescription.class);
         questDescriptionContainer.setBuffered(true);
         questDescriptionTable.setContainerDataSource(questDescriptionContainer);
@@ -455,7 +453,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         questDirectionTable = new Table();
         questDirectionTable.setSizeFull();
-        questDirectionTable.setHeight(500f, Unit.PIXELS);
         questDirectionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDirection.class);
         questDirectionContainer.setBuffered(true);
         questDirectionTable.setContainerDataSource(questDirectionContainer);
@@ -486,7 +483,6 @@ public class DirectTableEditTab extends VerticalLayout {
         itemNameLabel.setStyleName(ValoTheme.LABEL_COLORED);
         itemNameTable = new Table();
         itemNameTable.setSizeFull();
-        itemNameTable.setHeight(500f, Unit.PIXELS);
         itemNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsItemName.class);
         itemNameContainer.setBuffered(true);
         itemNameTable.setContainerDataSource(itemNameContainer);
@@ -516,7 +512,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         itemDescriptionTable = new Table();
         itemDescriptionTable.setSizeFull();
-        itemDescriptionTable.setHeight(500f, Unit.PIXELS);
         itemDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsItemDescription.class);
         itemDescriptionContainer.setBuffered(true);
         itemDescriptionTable.setContainerDataSource(itemDescriptionContainer);
@@ -544,7 +539,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         journalEntryTable = new Table();
         journalEntryTable.setSizeFull();
-        journalEntryTable.setHeight(500f, Unit.PIXELS);
         journalEntryContainer = service.getJPAContainerContainerForClass(GSpreadSheetsJournalEntry.class);
         journalEntryContainer.setBuffered(true);
         journalEntryTable.setContainerDataSource(journalEntryContainer);
@@ -572,7 +566,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         achievementTable = new Table();
         achievementTable.setSizeFull();
-        achievementTable.setHeight(500f, Unit.PIXELS);
         achievementContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAchievement.class);
         achievementContainer.setBuffered(true);
         achievementTable.setContainerDataSource(achievementContainer);
@@ -600,7 +593,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         achievementDescriptionTable = new Table();
         achievementDescriptionTable.setSizeFull();
-        achievementDescriptionTable.setHeight(500f, Unit.PIXELS);
         achievementDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAchievementDescription.class);
         achievementDescriptionContainer.setBuffered(true);
         achievementDescriptionTable.setContainerDataSource(achievementDescriptionContainer);
@@ -628,7 +620,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         noteTable = new Table();
         noteTable.setSizeFull();
-        noteTable.setHeight(500f, Unit.PIXELS);
         noteContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNote.class);
         noteContainer.setBuffered(true);
         noteTable.setContainerDataSource(noteContainer);
@@ -656,7 +647,6 @@ public class DirectTableEditTab extends VerticalLayout {
 
         esoInterfaceTable = new Table();
         esoInterfaceTable.setSizeFull();
-        esoInterfaceTable.setHeight(500f, Unit.PIXELS);
         esoInterfaceContainer = service.getJPAContainerContainerForClass(EsoInterfaceVariable.class);
         esoInterfaceContainer.setBuffered(true);
         esoInterfaceTable.setContainerDataSource(esoInterfaceContainer);
@@ -681,8 +671,7 @@ public class DirectTableEditTab extends VerticalLayout {
         tableTabs.addTab(esoInterfaceTable, "Строки интерфейса");
 
         this.addComponent(tableTabs);
-        this.setExpandRatio(searchTabs, 10f);
-        this.setExpandRatio(tableTabs, 90f);
+        this.setExpandRatio(tableTabs,20f);
 
     }
 
