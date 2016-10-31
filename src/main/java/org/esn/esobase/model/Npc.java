@@ -8,6 +8,7 @@ package org.esn.esobase.model;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
@@ -42,19 +43,16 @@ public class Npc extends DAO {
     @ManyToOne(fetch = FetchType.EAGER)
     private Location location;
     @OneToMany(mappedBy = "npc", cascade = CascadeType.PERSIST)
-    private List<Subtitle> subtitles;
+    private Set<Subtitle> subtitles;
     @OneToMany(mappedBy = "npc", cascade = CascadeType.PERSIST)
-    private List<Topic> topics;
+    private Set<Topic> topics;
     @OneToMany(mappedBy = "npc", cascade = CascadeType.PERSIST)
-    private List<Greeting> greetings;
+    private Set<Greeting> greetings;
     @Enumerated(EnumType.STRING)
     private NPC_SEX sex;
     @ManyToMany(mappedBy = "npcs")
-    private List<Quest> quests;
+    private Set<Quest> quests;
     private BigDecimal progress;
-    private Boolean hasNewTranslations;
-    @ManyToMany
-    private Set<SysAccount> translators;
 
     public Npc() {
     }
@@ -63,9 +61,9 @@ public class Npc extends DAO {
         this.name = name;
         this.nameRu = nameRu;
         this.location = location;
-        this.subtitles = new ArrayList<>();
-        this.topics = new ArrayList<>();
-        this.greetings = new ArrayList<>();
+        this.subtitles = new HashSet<>();
+        this.topics = new HashSet<>();
+        this.greetings = new HashSet<>();
     }
 
     @Override
@@ -102,27 +100,27 @@ public class Npc extends DAO {
         this.location = location;
     }
 
-    public List<Subtitle> getSubtitles() {
+    public Set<Subtitle> getSubtitles() {
         return subtitles;
     }
 
-    public void setSubtitles(List<Subtitle> subtitles) {
+    public void setSubtitles(Set<Subtitle> subtitles) {
         this.subtitles = subtitles;
     }
 
-    public List<Topic> getTopics() {
+    public Set<Topic> getTopics() {
         return topics;
     }
 
-    public void setTopics(List<Topic> topics) {
+    public void setTopics(Set<Topic> topics) {
         this.topics = topics;
     }
 
-    public List<Greeting> getGreetings() {
+    public Set<Greeting> getGreetings() {
         return greetings;
     }
 
-    public void setGreetings(List<Greeting> greetings) {
+    public void setGreetings(Set<Greeting> greetings) {
         this.greetings = greetings;
     }
 
@@ -170,28 +168,12 @@ public class Npc extends DAO {
         this.progress = progress;
     }
 
-    public List<Quest> getQuests() {
+    public Set<Quest> getQuests() {
         return quests;
     }
 
-    public void setQuests(List<Quest> quests) {
+    public void setQuests(Set<Quest> quests) {
         this.quests = quests;
-    }
-
-    public Boolean getHasNewTranslations() {
-        return hasNewTranslations;
-    }
-
-    public void setHasNewTranslations(Boolean hasNewTranslations) {
-        this.hasNewTranslations = hasNewTranslations;
-    }
-
-    public Set<SysAccount> getTranslators() {
-        return translators;
-    }
-
-    public void setTranslators(Set<SysAccount> translators) {
-        this.translators = translators;
     }
 
 }

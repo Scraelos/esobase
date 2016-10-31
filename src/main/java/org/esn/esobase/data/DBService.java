@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,9 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -77,6 +76,7 @@ import org.esn.esobase.model.Topic;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
+import org.esn.esobase.tools.EsnDecoder;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
@@ -85,6 +85,7 @@ import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.json.JSONObject;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -2585,17 +2586,64 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations, SysAccount translator) {
+    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations, SysAccount translator, boolean noTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Npc.class);
         crit.setFetchMode("location", FetchMode.JOIN);
-        if (withNewTranslations) {
-            crit.add(Restrictions.eq("hasNewTranslations", true));
+        if (withNewTranslations && translator != null) {
+            Query withNewTranslationsQuery = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status='NEW' and tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.status='NEW' and tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.status='NEW' and tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.status='NEW' and tt.author_id=:authorId) as rr group by npc_id");
+            withNewTranslationsQuery.setParameter("authorId", translator.getId());
+            List<BigInteger> resultList = withNewTranslationsQuery.getResultList();
+            List<Long> longResultList = new ArrayList();
+            for (BigInteger id : resultList) {
+                longResultList.add(id.longValue());
+            }
+            if (longResultList.isEmpty()) {
+                longResultList.add(0L);
+            }
+            crit.add(
+                    Restrictions.in("id", longResultList)
+            );
+        } else if (withNewTranslations) {
+            Query withNewTranslationsQuery = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status='NEW'\n"
+                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.status='NEW'\n"
+                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.status='NEW'\n"
+                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.status='NEW') as rr group by npc_id");
+            List<BigInteger> resultList = withNewTranslationsQuery.getResultList();
+            List<Long> longResultList = new ArrayList();
+            for (BigInteger id : resultList) {
+                longResultList.add(id.longValue());
+            }
+            if (longResultList.isEmpty()) {
+                longResultList.add(0L);
+            }
+            crit.add(
+                    Restrictions.in("id", longResultList)
+            );
+        } else if (translator != null) {
+            Query withNewTranslationsQuery = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.author_id=:authorId) as rr group by npc_id");
+            withNewTranslationsQuery.setParameter("authorId", translator.getId());
+            List<BigInteger> resultList = withNewTranslationsQuery.getResultList();
+            List<Long> longResultList = new ArrayList();
+            for (BigInteger id : resultList) {
+                longResultList.add(id.longValue());
+            }
+            if (longResultList.isEmpty()) {
+                longResultList.add(0L);
+            }
+            crit.add(
+                    Restrictions.in("id", longResultList)
+            );
         }
-        if (translator != null) {
-            crit.createAlias("translators", "tr");
-            crit.add(Restrictions.eq("tr.id", translator.getId()));
+        if (noTranslations) {
+            crit.add(Restrictions.lt("progress", BigDecimal.ONE));
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Npc> list = crit.list();
@@ -2646,19 +2694,6 @@ public class DBService {
         } else {
             entity.setChangeTime(new Date());
             em.merge(entity);
-        }
-        Npc npc = null;
-        if (entity.getSubtitle() != null) {
-            npc = entity.getSubtitle().getNpc();
-        } else if (entity.getGreeting() != null) {
-            npc = entity.getGreeting().getNpc();
-        } else if (entity.getPlayerTopic() != null) {
-            npc = entity.getPlayerTopic().getNpc();
-        } else if (entity.getNpcTopic() != null) {
-            npc = entity.getNpcTopic().getNpc();
-        }
-        if (npc != null) {
-            updateNpcHasTranslated(npc);
         }
     }
 
@@ -2949,19 +2984,6 @@ public class DBService {
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
         em.merge(entity);
-        Npc npc = null;
-        if (entity.getSubtitle() != null) {
-            npc = entity.getSubtitle().getNpc();
-        } else if (entity.getGreeting() != null) {
-            npc = entity.getGreeting().getNpc();
-        } else if (entity.getPlayerTopic() != null) {
-            npc = entity.getPlayerTopic().getNpc();
-        } else if (entity.getNpcTopic() != null) {
-            npc = entity.getNpcTopic().getNpc();
-        }
-        if (npc != null) {
-            updateNpcHasTranslated(npc);
-        }
     }
 
     @Transactional
@@ -3157,7 +3179,6 @@ public class DBService {
         if (npc != null) {
             calculateNpcProgress(npc);
             calculateLocationProgress(npc.getLocation());
-            updateNpcHasTranslated(npc);
         }
     }
 
@@ -3258,20 +3279,6 @@ public class DBService {
             }
             if (t.getPlayerTopic() != null) {
                 npc = t.getPlayerTopic().getNpc();
-            }
-            if (npc != null) {
-                Set<SysAccount> translators = npc.getTranslators();
-                if (translators == null) {
-                    translators = new HashSet<>();
-                }
-                if (!translators.contains(t.getAuthor())) {
-                    translators.add(t.getAuthor());
-                }
-                npc.setTranslators(translators);
-                if (t.getStatus() == TRANSLATE_STATUS.NEW) {
-                    npc.setHasNewTranslations(Boolean.TRUE);
-                }
-                em.merge(npc);
             }
         }
 
@@ -3889,46 +3896,6 @@ public class DBService {
         }
     }
 
-    @Transactional
-    public void updateNpcHasTranslated(Npc n) {
-        boolean hasNewTranslations = false;
-        Npc npc = em.find(Npc.class, n.getId());
-        Set<SysAccount> translators = new HashSet<>();
-        for (Topic t : npc.getTopics()) {
-            for (TranslatedText tt : t.getPlayerTranslations()) {
-                translators.add(tt.getAuthor());
-                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                    hasNewTranslations = true;
-                }
-            }
-            for (TranslatedText tt : t.getNpcTranslations()) {
-                translators.add(tt.getAuthor());
-                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                    hasNewTranslations = true;
-                }
-            }
-        }
-        for (Greeting g : npc.getGreetings()) {
-            for (TranslatedText tt : g.getTranslations()) {
-                translators.add(tt.getAuthor());
-                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                    hasNewTranslations = true;
-                }
-            }
-        }
-        for (Subtitle s : npc.getSubtitles()) {
-            for (TranslatedText tt : s.getTranslations()) {
-                translators.add(tt.getAuthor());
-                if (tt.getStatus() == TRANSLATE_STATUS.NEW) {
-                    hasNewTranslations = true;
-                }
-            }
-        }
-        n.setTranslators(translators);
-        n.setHasNewTranslations(hasNewTranslations);
-        em.merge(n);
-    }
-
     public HierarchicalContainer getStatistics() {
         HierarchicalContainer result = new HierarchicalContainer();
         result.addContainerProperty("name", String.class, null);
@@ -4280,21 +4247,21 @@ public class DBService {
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
             }
         }
-        
+
         TypedQuery<GSpreadSheetsAchievement> achievementQuery = em.createQuery("select a from GSpreadSheetsAchievement a where aId is null order by changeTime", GSpreadSheetsAchievement.class);
         QuestNameQuery.setMaxResults(100);
         List<GSpreadSheetsAchievement> achievementList = achievementQuery.getResultList();
         for (GSpreadSheetsAchievement item : achievementList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{12529189L,172030117L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{12529189L, 172030117L}));
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
             }
         }
-        
+
         TypedQuery<GSpreadSheetsAchievementDescription> achievementDescriptionQuery = em.createQuery("select a from GSpreadSheetsAchievementDescription a where aId is null order by changeTime", GSpreadSheetsAchievementDescription.class);
         QuestNameQuery.setMaxResults(100);
         List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionQuery.getResultList();
@@ -4308,7 +4275,7 @@ public class DBService {
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
             }
         }
-        
+
         TypedQuery<GSpreadSheetsNote> noteQuery = em.createQuery("select a from GSpreadSheetsNote a where aId is null order by changeTime", GSpreadSheetsNote.class);
         QuestNameQuery.setMaxResults(100);
         List<GSpreadSheetsNote> noteList = noteQuery.getResultList();
@@ -4635,6 +4602,141 @@ public class DBService {
                 updateQ.executeUpdate();
             }
         }
+    }
+
+    @Transactional
+    public void assignActivatorsToItems() {
+        Query activatorToItemQ = em.createNativeQuery("select i.id,a.textru,a.translator from gspreadsheetsactivator a join gspreadsheetsitemname i on a.texten=i.texten where a.texten!=a.textru and i.texten=i.textru");
+        List<Object[]> activatorToItemR = activatorToItemQ.getResultList();
+        for (Object[] row : activatorToItemR) {
+            BigInteger id = (BigInteger) row[0];
+            String textru = (String) row[1];
+            String translator = (String) row[2];
+            Date changeTime = new Date();
+            if (translator == null || translator.isEmpty()) {
+                translator = "?";
+            }
+            GSpreadSheetsItemName r = em.find(GSpreadSheetsItemName.class, id.longValue());
+            r.setTextRu(textru);
+            r.setTranslator(translator);
+            r.setChangeTime(changeTime);
+            em.merge(r);
+        }
+        Query itemToActivatorQ = em.createNativeQuery("select a.id,i.textru,i.translator from gspreadsheetsactivator a join gspreadsheetsitemname i on a.texten=i.texten where i.texten!=i.textru and a.texten=a.textru");
+        List<Object[]> itemToActivatorR = itemToActivatorQ.getResultList();
+        for (Object[] row : itemToActivatorR) {
+            BigInteger id = (BigInteger) row[0];
+            String textru = (String) row[1];
+            String translator = (String) row[2];
+            Date changeTime = new Date();
+            if (translator == null || translator.isEmpty()) {
+                translator = "?";
+            }
+            GSpreadSheetsActivator r = em.find(GSpreadSheetsActivator.class, id.longValue());
+            r.setTextRu(textru);
+            r.setTranslator(translator);
+            r.setChangeTime(changeTime);
+            em.merge(r);
+        }
+        Query activatorToLocationQ = em.createNativeQuery("select i.id,a.textru,a.translator from gspreadsheetsactivator a join gspreadsheetslocationname i on a.texten=i.texten where a.texten!=a.textru and i.texten=i.textru");
+        List<Object[]> activatorToLocationR = activatorToLocationQ.getResultList();
+        for (Object[] row : activatorToLocationR) {
+            BigInteger id = (BigInteger) row[0];
+            String textru = (String) row[1];
+            String translator = (String) row[2];
+            Date changeTime = new Date();
+            if (translator == null || translator.isEmpty()) {
+                translator = "?";
+            }
+            GSpreadSheetsLocationName r = em.find(GSpreadSheetsLocationName.class, id.longValue());
+            r.setTextRu(textru);
+            r.setTranslator(translator);
+            r.setChangeTime(changeTime);
+            em.merge(r);
+        }
+        Query locationToActivatorQ = em.createNativeQuery("select a.id,i.textru,i.translator from gspreadsheetsactivator a join gspreadsheetslocationname i on a.texten=i.texten where i.texten!=i.textru and a.texten=a.textru");
+        List<Object[]> locationToActivatorR = locationToActivatorQ.getResultList();
+        for (Object[] row : locationToActivatorR) {
+            BigInteger id = (BigInteger) row[0];
+            String textru = (String) row[1];
+            String translator = (String) row[2];
+            Date changeTime = new Date();
+            if (translator == null || translator.isEmpty()) {
+                translator = "?";
+            }
+            GSpreadSheetsActivator r = em.find(GSpreadSheetsActivator.class, id.longValue());
+            r.setTextRu(textru);
+            r.setTranslator(translator);
+            r.setChangeTime(changeTime);
+            em.merge(r);
+        }
+    }
+
+    @Transactional
+    public void newFormatImportNpcs(JSONObject source) {
+        Session session = (Session) em.getDelegate();
+        JSONObject npcLocationObject = source.getJSONObject("npc");
+        Iterator locationsKeys = npcLocationObject.keys();
+        while (locationsKeys.hasNext()) {
+            String locationName = (String) locationsKeys.next();
+            Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+            sheetLocationCrit.add(Restrictions.or(Restrictions.eq("textEn", locationName), Restrictions.eq("textRu", locationName)));
+            List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
+            if (list != null && !list.isEmpty()) {
+                GSpreadSheetsLocationName sheetsLocationName = list.get(0);
+                Criteria locationCrit = session.createCriteria(Location.class);
+                locationCrit.add(Restrictions.or(Restrictions.eq("name", sheetsLocationName.getTextEn()), Restrictions.eq("nameRu", sheetsLocationName.getTextRu())));
+                List<Location> locations = locationCrit.list();
+                Location location = null;
+                if (locations != null && !locations.isEmpty()) {
+                    location = locations.get(0);
+                    if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                        location.setNameRu(sheetsLocationName.getTextRu());
+                    }
+                } else {
+                    location = new Location();
+                    location.setName(sheetsLocationName.getTextEn());
+                    location.setProgress(BigDecimal.ZERO);
+                    location.setSheetsLocationName(sheetsLocationName);
+                }
+
+                JSONObject npcsObject = npcLocationObject.getJSONObject(locationName);
+                Iterator npcsKeys = npcsObject.keys();
+                while (npcsKeys.hasNext()) {
+                    String npcKey = (String) npcsKeys.next();
+                    String npcName = null;
+                    String npcNameRu = null;
+                    if (EsnDecoder.IsRu(npcKey)) {
+                        npcNameRu = EsnDecoder.decode(npcKey);
+                    } else {
+                        npcName = npcKey;
+                    }
+                    GSpreadSheetsNpcName sheetNpc;
+                    if (npcName == null) {
+                        Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+                        sheetNpcCrit.add(Restrictions.eq("textRu", npcNameRu));
+                        List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
+                        if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
+                            sheetNpc = sheetNpcList.get(0);
+                            npcName = sheetNpc.getTextEn();
+                        }
+                    } else {
+                        Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+                        sheetNpcCrit.add(Restrictions.eq("textEn", npcName));
+                        List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
+                        if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
+                            sheetNpc = sheetNpcList.get(0);
+                            if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                npcNameRu = sheetNpc.getTextRu();
+                            }
+                        }
+                    }
+                    Criteria npcCriteria = session.createCriteria(Npc.class);
+                }
+            }
+
+        }
+
     }
 
 }

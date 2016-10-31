@@ -123,6 +123,7 @@ public class QuestsTab extends VerticalLayout {
         });
         table.addItemClickListener(new TableClickListener());
         LoadTable();
+        table.sort(new Object[]{"name"}, new boolean[]{true});
         tableAndForm.addComponent(table);
         tableAndForm.setExpandRatio(table, 0.2f);
         form = new FormLayout();

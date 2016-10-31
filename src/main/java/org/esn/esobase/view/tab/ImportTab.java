@@ -86,6 +86,7 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadInterfaceLua;
     private Upload uploadRuInterfaceLua;
     private Button updateGspreadSheetsWithRawText;
+    private Button assignActivatorsWithItems;
 
     public ImportTab(DBService service_) {
         this.service = service_;
@@ -294,7 +295,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     BeanItemContainer<Npc> c = new BeanItemContainer<>(Npc.class);
-                    c = service.getNpcs(c, false, null);
+                    c = service.getNpcs(c, false, null,false);
                     for (Npc n : c.getItemIds()) {
                         service.calculateNpcProgress(n);
                     }
@@ -362,6 +363,17 @@ public class ImportTab extends VerticalLayout {
             uploadRuInterfaceLua.addSucceededListener(interfaceRuLuaReceiver);
             uploadRuInterfaceLua.setImmediate(true);
             this.addComponent(uploadRuInterfaceLua);
+            
+            assignActivatorsWithItems = new Button("Заполнить непереведённые активаторы и названия предметов");
+            assignActivatorsWithItems.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    service.assignActivatorsToItems();
+                }
+            });
+            this.addComponent(assignActivatorsWithItems);
+            
         }
     }
 

@@ -84,11 +84,11 @@ public class MainView extends Panel implements View, Command {
     private SearchInRawStringsTab searchInRawStringsTabContent;
     private SpellerTestTab spellerTestTabContent;
 
-    protected final ShortcutListener shiftTwoListener;
-    protected final ShortcutListener shiftThreeListener;
+    //protected final ShortcutListener shiftTwoListener;
+    //protected final ShortcutListener shiftThreeListener;
 
     public MainView() {
-        this.shiftTwoListener = new ShortcutListener("Search in catalogs(shift+2)", KeyCode.NUM2, new int[]{ModifierKey.SHIFT}) {
+        /*this.shiftTwoListener = new ShortcutListener("Search in catalogs(shift+2)", KeyCode.NUM2, new int[]{ModifierKey.SHIFT}) {
 
             @Override
             public void handleAction(Object sender, Object target) {
@@ -103,7 +103,7 @@ public class MainView extends Panel implements View, Command {
                 openSearchInRaw();
             }
 
-        };
+        };*/
     }
 
     @PostConstruct
@@ -151,8 +151,8 @@ public class MainView extends Panel implements View, Command {
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
         portalInfoMenuItem = mainMenu.addItem("Инфо", this);
-        this.addShortcutListener(shiftTwoListener);
-        this.addShortcutListener(shiftThreeListener);
+        //this.addShortcutListener(shiftTwoListener);
+        //this.addShortcutListener(shiftThreeListener);
     }
 
     private void buildHeader() {

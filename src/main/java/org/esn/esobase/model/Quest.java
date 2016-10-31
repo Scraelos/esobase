@@ -17,6 +17,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -33,9 +35,21 @@ public class Quest extends DAO {
     private Long id;
     private String name;
     private String nameRu;
+    private String descriptionEn;
+    private String descriptionRu;
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Npc> npcs;
     private BigDecimal progress;
+    @ManyToOne
+    private Location location;
+    @OneToMany(mappedBy = "quest")
+    private List<QuestJournalEntry> questJournalEntrys;
+    @OneToMany(mappedBy = "quest")
+    private List<QuestDirection> questDirections;
+    @ManyToOne
+    private GSpreadSheetsQuestName sheetsQuestName;
+    @ManyToOne
+    private GSpreadSheetsQuestDescription sheetsQuestDescription;
 
     @Override
     public Long getId() {
@@ -71,12 +85,68 @@ public class Quest extends DAO {
         this.npcs = npcs;
     }
 
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
     public BigDecimal getProgress() {
         return progress;
     }
 
     public void setProgress(BigDecimal progress) {
         this.progress = progress;
+    }
+
+    public List<QuestJournalEntry> getQuestJournalEntrys() {
+        return questJournalEntrys;
+    }
+
+    public void setQuestJournalEntrys(List<QuestJournalEntry> questJournalEntrys) {
+        this.questJournalEntrys = questJournalEntrys;
+    }
+
+    public String getDescriptionEn() {
+        return descriptionEn;
+    }
+
+    public void setDescriptionEn(String descriptionEn) {
+        this.descriptionEn = descriptionEn;
+    }
+
+    public String getDescriptionRu() {
+        return descriptionRu;
+    }
+
+    public void setDescriptionRu(String descriptionRu) {
+        this.descriptionRu = descriptionRu;
+    }
+
+    public List<QuestDirection> getQuestDirections() {
+        return questDirections;
+    }
+
+    public void setQuestDirections(List<QuestDirection> questDirections) {
+        this.questDirections = questDirections;
+    }
+
+    public GSpreadSheetsQuestName getSheetsQuestName() {
+        return sheetsQuestName;
+    }
+
+    public void setSheetsQuestName(GSpreadSheetsQuestName sheetsQuestName) {
+        this.sheetsQuestName = sheetsQuestName;
+    }
+
+    public GSpreadSheetsQuestDescription getSheetsQuestDescription() {
+        return sheetsQuestDescription;
+    }
+
+    public void setSheetsQuestDescription(GSpreadSheetsQuestDescription sheetsQuestDescription) {
+        this.sheetsQuestDescription = sheetsQuestDescription;
     }
 
     @Override
@@ -91,7 +161,7 @@ public class Quest extends DAO {
         }
         if (progress != null) {
             String r = progress.multiply(BigDecimal.valueOf(100L).setScale(2, RoundingMode.HALF_DOWN)).setScale(0, RoundingMode.HALF_UP).toString() + "%";
-            result+="("+r+")";
+            result += "(" + r + ")";
         }
         return result;
     }

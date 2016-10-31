@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.Greeting;
 import org.esn.esobase.model.Location;
@@ -74,6 +75,7 @@ public class TranslateTab extends VerticalLayout {
     private BeanItemContainer<Subtitle> subtitlesContainer;
     private Npc currentNpc;
     private CheckBox onlyWithTranslations;
+    private CheckBox noTranslations;
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
@@ -124,6 +126,7 @@ public class TranslateTab extends VerticalLayout {
         locationAndNpc.setWidth(95f, Unit.PERCENTAGE);
 
         npcListlayout.addComponent(locationAndNpc);
+        
         onlyWithTranslations = new CheckBox("С новыми переводами");
         onlyWithTranslations.setValue(Boolean.FALSE);
         onlyWithTranslations.addValueChangeListener(new Property.ValueChangeListener() {
@@ -135,6 +138,18 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
+        noTranslations = new CheckBox("Не переведены полностью");
+        noTranslations.setValue(Boolean.FALSE);
+        noTranslations.addValueChangeListener(new Property.ValueChangeListener() {
+
+            @Override
+            public void valueChange(Property.ValueChangeEvent event) {
+                locationTable.setValue(null);
+                LoadFilters();
+                LoadNpcContent();
+            }
+        });
+        HorizontalLayout checkBoxlayout=new HorizontalLayout(onlyWithTranslations,noTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
         sysAccountContainer = service.loadBeanItems(sysAccountContainer);
@@ -157,7 +172,7 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
-        FormLayout questAndWithNewTranslations = new FormLayout(questTable, onlyWithTranslations, translatorBox);
+        FormLayout questAndWithNewTranslations = new FormLayout(questTable, checkBoxlayout, translatorBox);
         questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
         questAndWithNewTranslations.setWidth(95f, Unit.PERCENTAGE);
         npcListlayout.addComponent(questAndWithNewTranslations);
@@ -242,7 +257,7 @@ public class TranslateTab extends VerticalLayout {
     }
 
     private void LoadFilters() {
-        npcContainer = service.getNpcs(npcContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue());
+        npcContainer = service.getNpcs(npcContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue(),noTranslations.getValue());
         npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
         List<Location> locations = new ArrayList<>();
         for (Npc npc : npcContainer.getItemIds()) {

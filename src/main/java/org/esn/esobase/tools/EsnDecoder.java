@@ -16,6 +16,7 @@ public class EsnDecoder {
 
     private static final Pattern esnEncodingPattern = Pattern.compile("^.*[ÀÁÂÄÆÇÈÉÊÌÍÎÏÒÓÑŒÙÚÅŸÖËÔÜàáâäæçèéêìíîïòóñœùúûåÿöëôü]+.*");
     private static final Pattern enEncodingPattern = Pattern.compile("^.*[BDFGHIJKLMNQRSTUVWYZbdfghijklmnqrstuvwyz]+.*");
+    private static final Pattern ruPattern = Pattern.compile("^.*[а-я]+.*");
 
     public static boolean IsEsnEncoding(String text) {
         boolean result = false;
@@ -26,6 +27,24 @@ public class EsnDecoder {
             enCounter++;
         }
         Matcher matcher = esnEncodingPattern.matcher(text);
+        while (matcher.find()) {
+            ruCounter++;
+        }
+        if (ruCounter > enCounter) {
+            result = true;
+        }
+        return result;
+    }
+    
+    public static boolean IsRu(String text) {
+        boolean result = false;
+        int enCounter = 0;
+        int ruCounter = 0;
+        Matcher enMatcher = enEncodingPattern.matcher(text);
+        while (enMatcher.find()) {
+            enCounter++;
+        }
+        Matcher matcher = ruPattern.matcher(text);
         while (matcher.find()) {
             ruCounter++;
         }

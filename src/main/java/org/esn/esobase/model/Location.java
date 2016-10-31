@@ -16,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import org.esn.esobase.model.lib.DAO;
 
@@ -37,6 +38,8 @@ public class Location extends DAO {
     @OneToMany(mappedBy = "location", cascade = CascadeType.PERSIST)
     private List<Npc> npcs;
     private BigDecimal progress;
+    @ManyToOne
+    private GSpreadSheetsLocationName sheetsLocationName;
 
     public Location() {
     }
@@ -87,6 +90,14 @@ public class Location extends DAO {
 
     public void setProgress(BigDecimal progress) {
         this.progress = progress;
+    }
+
+    public GSpreadSheetsLocationName getSheetsLocationName() {
+        return sheetsLocationName;
+    }
+
+    public void setSheetsLocationName(GSpreadSheetsLocationName sheetsLocationName) {
+        this.sheetsLocationName = sheetsLocationName;
     }
 
     @Override

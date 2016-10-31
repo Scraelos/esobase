@@ -8,13 +8,9 @@ package org.esn.esobase.tools;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 import org.esn.esobase.model.Greeting;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
@@ -36,9 +32,9 @@ public class LuaDecoder {
 
             String line = lines[i];
             /*int indexOf = line.indexOf("--");
-            if (indexOf != -1) {
-                line = line.substring(0, indexOf);
-            }*/
+             if (indexOf != -1) {
+             line = line.substring(0, indexOf);
+             }*/
             sb.append(line.replaceAll("=", ":").replaceAll("[\\[\\]]", "").replaceAll("\" :", "\":").replaceAll(",\\n(.+)\\}", "\n$1}"));
         }
         String luaSource = sb.toString();
@@ -166,6 +162,20 @@ public class LuaDecoder {
             }
             result.add(location);
         }
+        return result;
+    }
+
+    public JSONObject getJsonFromLua(String source) {
+        JSONObject result = null;
+        String[] lines = source.split("\n");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i];
+            sb.append(line.replaceAll("=", ":").replaceAll("[\\[\\]]", "").replaceAll("\" :", "\":").replaceAll(",\\n(.+)\\}", "\n$1}"));
+        }
+        String luaSource = sb.toString();
+        String jsonString = luaSource.replaceAll("=", ":").replaceAll("[\\[\\]]", "").replaceAll("\" :", "\":").replaceAll(",\\n(.+)\\}", "\n$1}");
+        result = new JSONObject(jsonString);
         return result;
     }
 
