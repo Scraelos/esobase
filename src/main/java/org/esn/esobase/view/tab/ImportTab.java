@@ -32,6 +32,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.model.EsoInterfaceVariable;
+import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
@@ -74,6 +75,7 @@ public class ImportTab extends VerticalLayout {
     private Button importAchievementsFromG;
     private Button importAchievementDescriptionsFromG;
     private Button importNotesFromG;
+    private Button importAbilityDescriptionsFromG;
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
@@ -250,6 +252,17 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importNotesFromG);
+            importAbilityDescriptionsFromG = new Button("Импорт описаний способностей из гугл-таблиц");
+            importAbilityDescriptionsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsAbilityDescription> items = docsService.getAbilityDescriptions();
+                    service.loadAbilityDescriptionsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importAbilityDescriptionsFromG);
 
             importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
             importNpcNamesFromG.addClickListener(new Button.ClickListener() {
@@ -295,7 +308,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     BeanItemContainer<Npc> c = new BeanItemContainer<>(Npc.class);
-                    c = service.getNpcs(c, false, null,false);
+                    c = service.getNpcs(c, false, null, false);
                     for (Npc n : c.getItemIds()) {
                         service.calculateNpcProgress(n);
                     }
@@ -363,7 +376,7 @@ public class ImportTab extends VerticalLayout {
             uploadRuInterfaceLua.addSucceededListener(interfaceRuLuaReceiver);
             uploadRuInterfaceLua.setImmediate(true);
             this.addComponent(uploadRuInterfaceLua);
-            
+
             assignActivatorsWithItems = new Button("Заполнить непереведённые активаторы и названия предметов");
             assignActivatorsWithItems.addClickListener(new Button.ClickListener() {
 
@@ -373,7 +386,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(assignActivatorsWithItems);
-            
+
         }
     }
 

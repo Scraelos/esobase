@@ -84,6 +84,8 @@ public class TranslatedText extends DAO {
     private GSpreadSheetsAchievementDescription spreadSheetsAchievementDescription;
     @ManyToOne
     private GSpreadSheetsNote spreadSheetsNote;
+    @ManyToOne
+    private GSpreadSheetsAbilityDescription sheetsAbilityDescription;
 
     @Override
     public Long getId() {
@@ -301,6 +303,14 @@ public class TranslatedText extends DAO {
 
     public void setSpreadSheetsNote(GSpreadSheetsNote spreadSheetsNote) {
         this.spreadSheetsNote = spreadSheetsNote;
+    }
+
+    public GSpreadSheetsAbilityDescription getSheetsAbilityDescription() {
+        return sheetsAbilityDescription;
+    }
+
+    public void setSheetsAbilityDescription(GSpreadSheetsAbilityDescription sheetsAbilityDescription) {
+        this.sheetsAbilityDescription = sheetsAbilityDescription;
     }
 
 }

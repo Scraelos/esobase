@@ -42,11 +42,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import org.esn.esobase.data.diffs.AbilityDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementsDiff;
 import org.esn.esobase.data.diffs.NotesDiff;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.EsoRawString;
+import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
@@ -1050,6 +1052,58 @@ public class DBService {
     }
 
     @Transactional
+    public void loadAbilityDescriptionsFromSpreadSheet(List<GSpreadSheetsAbilityDescription> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+        Map<String, GSpreadSheetsAbilityDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsAbilityDescription> allItems = crit.list();
+        for (GSpreadSheetsAbilityDescription item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsAbilityDescription item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "ability description {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsAbilityDescription result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for ability description: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for ability description: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsAbilityDescription item : items) {
+            GSpreadSheetsAbilityDescription result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting ability description for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsAbilityDescription> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsAbilityDescription item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsAbilityDescription item : allItems) {
+            GSpreadSheetsAbilityDescription result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing ability description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
     public void loadJournalEntriesFromSpreadSheet(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
@@ -1965,6 +2019,59 @@ public class DBService {
             }
         }
         for (NotesDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getAbilityDescriptionsDiff(List<GSpreadSheetsAbilityDescription> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<AbilityDescriptionsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+        Map<Long, GSpreadSheetsAbilityDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsAbilityDescription> allItems = crit.list();
+        for (GSpreadSheetsAbilityDescription item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsAbilityDescription item : items) {
+            GSpreadSheetsAbilityDescription result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new AbilityDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new AbilityDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new AbilityDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new AbilityDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new AbilityDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (AbilityDescriptionsDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -2963,6 +3070,24 @@ public class DBService {
     }
 
     @Transactional
+    public void saveAbilityDescriptions(List<GSpreadSheetsAbilityDescription> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsAbilityDescription item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsAbilityDescription result = (GSpreadSheetsAbilityDescription) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
     public void saveJournalEntries(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
         for (GSpreadSheetsJournalEntry item : items) {
@@ -3066,6 +3191,13 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getSpreadSheetsNote() != null) {
             GSpreadSheetsNote gs = em.find(GSpreadSheetsNote.class, entity.getSpreadSheetsNote().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSheetsAbilityDescription() != null) {
+            GSpreadSheetsAbilityDescription gs = em.find(GSpreadSheetsAbilityDescription.class, entity.getSheetsAbilityDescription().getId());
             gs.setTextRu(entity.getText());
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
@@ -3599,6 +3731,17 @@ public class DBService {
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Письмо");
         }
+        Criteria abilityDescriptionCrit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+        abilityDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionCrit.list();
+        for (GSpreadSheetsAbilityDescription i : abilityDescriptionList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание способности");
+        }
         Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
         searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
@@ -3748,7 +3891,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote) || (item.getEntity() instanceof GSpreadSheetsAbilityDescription)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             String textRu = (String) item.getItemProperty("textRu").getValue();
@@ -3797,7 +3940,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(Object itemId, String textRu) {
-        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote)) {
+        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote) || (itemId instanceof GSpreadSheetsAbilityDescription)) {
             if (itemId instanceof GSpreadSheetsNpcName) {
                 ((GSpreadSheetsNpcName) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsNpcName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
@@ -3842,6 +3985,10 @@ public class DBService {
                 ((GSpreadSheetsNote) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsNote) itemId).setTextRu(textRu);
                 ((GSpreadSheetsNote) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsAbilityDescription) {
+                ((GSpreadSheetsAbilityDescription) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsAbilityDescription) itemId).setTextRu(textRu);
+                ((GSpreadSheetsAbilityDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
             } else if (itemId instanceof GSpreadSheetsJournalEntry) {
                 ((GSpreadSheetsJournalEntry) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsJournalEntry) itemId).setTextRu(textRu);
@@ -3905,6 +4052,7 @@ public class DBService {
                 + "select 'Перевод достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievement where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievement) as qres union all\n"
                 + "select 'Перевод описаний достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievementdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievementdescription) as qres union all\n"
                 + "select 'Перевод записок', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnote where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnote) as qres union all\n"
+                + "select 'Перевод описаний способностей', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsabilitydescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsabilitydescription) as qres union all\n"
                 + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
                 + "select 'Перевод названий квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestname) as qres union all\n"
                 + "select 'Перевод описаний квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestdescription) as qres union all\n"
@@ -4249,7 +4397,7 @@ public class DBService {
         }
 
         TypedQuery<GSpreadSheetsAchievement> achievementQuery = em.createQuery("select a from GSpreadSheetsAchievement a where aId is null order by changeTime", GSpreadSheetsAchievement.class);
-        QuestNameQuery.setMaxResults(100);
+        achievementQuery.setMaxResults(100);
         List<GSpreadSheetsAchievement> achievementList = achievementQuery.getResultList();
         for (GSpreadSheetsAchievement item : achievementList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
@@ -4263,7 +4411,7 @@ public class DBService {
         }
 
         TypedQuery<GSpreadSheetsAchievementDescription> achievementDescriptionQuery = em.createQuery("select a from GSpreadSheetsAchievementDescription a where aId is null order by changeTime", GSpreadSheetsAchievementDescription.class);
-        QuestNameQuery.setMaxResults(100);
+        achievementDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionQuery.getResultList();
         for (GSpreadSheetsAchievementDescription item : achievementDescriptionList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
@@ -4277,12 +4425,25 @@ public class DBService {
         }
 
         TypedQuery<GSpreadSheetsNote> noteQuery = em.createQuery("select a from GSpreadSheetsNote a where aId is null order by changeTime", GSpreadSheetsNote.class);
-        QuestNameQuery.setMaxResults(100);
+        noteQuery.setMaxResults(100);
         List<GSpreadSheetsNote> noteList = noteQuery.getResultList();
         for (GSpreadSheetsNote item : noteList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{219317028L}));
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+        TypedQuery<GSpreadSheetsAbilityDescription> abilityDescriptionQuery = em.createQuery("select a from GSpreadSheetsAbilityDescription a where aId is null order by changeTime", GSpreadSheetsAbilityDescription.class);
+        //abilityDescriptionQuery.setMaxResults(100);
+        List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionQuery.getResultList();
+        for (GSpreadSheetsAbilityDescription item : abilityDescriptionList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{132143172L}));
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4596,6 +4757,21 @@ public class DBService {
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
                 Query updateQ = em.createNativeQuery("update gspreadsheetsnote set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetAbilityDescriptionsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsabilitydescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetAbilityDescriptionsQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsabilitydescription set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
                 updateQ.setParameter("textEn", eTextEn);
                 updateQ.setParameter("textRu", eTextEn);

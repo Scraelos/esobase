@@ -40,6 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
@@ -78,6 +79,7 @@ public class GoogleDocsService {
     private static final String ACHIEVEMENTS_SPREADSHEET_ID = "1OywcE3kHgyW5jp40Dw2TGIVG5tvwU8QNBOqxWfbIvs0";
     private static final String ACHIEVEMENTS_DESCRIPTIONS_SPREADSHEET_ID = "1lPmQ6RNsc3KaeNwYRJH0IW0ZMEoO5oMWUZ2f3LLDdtA";
     private static final String NOTES_SPREADSHEET_ID = "1uqj8yZdqGbqOv-2F0bj6K7QiDEc9vQ2U7i1S3Jb_ZdI";
+    private static final String ABILTY_DESCRIPTION_SPREADSHEET_ID = "1oaQVbLHvUxb6nwCpHm5HAr-pDZXNARzKjnfqhfImHX0";
 
     public List<GSpreadSheetsPlayerPhrase> getPlayerPhrases() {
         List<GSpreadSheetsPlayerPhrase> phrases = new ArrayList<>();
@@ -924,7 +926,7 @@ public class GoogleDocsService {
         }
         return items;
     }
-    
+
     public List<GSpreadSheetsAchievement> getAchievements() {
         List<GSpreadSheetsAchievement> items = new ArrayList<>();
         try {
@@ -1018,7 +1020,7 @@ public class GoogleDocsService {
         }
         return items;
     }
-    
+
     public List<GSpreadSheetsAchievementDescription> getAchievementDescriptions() {
         List<GSpreadSheetsAchievementDescription> items = new ArrayList<>();
         try {
@@ -1112,7 +1114,7 @@ public class GoogleDocsService {
         }
         return items;
     }
-    
+
     public List<GSpreadSheetsNote> getNotes() {
         List<GSpreadSheetsNote> items = new ArrayList<>();
         try {
@@ -1190,6 +1192,99 @@ public class GoogleDocsService {
                 }
             }
             GSpreadSheetsNote item = new GSpreadSheetsNote(Long.valueOf(lastRow), textEn, textRu, translator, weight);
+            item.setChangeTime(editTime);
+            items.add(item);
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "Fetched {0} entries", items.size());
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (AuthenticationException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ServiceException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return items;
+    }
+
+    public List<GSpreadSheetsAbilityDescription> getAbilityDescriptions() {
+        List<GSpreadSheetsAbilityDescription> items = new ArrayList<>();
+        try {
+            Credential authorize = authorize();
+            SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
+            spreadsheetService.setOAuth2Credentials(authorize);
+            SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);
+            List<SpreadsheetEntry> feedEntries = feed.getEntries();
+            SpreadsheetEntry entry = null;
+            for (SpreadsheetEntry spreadsheetEntry : feedEntries) {
+                if (spreadsheetEntry.getKey().equals(ABILTY_DESCRIPTION_SPREADSHEET_ID)) {
+                    entry = spreadsheetEntry;
+                }
+            }
+
+            WorksheetEntry defaultWorksheet = entry.getDefaultWorksheet();
+            CellFeed feedc = spreadsheetService.getFeed(defaultWorksheet.getCellFeedUrl(), CellFeed.class);
+            List<CellEntry> entries = feedc.getEntries();
+            int counter = 0;
+            String textEn = null;
+            String textRu = null;
+            String translator = null;
+            Date editTime = null;
+            Integer weight = null;
+            int lastRow = -1;
+            for (CellEntry cellEntry : entries) {
+                String value = cellEntry.getCell().getValue();
+                int row = cellEntry.getCell().getRow();
+                int col = cellEntry.getCell().getCol();
+                if (row > lastRow) {
+                    counter++;
+                    if (lastRow > -1) {
+                        GSpreadSheetsAbilityDescription item = new GSpreadSheetsAbilityDescription(Long.valueOf(lastRow), textEn, textRu, translator, weight);
+                        item.setChangeTime(editTime);
+                        items.add(item);
+                    }
+                    textEn = null;
+                    textRu = null;
+                    translator = null;
+                    editTime = null;
+                    weight = null;
+                    lastRow = row;
+                }
+                switch (col) {
+                    case 1:
+                        textEn = value;
+                        break;
+                    case 2:
+                        textRu = value;
+                        break;
+                    case 3:
+                        translator = value;
+                        break;
+                    case 5:
+                        if (value != null && !value.isEmpty()) {
+                            try {
+                                weight = Integer.parseInt(value);
+                            } catch (NumberFormatException ex) {
+
+                            }
+                        }
+                        break;
+                    case 6:
+                        if (value != null && !value.isEmpty()) {
+                            try {
+                                editTime = dateFormat.parse(value);
+                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
+
+                            }
+                        }
+                        break;
+                    default:
+
+                }
+            }
+            GSpreadSheetsAbilityDescription item = new GSpreadSheetsAbilityDescription(Long.valueOf(lastRow), textEn, textRu, translator, weight);
             item.setChangeTime(editTime);
             items.add(item);
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "Fetched {0} entries", items.size());
@@ -2273,7 +2368,7 @@ public class GoogleDocsService {
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void uploadAchievements(List<GSpreadSheetsAchievement> items) {
         try {
 
@@ -2342,7 +2437,7 @@ public class GoogleDocsService {
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void uploadAchievementDescriptions(List<GSpreadSheetsAchievementDescription> items) {
         try {
 
@@ -2411,7 +2506,7 @@ public class GoogleDocsService {
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void uploadNotes(List<GSpreadSheetsNote> items) {
         try {
 
@@ -2430,6 +2525,74 @@ public class GoogleDocsService {
 
             WorksheetEntry defaultWorksheet = entry.getDefaultWorksheet();
             for (GSpreadSheetsNote item : items) {
+                URL cellFeedUrl = new URI(defaultWorksheet.getCellFeedUrl().toString()
+                        + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
+                CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
+                List<CellEntry> entries = feedc.getEntries();
+                for (CellEntry cellEntry : entries) {
+                    Cell cell = cellEntry.getCell();
+
+                    switch (cell.getCol()) {
+                        case 1:
+
+                            break;
+                        case 2:
+                            String textRu = item.getTextRu();
+                            cellEntry.changeInputValueLocal(textRu);
+                            cellEntry.update();
+                            break;
+                        case 3:
+                            cellEntry.changeInputValueLocal(item.getTranslator());
+                            cellEntry.update();
+                            break;
+                        case 6:
+                            if (item.getChangeTime() != null) {
+                                cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
+                                cellEntry.update();
+                            }
+                            break;
+                    }
+                }
+                if (entries.size() < 3) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
+                    feedc.insert(cellEntry);
+                }
+                if (entries.size() < 6 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                    feedc.insert(cellEntry);
+                }
+            }
+
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (AuthenticationException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ServiceException ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void uploadAbilityDescriptions(List<GSpreadSheetsAbilityDescription> items) {
+        try {
+
+            Credential authorize = authorize();
+            SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
+            spreadsheetService.setOAuth2Credentials(authorize);
+            SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);
+            List<SpreadsheetEntry> feedEntries = feed.getEntries();
+            SpreadsheetEntry entry = null;
+            for (SpreadsheetEntry spreadsheetEntry : feedEntries) {
+                if (spreadsheetEntry.getKey().equals(ABILTY_DESCRIPTION_SPREADSHEET_ID)) {
+                    entry = spreadsheetEntry;
+                }
+            }
+
+            WorksheetEntry defaultWorksheet = entry.getDefaultWorksheet();
+            for (GSpreadSheetsAbilityDescription item : items) {
                 URL cellFeedUrl = new URI(defaultWorksheet.getCellFeedUrl().toString()
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);

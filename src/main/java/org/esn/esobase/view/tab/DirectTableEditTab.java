@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.EsoInterfaceVariable;
+import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
@@ -115,6 +116,9 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private Table achievementDescriptionTable;
     private JPAContainer<GSpreadSheetsAchievementDescription> achievementDescriptionContainer;
+
+    private Table abilityDescriptionTable;
+    private JPAContainer<GSpreadSheetsAbilityDescription> abilityDescriptionContainer;
 
     private Table noteTable;
     private JPAContainer<GSpreadSheetsNote> noteContainer;
@@ -618,6 +622,33 @@ public class DirectTableEditTab extends VerticalLayout {
         achievementDescriptionTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(achievementDescriptionTable, "Описания достижений");
 
+        abilityDescriptionTable = new Table();
+        abilityDescriptionTable.setSizeFull();
+        abilityDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAbilityDescription.class);
+        abilityDescriptionContainer.setBuffered(true);
+        abilityDescriptionTable.setContainerDataSource(abilityDescriptionContainer);
+        abilityDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
+        abilityDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
+        abilityDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "weight", "translator", "changeTime", "translateColumn"});
+        abilityDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "Порядок", "Переводчик", "Время", ""});
+        abilityDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
+        abilityDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
+        abilityDescriptionTable.setColumnWidth("rowNum", 100);
+        abilityDescriptionTable.setColumnExpandRatio("textEn", 5f);
+        abilityDescriptionTable.setColumnExpandRatio("textRu", 5f);
+        abilityDescriptionTable.setColumnExpandRatio("translateColumn", 5f);
+        abilityDescriptionTable.setColumnExpandRatio("translator", 1f);
+        abilityDescriptionTable.setColumnWidth("translator", 131);
+        abilityDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
+        abilityDescriptionTable.setColumnWidth("changeTime", 190);
+        abilityDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
+        abilityDescriptionTable.setColumnWidth("saveColumn", 115);
+        abilityDescriptionTable.setEditable(true);
+        abilityDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
+        abilityDescriptionTable.setSortEnabled(false);
+        abilityDescriptionTable.setConverter("weight", new WeightConverter());
+        tableTabs.addTab(abilityDescriptionTable, "Описания способностей");
+
         noteTable = new Table();
         noteTable.setSizeFull();
         noteContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNote.class);
@@ -671,7 +702,7 @@ public class DirectTableEditTab extends VerticalLayout {
         tableTabs.addTab(esoInterfaceTable, "Строки интерфейса");
 
         this.addComponent(tableTabs);
-        this.setExpandRatio(tableTabs,20f);
+        this.setExpandRatio(tableTabs, 20f);
 
     }
 
@@ -732,6 +763,9 @@ public class DirectTableEditTab extends VerticalLayout {
             }
             if (translateTypeBox.getValue().equals("GSpreadSheetsQuestName")) {
                 newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestName")));
+            }
+            if (translateTypeBox.getValue().equals("GSpreadSheetsAbilityDescription")) {
+                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("sheetsAbilityDescription")));
             }
             if (translateTypeBox.getValue().equals("EsoInterfaceVariable")) {
                 newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("esoInterfaceVariable")));
@@ -796,6 +830,8 @@ public class DirectTableEditTab extends VerticalLayout {
                 tt.setSpreadSheetsQuestDirection((GSpreadSheetsQuestDirection) entity);
             } else if (entity instanceof GSpreadSheetsQuestName) {
                 tt.setSpreadSheetsQuestName((GSpreadSheetsQuestName) entity);
+            } else if (entity instanceof GSpreadSheetsAbilityDescription) {
+                tt.setSheetsAbilityDescription((GSpreadSheetsAbilityDescription) entity);
             } else if (entity instanceof EsoInterfaceVariable) {
                 tt.setEsoInterfaceVariable((EsoInterfaceVariable) entity);
             }
@@ -985,6 +1021,11 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = itemDescriptionTable;
                 rowNum = ((GSpreadSheetsItemDescription) entity).getRowNum().intValue();
                 itemId = ((GSpreadSheetsItemDescription) entity).getId();
+            } else if (entity instanceof GSpreadSheetsAbilityDescription) {
+                targetTabId = abilityDescriptionTable;
+                targetTable = abilityDescriptionTable;
+                rowNum = ((GSpreadSheetsAbilityDescription) entity).getRowNum().intValue();
+                itemId = ((GSpreadSheetsAbilityDescription) entity).getId();
             } else if (entity instanceof EsoInterfaceVariable) {
                 targetTabId = esoInterfaceTable;
                 targetTable = esoInterfaceTable;
@@ -1093,6 +1134,11 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = itemDescriptionTable;
                 rowNum = tt.getSpreadSheetsItemDescription().getRowNum().intValue();
                 itemId = tt.getSpreadSheetsItemDescription().getId();
+            } else if (tt.getSheetsAbilityDescription() != null) {
+                targetTabId = abilityDescriptionTable;
+                targetTable = abilityDescriptionTable;
+                rowNum = tt.getSheetsAbilityDescription().getRowNum().intValue();
+                itemId = tt.getSheetsAbilityDescription().getId();
             } else if (tt.getEsoInterfaceVariable() != null) {
                 targetTabId = esoInterfaceTable;
                 targetTable = esoInterfaceTable;
