@@ -6,7 +6,6 @@
 package org.esn.esobase.model;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -129,6 +128,10 @@ public class GSpreadSheetsQuestDirection extends DAO {
 
     public void setTranslatedTexts(Set<TranslatedText> translatedTexts) {
         this.translatedTexts = translatedTexts;
+    }
+
+    public Long getaId() {
+        return aId;
     }
 
     public void setaId(Long aId) {

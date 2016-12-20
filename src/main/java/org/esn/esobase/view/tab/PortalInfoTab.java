@@ -20,8 +20,11 @@ public class PortalInfoTab extends VerticalLayout {
     private Table table;
 
     public PortalInfoTab(DBService service_) {
+        this.setSizeFull();
         this.service = service_;
         table = new Table();
+        table.setSizeFull();
+        table.setWidth(500f,Unit.PIXELS);
         HierarchicalContainer hc = service.getStatistics();
         table.setContainerDataSource(hc);
         table.setColumnHeaderMode(Table.ColumnHeaderMode.HIDDEN);

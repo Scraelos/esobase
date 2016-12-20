@@ -126,6 +126,8 @@ public class DBService {
         roles.add(new SysAccountRole(20L, "ROLE_DIRECT_ACCESS_ACHIEVEMENTS", "Прямое редактирование достижений"));
         roles.add(new SysAccountRole(21L, "ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS", "Прямое редактирование описаний достижений"));
         roles.add(new SysAccountRole(22L, "ROLE_DIRECT_ACCESS_NOTES", "Прямое редактирование записок"));
+        roles.add(new SysAccountRole(23L, "ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS", "Прямое редактирование описаний способностей"));
+        roles.add(new SysAccountRole(24L, "ROLE_PREAPPROVE", "Проверка правильности перевода"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -2610,7 +2612,7 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, boolean withNewTranslations, SysAccount translator) {
+    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Topic.class);
@@ -2619,14 +2621,23 @@ public class DBService {
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
-        if (withNewTranslations || (translator != null)) {
+        if (noTranslations) {
+            crit.createAlias("extPlayerPhrase", "extPlayerPhrase");
+            crit.createAlias("extNpcPhrase", "extNpcPhrase");
+            crit.add(Restrictions.or(
+                    Restrictions.eqProperty("extPlayerPhrase.textEn", "extPlayerPhrase.textRu"),
+                    Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
+            )
+            );
+        }
+        if (translateStatus != null || (translator != null)) {
             crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
             crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
         }
-        if (withNewTranslations) {
+        if (translateStatus != null) {
             crit.add(Restrictions.or(
-                    Restrictions.eq("playerTranslations.status", TRANSLATE_STATUS.NEW),
-                    Restrictions.eq("npcTranslations.status", TRANSLATE_STATUS.NEW)
+                    Restrictions.eq("playerTranslations.status", translateStatus),
+                    Restrictions.eq("npcTranslations.status", translateStatus)
             )
             );
         }
@@ -2644,19 +2655,25 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Greeting> getNpcGreetings(Npc npc, BeanItemContainer<Greeting> container, boolean withNewTranslations, SysAccount translator) {
+    public BeanItemContainer<Greeting> getNpcGreetings(Npc npc, BeanItemContainer<Greeting> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Greeting.class);
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
-        if (withNewTranslations || (translator != null)) {
+        if (noTranslations) {
+            crit.createAlias("extNpcPhrase", "extNpcPhrase");
+            crit.add(
+                    Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
+            );
+        }
+        if (translateStatus != null || (translator != null)) {
             crit.createAlias("translations", "translations");
         }
-        if (withNewTranslations) {
+        if (translateStatus != null) {
             crit.add(Restrictions.sizeGt("translations", 0));
-            crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+            crit.add(Restrictions.eq("translations.status", translateStatus));
         }
         if (translator != null) {
             crit.add(Restrictions.eq("translations.author", translator));
@@ -2669,19 +2686,25 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, boolean withNewTranslations, SysAccount translator) {
+    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Subtitle.class);
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
-        if (withNewTranslations || (translator != null)) {
+        if (noTranslations) {
+            crit.createAlias("extNpcPhrase", "extNpcPhrase");
+            crit.add(
+                    Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
+            );
+        }
+        if (translateStatus != null || (translator != null)) {
             crit.createAlias("translations", "translations");
         }
-        if (withNewTranslations) {
+        if (translateStatus != null) {
             crit.add(Restrictions.sizeGt("translations", 0));
-            crit.add(Restrictions.eq("translations.status", TRANSLATE_STATUS.NEW));
+            crit.add(Restrictions.eq("translations.status", translateStatus));
         }
         if (translator != null) {
             crit.add(Restrictions.eq("translations.author", translator));
@@ -2693,18 +2716,19 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, boolean withNewTranslations, SysAccount translator, boolean noTranslations) {
+    public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Npc.class);
         crit.setFetchMode("location", FetchMode.JOIN);
-        if (withNewTranslations && translator != null) {
-            Query withNewTranslationsQuery = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status='NEW' and tt.author_id=:authorId\n"
-                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.status='NEW' and tt.author_id=:authorId\n"
-                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.status='NEW' and tt.author_id=:authorId\n"
-                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.status='NEW' and tt.author_id=:authorId) as rr group by npc_id");
-            withNewTranslationsQuery.setParameter("authorId", translator.getId());
-            List<BigInteger> resultList = withNewTranslationsQuery.getResultList();
+        if (translateStatus != null && translator != null) {
+            Query q = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status=:translateStatus and tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.status=:translateStatus and tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.status=:translateStatus and tt.author_id=:authorId\n"
+                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.status=:translateStatus and tt.author_id=:authorId) as rr group by npc_id");
+            q.setParameter("authorId", translator.getId());
+            q.setParameter("translateStatus", translateStatus.name());
+            List<BigInteger> resultList = q.getResultList();
             List<Long> longResultList = new ArrayList();
             for (BigInteger id : resultList) {
                 longResultList.add(id.longValue());
@@ -2715,12 +2739,13 @@ public class DBService {
             crit.add(
                     Restrictions.in("id", longResultList)
             );
-        } else if (withNewTranslations) {
-            Query withNewTranslationsQuery = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status='NEW'\n"
-                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.status='NEW'\n"
-                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.status='NEW'\n"
-                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.status='NEW') as rr group by npc_id");
-            List<BigInteger> resultList = withNewTranslationsQuery.getResultList();
+        } else if (translateStatus != null) {
+            Query q = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status=:translateStatus\n"
+                    + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.status=:translateStatus\n"
+                    + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.status=:translateStatus\n"
+                    + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.status=:translateStatus) as rr group by npc_id");
+            q.setParameter("translateStatus", translateStatus.name());
+            List<BigInteger> resultList = q.getResultList();
             List<Long> longResultList = new ArrayList();
             for (BigInteger id : resultList) {
                 longResultList.add(id.longValue());
@@ -2732,12 +2757,12 @@ public class DBService {
                     Restrictions.in("id", longResultList)
             );
         } else if (translator != null) {
-            Query withNewTranslationsQuery = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.author_id=:authorId\n"
+            Query q = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.author_id=:authorId\n"
                     + "union all select t.npc_id from translatedtext tt join topic t on tt.playertopic_id=t.id where tt.author_id=:authorId\n"
                     + "union all select t.npc_id from translatedtext tt join greeting t on tt.greeting_id=t.id where tt.author_id=:authorId\n"
                     + "union all select t.npc_id from translatedtext tt join subtitle t on tt.subtitle_id=t.id where tt.author_id=:authorId) as rr group by npc_id");
-            withNewTranslationsQuery.setParameter("authorId", translator.getId());
-            List<BigInteger> resultList = withNewTranslationsQuery.getResultList();
+            q.setParameter("authorId", translator.getId());
+            List<BigInteger> resultList = q.getResultList();
             List<Long> longResultList = new ArrayList();
             for (BigInteger id : resultList) {
                 longResultList.add(id.longValue());
@@ -3103,6 +3128,12 @@ public class DBService {
                 em.persist(item);
             }
         }
+    }
+
+    @Transactional
+    public void preAcceptTranslatedText(TranslatedText entity) {
+        entity.setStatus(TRANSLATE_STATUS.PREACCEPTED);
+        em.merge(entity);
     }
 
     @Transactional
@@ -4051,7 +4082,7 @@ public class DBService {
                 + "select 'Перевод активаторов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsactivator where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsactivator) as qres union all\n"
                 + "select 'Перевод достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievement where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievement) as qres union all\n"
                 + "select 'Перевод описаний достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievementdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievementdescription) as qres union all\n"
-                + "select 'Перевод записок', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnote where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnote) as qres union all\n"
+                + "select 'Перевод писем', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnote where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnote) as qres union all\n"
                 + "select 'Перевод описаний способностей', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsabilitydescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsabilitydescription) as qres union all\n"
                 + "select 'Перевод имён NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcname) as qres union all\n"
                 + "select 'Перевод названий квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestname) as qres union all\n"
@@ -4078,6 +4109,12 @@ public class DBService {
         Item item = result.addItem(newTranslationCount);
         item.getItemProperty("name").setValue("Строк на вычитку");
         item.getItemProperty("value").setValue(Long.toString(newTranslationCount.longValue()));
+        Query preApproveTranslationsQuery = em.createNativeQuery("select count(*) from translatedtext where status='PREACCEPTED'");
+        preApproveTranslationsQuery.setMaxResults(1);
+        BigInteger preApproveTranslationCount = (BigInteger) preApproveTranslationsQuery.getSingleResult();
+        Item preApproveItem = result.addItem(preApproveTranslationCount);
+        preApproveItem.getItemProperty("name").setValue("Предварительно вычитанных строк");
+        preApproveItem.getItemProperty("value").setValue(Long.toString(preApproveTranslationCount.longValue()));
         return result;
     }
 
@@ -4856,12 +4893,12 @@ public class DBService {
         while (locationsKeys.hasNext()) {
             String locationName = (String) locationsKeys.next();
             Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
-            sheetLocationCrit.add(Restrictions.or(Restrictions.eq("textEn", locationName), Restrictions.eq("textRu", locationName)));
+            sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
             List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
             if (list != null && !list.isEmpty()) {
                 GSpreadSheetsLocationName sheetsLocationName = list.get(0);
                 Criteria locationCrit = session.createCriteria(Location.class);
-                locationCrit.add(Restrictions.or(Restrictions.eq("name", sheetsLocationName.getTextEn()), Restrictions.eq("nameRu", sheetsLocationName.getTextRu())));
+                locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
                 List<Location> locations = locationCrit.list();
                 Location location = null;
                 if (locations != null && !locations.isEmpty()) {
@@ -4887,10 +4924,10 @@ public class DBService {
                     } else {
                         npcName = npcKey;
                     }
-                    GSpreadSheetsNpcName sheetNpc;
+                    GSpreadSheetsNpcName sheetNpc = null;
                     if (npcName == null) {
                         Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-                        sheetNpcCrit.add(Restrictions.eq("textRu", npcNameRu));
+                        sheetNpcCrit.add(Restrictions.ilike("textRu", npcNameRu));
                         List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                         if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                             sheetNpc = sheetNpcList.get(0);
@@ -4898,7 +4935,7 @@ public class DBService {
                         }
                     } else {
                         Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-                        sheetNpcCrit.add(Restrictions.eq("textEn", npcName));
+                        sheetNpcCrit.add(Restrictions.ilike("textEn", npcName));
                         List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                         if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                             sheetNpc = sheetNpcList.get(0);
@@ -4908,6 +4945,33 @@ public class DBService {
                         }
                     }
                     Criteria npcCriteria = session.createCriteria(Npc.class);
+                    npcCriteria.add(Restrictions.eq("location", location));
+                    if (sheetNpc != null) {
+                        npcCriteria.add(Restrictions.eq("sheetsNpcName", sheetNpc));
+                    } else if (npcName != null) {
+                        npcCriteria.add(Restrictions.ilike("name", npcName));
+                    } else if (npcNameRu != null) {
+                        npcCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
+                    }
+                    Npc currentNpc = null;
+                    List<Npc> npcList = npcCriteria.list();
+                    if (npcList != null && !npcList.isEmpty()) {
+                        currentNpc = npcList.get(0);
+
+                    } else {
+                        currentNpc = new Npc();
+                        if (npcName != null) {
+                            currentNpc.setName(npcName);
+                        }
+                        if (npcNameRu != null) {
+                            currentNpc.setNameRu(npcNameRu);
+                        }
+                        if (sheetNpc != null) {
+                            currentNpc.setSheetsNpcName(sheetNpc);
+                            currentNpc.setSex(sheetNpc.getSex());
+                        }
+                    }
+
                 }
             }
 

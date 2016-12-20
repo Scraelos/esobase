@@ -308,7 +308,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     BeanItemContainer<Npc> c = new BeanItemContainer<>(Npc.class);
-                    c = service.getNpcs(c, false, null, false);
+                    c = service.getNpcs(c, null, null, false);
                     for (Npc n : c.getItemIds()) {
                         service.calculateNpcProgress(n);
                     }

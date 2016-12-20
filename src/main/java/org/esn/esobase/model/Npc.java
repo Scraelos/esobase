@@ -7,9 +7,7 @@ package org.esn.esobase.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -24,6 +22,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -53,6 +52,8 @@ public class Npc extends DAO {
     @ManyToMany(mappedBy = "npcs")
     private Set<Quest> quests;
     private BigDecimal progress;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private GSpreadSheetsNpcName sheetsNpcName;
 
     public Npc() {
     }
@@ -174,6 +175,14 @@ public class Npc extends DAO {
 
     public void setQuests(Set<Quest> quests) {
         this.quests = quests;
+    }
+
+    public GSpreadSheetsNpcName getSheetsNpcName() {
+        return sheetsNpcName;
+    }
+
+    public void setSheetsNpcName(GSpreadSheetsNpcName sheetsNpcName) {
+        this.sheetsNpcName = sheetsNpcName;
     }
 
 }

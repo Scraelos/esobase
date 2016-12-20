@@ -27,9 +27,9 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.Greeting;
 import org.esn.esobase.model.Location;
@@ -74,7 +74,7 @@ public class TranslateTab extends VerticalLayout {
     private BeanItemContainer<Greeting> greetingsContainer;
     private BeanItemContainer<Subtitle> subtitlesContainer;
     private Npc currentNpc;
-    private CheckBox onlyWithTranslations;
+    private ComboBox translateStatus;
     private CheckBox noTranslations;
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
@@ -121,15 +121,15 @@ public class TranslateTab extends VerticalLayout {
         npcContainer.addNestedContainerProperty("location.name");
         npcContainer.addNestedContainerProperty("location.nameRu");
 
-        FormLayout locationAndNpc = new FormLayout(locationTable, npcTable);
+        FormLayout locationAndNpc = new FormLayout(questTable, locationTable, npcTable);
         locationAndNpc.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
         locationAndNpc.setWidth(95f, Unit.PERCENTAGE);
 
         npcListlayout.addComponent(locationAndNpc);
-        
-        onlyWithTranslations = new CheckBox("С новыми переводами");
-        onlyWithTranslations.setValue(Boolean.FALSE);
-        onlyWithTranslations.addValueChangeListener(new Property.ValueChangeListener() {
+
+        translateStatus = new ComboBox("Статус перевода", Arrays.asList(TRANSLATE_STATUS.values()));
+        translateStatus.setNullSelectionAllowed(true);
+        translateStatus.addValueChangeListener(new Property.ValueChangeListener() {
 
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
@@ -149,7 +149,7 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
-        HorizontalLayout checkBoxlayout=new HorizontalLayout(onlyWithTranslations,noTranslations);
+        HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
         sysAccountContainer = service.loadBeanItems(sysAccountContainer);
@@ -172,7 +172,7 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
-        FormLayout questAndWithNewTranslations = new FormLayout(questTable, checkBoxlayout, translatorBox);
+        FormLayout questAndWithNewTranslations = new FormLayout(translateStatus, translatorBox, checkBoxlayout);
         questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
         questAndWithNewTranslations.setWidth(95f, Unit.PERCENTAGE);
         npcListlayout.addComponent(questAndWithNewTranslations);
@@ -257,7 +257,7 @@ public class TranslateTab extends VerticalLayout {
     }
 
     private void LoadFilters() {
-        npcContainer = service.getNpcs(npcContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue(),noTranslations.getValue());
+        npcContainer = service.getNpcs(npcContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
         npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
         List<Location> locations = new ArrayList<>();
         for (Npc npc : npcContainer.getItemIds()) {
@@ -277,12 +277,15 @@ public class TranslateTab extends VerticalLayout {
             locationNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "location.nameRu"));
             npcName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "name"));
             npcNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "nameRu"));
-            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue());
+            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
             topicsContainer.sort(new Object[]{"id"}, new boolean[]{true});
-            greetingsContainer = service.getNpcGreetings(currentNpc, greetingsContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue());
+            npcTabSheet.getTab(npcTopicsTable).setCaption("Диалоги(" + topicsContainer.size() + ")");
+            greetingsContainer = service.getNpcGreetings(currentNpc, greetingsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
             greetingsContainer.sort(new Object[]{"id"}, new boolean[]{true});
-            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, onlyWithTranslations.getValue(), (SysAccount) translatorBox.getValue());
+            npcTabSheet.getTab(npcGreetingsTable).setCaption("Приветствие(" + greetingsContainer.size() + ")");
+            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
             subtitlesContainer.sort(new Object[]{"id"}, new boolean[]{true});
+            npcTabSheet.getTab(npcSubtitlesTable).setCaption("Субтитры(" + subtitlesContainer.size() + ")");
         }
     }
 
@@ -600,6 +603,7 @@ public class TranslateTab extends VerticalLayout {
         private TextArea translation;
         private Button save;
         private Button accept;
+        private Button preAccept;
         private Button reject;
         private final TranslatedText translatedText;
 
@@ -616,8 +620,8 @@ public class TranslateTab extends VerticalLayout {
                 caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
             }
             if (translatedText.getCreateTime() != null) {
-                        caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
-                    }
+                caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
+            }
             if (translatedText.getChangeTime() != null) {
                 caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
@@ -683,8 +687,26 @@ public class TranslateTab extends VerticalLayout {
 
             this.addComponent(save);
             save.setVisible(false);
+
+            if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
+                if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+                    preAccept = new Button("Перевод верен");
+                    preAccept.addClickListener(new Button.ClickListener() {
+
+                        @Override
+                        public void buttonClick(Button.ClickEvent event) {
+                            translatedText.setText(translation.getValue());
+                            service.preAcceptTranslatedText(translatedText);
+                            LoadNpcContent();
+                            LoadFilters();
+                        }
+                    });
+                    this.addComponent(preAccept);
+                }
+            }
+
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
-                if (translatedText.getId() != null && translatedText.getStatus() == TRANSLATE_STATUS.NEW) {
+                if (translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED))) {
                     accept = new Button("Принять эту версию");
                     accept.addClickListener(new Button.ClickListener() {
 
@@ -698,6 +720,10 @@ public class TranslateTab extends VerticalLayout {
                         }
                     });
                     this.addComponent(accept);
+                }
+            }
+            if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
+                if (translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED))) {
                     reject = new Button("Отклонить эту версию");
                     reject.addClickListener(new Button.ClickListener() {
 
@@ -711,7 +737,6 @@ public class TranslateTab extends VerticalLayout {
                     });
                     this.addComponent(reject);
                 }
-
             }
         }
 

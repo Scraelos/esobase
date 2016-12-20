@@ -6,7 +6,6 @@
 package org.esn.esobase.model;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;

@@ -6,7 +6,6 @@
 package org.esn.esobase.model;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -17,7 +16,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import org.esn.esobase.model.lib.DAO;
@@ -130,6 +128,10 @@ public class GSpreadSheetsNpcPhrase extends DAO {
 
     public void setTranslatedTexts(Set<TranslatedText> translatedTexts) {
         this.translatedTexts = translatedTexts;
+    }
+
+    public Long getaId() {
+        return aId;
     }
 
     public void setaId(Long aId) {

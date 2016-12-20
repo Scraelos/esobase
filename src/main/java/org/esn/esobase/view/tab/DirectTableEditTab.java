@@ -857,9 +857,15 @@ public class DirectTableEditTab extends VerticalLayout {
                 }
             }
             if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-                Button addTranslation = new Button("Добавить перевод");
+                Button addTranslation = new Button("Добавить");
                 addTranslation.addClickListener(new AddTranslationClickListener(item, result, (JPAContainer) source.getContainerDataSource(), source));
-                result.addComponent(addTranslation);
+                if(list!=null&&!list.isEmpty()) {
+                    TranslationCell component = (TranslationCell) result.getComponent(result.getComponentCount()-1);
+                    component.getActionLayout().addComponent(addTranslation);
+                } else {
+                    result.addComponent(addTranslation);
+                }
+                
             }
             return result;
         }
@@ -1200,7 +1206,7 @@ public class DirectTableEditTab extends VerticalLayout {
 
     }
 
-    private class TranslationCell extends VerticalLayout {
+    private class TranslationCell extends HorizontalLayout {
 
         private TextArea translation;
         private Button save;
@@ -1210,6 +1216,7 @@ public class DirectTableEditTab extends VerticalLayout {
         private final JPAContainer container;
         private final EntityItem item;
         private final Table table;
+        private VerticalLayout actionLayout;
 
         public TranslationCell(TranslatedText translatedText_, JPAContainer container_, EntityItem item_, Table table_) {
             this.setSizeFull();
@@ -1232,14 +1239,17 @@ public class DirectTableEditTab extends VerticalLayout {
             if (translatedText.getChangeTime() != null) {
                 caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
-            translation = new TextArea(caption.toString());
+            actionLayout = new VerticalLayout();
+            actionLayout.setSizeFull();
+
+            translation = new TextArea();
+            translation.setDescription(caption.toString());
             translation.setSizeFull();
             translation.setNullRepresentation("");
             translation.setImmediate(true);
             translation.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.TIMEOUT);
             translation.setTextChangeTimeout(5000);
             translation.setValue(translatedText_.getText());
-
             translation.addTextChangeListener(new FieldEvents.TextChangeListener() {
 
                 @Override
@@ -1268,7 +1278,7 @@ public class DirectTableEditTab extends VerticalLayout {
                     if (translatedText.getChangeTime() != null) {
                         caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
                     }
-                    translation.setCaption(caption.toString());
+                    translation.setDescription(caption.toString());
                 }
             });
             if (SpringSecurityHelper.getSysAccount().equals(translatedText_.getAuthor())) {
@@ -1294,11 +1304,11 @@ public class DirectTableEditTab extends VerticalLayout {
                 }
             });
 
-            this.addComponent(save);
+            actionLayout.addComponent(save);
             save.setVisible(false);
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
                 if (translatedText.getId() != null && translatedText.getStatus() == TRANSLATE_STATUS.NEW) {
-                    accept = new Button("Принять эту версию");
+                    accept = new Button("Принять");
                     accept.addClickListener(new Button.ClickListener() {
 
                         @Override
@@ -1313,8 +1323,8 @@ public class DirectTableEditTab extends VerticalLayout {
                             }
                         }
                     });
-                    this.addComponent(accept);
-                    reject = new Button("Отклонить эту версию");
+                    actionLayout.addComponent(accept);
+                    reject = new Button("Отклонить");
                     reject.addClickListener(new Button.ClickListener() {
 
                         @Override
@@ -1328,11 +1338,20 @@ public class DirectTableEditTab extends VerticalLayout {
                             }
                         }
                     });
-                    this.addComponent(reject);
+                    actionLayout.addComponent(reject);
+
                 }
 
             }
+            this.addComponent(actionLayout);
+            this.setExpandRatio(translation, 8f);
+            this.setExpandRatio(actionLayout, 2f);
         }
+
+        public VerticalLayout getActionLayout() {
+            return actionLayout;
+        }
+        
     }
 
 }

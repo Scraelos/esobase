@@ -6,7 +6,6 @@
 package org.esn.esobase.model;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -146,6 +145,10 @@ public class GSpreadSheetsNpcName extends DAO {
 
     public void setaId(Long aId) {
         this.aId = aId;
+    }
+
+    public Long getaId() {
+        return aId;
     }
 
     public Long getbId() {
