@@ -135,7 +135,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -144,7 +144,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -229,7 +229,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -238,7 +238,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -323,7 +323,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -332,7 +332,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -417,7 +417,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -426,7 +426,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -511,7 +511,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -520,7 +520,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -605,7 +605,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -614,7 +614,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -699,7 +699,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -708,7 +708,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -793,7 +793,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -802,7 +802,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -887,7 +887,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -896,7 +896,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -981,7 +981,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -990,7 +990,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -1075,7 +1075,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -1084,7 +1084,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -1169,7 +1169,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -1178,7 +1178,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -1262,7 +1262,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -1271,7 +1271,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -1425,7 +1425,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -1434,7 +1434,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -1552,7 +1552,7 @@ public class GoogleDocsService {
                     case 3:
                         translator = value;
                         break;
-                    case 5:
+                    case 6:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 weight = Integer.parseInt(value);
@@ -1561,7 +1561,7 @@ public class GoogleDocsService {
                             }
                         }
                         break;
-                    case 6:
+                    case 7:
                         if (value != null && !value.isEmpty()) {
                             try {
                                 editTime = dateFormat.parse(value);
@@ -1629,7 +1629,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(phrase.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (phrase.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(phrase.getChangeTime()));
                                 cellEntry.update();
@@ -1641,8 +1641,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 3, phrase.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && phrase.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 6, dateFormat.format(phrase.getChangeTime()));
+                if (entries.size() < 7 && phrase.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 7, dateFormat.format(phrase.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -1697,7 +1697,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(phrase.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (phrase.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(phrase.getChangeTime()));
                                 cellEntry.update();
@@ -1709,8 +1709,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 3, phrase.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && phrase.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 6, dateFormat.format(phrase.getChangeTime()));
+                if (entries.size() < 7 && phrase.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 7, dateFormat.format(phrase.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -1786,7 +1786,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(name.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (name.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(name.getChangeTime()));
                                 cellEntry.update();
@@ -1798,8 +1798,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 3, name.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && name.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 6, dateFormat.format(name.getChangeTime()));
+                if (entries.size() < 7 && name.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 7, dateFormat.format(name.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -1855,7 +1855,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(name.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (name.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(name.getChangeTime()));
                                 cellEntry.update();
@@ -1867,8 +1867,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 3, name.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && name.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 6, dateFormat.format(name.getChangeTime()));
+                if (entries.size() < 7 && name.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 7, dateFormat.format(name.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -1924,7 +1924,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -1936,8 +1936,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -1993,7 +1993,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2005,8 +2005,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2062,7 +2062,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2074,8 +2074,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2131,7 +2131,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2143,8 +2143,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2200,7 +2200,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2212,8 +2212,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2269,7 +2269,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2281,8 +2281,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2338,7 +2338,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2350,8 +2350,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2407,7 +2407,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2419,8 +2419,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2476,7 +2476,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2488,8 +2488,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2545,7 +2545,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2557,8 +2557,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
@@ -2613,7 +2613,7 @@ public class GoogleDocsService {
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
                             break;
-                        case 6:
+                        case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
@@ -2625,8 +2625,8 @@ public class GoogleDocsService {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 6 && item.getChangeTime() != null) {
-                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 6, dateFormat.format(item.getChangeTime()));
+                if (entries.size() < 7 && item.getChangeTime() != null) {
+                    CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
             }
