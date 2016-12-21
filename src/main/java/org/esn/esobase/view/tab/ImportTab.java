@@ -52,6 +52,7 @@ import org.esn.esobase.model.Npc;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.EsnDecoder;
 import org.esn.esobase.tools.LuaDecoder;
+import org.json.JSONObject;
 
 /**
  *
@@ -61,6 +62,7 @@ public class ImportTab extends VerticalLayout {
 
     private DBService service;
     private Upload upload;
+    private Upload uploadNewFormat;
     private Button importPlayerPhrasesFromG;
     private Button importNpcPhrasesFromG;
     private Button importLocationNamesFromG;
@@ -98,6 +100,12 @@ public class ImportTab extends VerticalLayout {
         upload.addSucceededListener(receiver);
         upload.setImmediate(true);
         this.addComponent(upload);
+        
+        NewConversationsReceiver newReceiver = new NewConversationsReceiver(service);
+        uploadNewFormat = new Upload("Загрузите файл ConversationsQ.lua", newReceiver);
+        uploadNewFormat.addSucceededListener(newReceiver);
+        uploadNewFormat.setImmediate(true);
+        this.addComponent(uploadNewFormat);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             importPlayerPhrasesFromG = new Button("Импорт фраз игрока из гугл-таблиц");
             importPlayerPhrasesFromG.addClickListener(new Button.ClickListener() {
@@ -597,6 +605,32 @@ public class ImportTab extends VerticalLayout {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
 
+        }
+
+    }
+    
+    private class NewConversationsReceiver implements Receiver, SucceededListener {
+
+        public NewConversationsReceiver(DBService service) {
+            this.service = service;
+        }
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+                byte[] toByteArray = baos.toByteArray();
+                String text = new String(toByteArray);
+                JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
+                service.newFormatImportNpcs(jsonFromLua);
         }
 
     }

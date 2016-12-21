@@ -76,7 +76,7 @@ public class LuaDecoder {
                         String subtitlekey = (String) subtitlesKeys.next();
                         String subtitleText = null;
                         String subtitleTextRu = null;
-                        if (EsnDecoder.IsEsnEncoding(subtitlekey)) {
+                        if (EsnDecoder.IsEsnEncoding(subtitlekey)||EsnDecoder.IsRu(subtitlekey)) {
                             subtitleTextRu = EsnDecoder.decode(subtitlekey);
                         } else {
                             subtitleText = subtitlekey;
@@ -104,12 +104,12 @@ public class LuaDecoder {
                         String playerTextRu = null;
                         String npcText = null;
                         String npcTextRu = null;
-                        if (EsnDecoder.IsEsnEncoding(topickey)) {
+                        if (EsnDecoder.IsEsnEncoding(topickey)||EsnDecoder.IsRu(topickey)) {
                             playerTextRu = EsnDecoder.decode(topickey);
                         } else {
                             playerText = topickey.replace("Óàeæäeîèe ", "").replace("Óâpoça ", "");
                         }
-                        if (EsnDecoder.IsEsnEncoding(topicsObject.getString(topickey))) {
+                        if (EsnDecoder.IsEsnEncoding(topicsObject.getString(topickey))||EsnDecoder.IsRu(topicsObject.getString(topickey))) {
                             npcTextRu = EsnDecoder.decode(topicsObject.getString(topickey));
                         } else {
                             npcText = topicsObject.getString(topickey);
@@ -139,7 +139,7 @@ public class LuaDecoder {
                         String greetingskey = (String) greetingsKeys.next();
                         String greetingText = null;
                         String greetingTextRu = null;
-                        if (EsnDecoder.IsEsnEncoding(greetingsObject.getString(greetingskey))) {
+                        if (EsnDecoder.IsEsnEncoding(greetingsObject.getString(greetingskey))||EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
                             greetingTextRu = EsnDecoder.decode(greetingsObject.getString(greetingskey));
                         } else {
                             greetingText = greetingsObject.getString(greetingskey);
@@ -165,7 +165,7 @@ public class LuaDecoder {
         return result;
     }
 
-    public JSONObject getJsonFromLua(String source) {
+    public static JSONObject getJsonFromLua(String source) {
         JSONObject result = null;
         String[] lines = source.split("\n");
         StringBuilder sb = new StringBuilder();
