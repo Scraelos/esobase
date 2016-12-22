@@ -142,7 +142,7 @@ public class DirectTableEditTab extends VerticalLayout {
         this.setHeight(100f, Unit.PERCENTAGE);
         searchTabs = new TabSheet();
         searchTabs.setSizeFull();
-        searchTabs.setHeight(200f, Unit.PIXELS);
+        searchTabs.setHeight(250f, Unit.PIXELS);
         VerticalLayout searchInCatalogsLayout = new VerticalLayout();
         searchInCatalogsLayout.setSizeFull();
         HorizontalLayout hl = new HorizontalLayout();
