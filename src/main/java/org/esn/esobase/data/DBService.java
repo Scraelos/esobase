@@ -48,6 +48,7 @@ import org.esn.esobase.data.diffs.AchievementsDiff;
 import org.esn.esobase.data.diffs.NotesDiff;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.EsoRawString;
+import org.esn.esobase.model.GSpreadSheetEntity;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
@@ -79,6 +80,7 @@ import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.EsnDecoder;
+import org.esn.esobase.tools.GSpreadSheetLinkRouter;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
@@ -4547,6 +4549,24 @@ public class DBService {
     }
 
     @Transactional
+    public DAO getLinkedItem(GSpreadSheetEntity entity) {
+        DAO result = null;
+        GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(entity.getaId());
+        if (route != null) {
+            Session session = (Session) em.getDelegate();
+            Criteria crit = session.createCriteria(route.getTargetClass());
+            crit.add(Restrictions.eq("aId", route.getTargetId()));
+            crit.add(Restrictions.eq("cId", entity.getcId()));
+            List<DAO> list = crit.list();
+            if (list != null && !list.isEmpty()) {
+                result = list.get(0);
+            }
+        }
+
+        return result;
+    }
+
+    @Transactional
     public void updateGspreadSheetTextEn() {
         List<Object[]> resultList;
         Query activatorsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsactivator g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
@@ -5015,7 +5035,7 @@ public class DBService {
                             } else {
                                 npcText = topicsObject.getString(topickey);
                             }
-                            if ((playerText != null&&!playerText.isEmpty()) || (npcText != null&&!npcText.isEmpty())) {
+                            if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty())) {
                                 Criteria topicCriteria = session.createCriteria(Topic.class);
                                 topicCriteria.add(Restrictions.eq("npc", currentNpc));
                                 if (playerText != null) {
@@ -5070,23 +5090,23 @@ public class DBService {
                             } else {
                                 subtitleText = subtitlekey;
                             }
-                            if(subtitleText != null&&!subtitleText.isEmpty()) {
+                            if (subtitleText != null && !subtitleText.isEmpty()) {
                                 Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
-                            subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
-                            if (subtitleText != null) {
-                                subtitleCriteria.add(Restrictions.eq("text", subtitleText));
+                                subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
+                                if (subtitleText != null) {
+                                    subtitleCriteria.add(Restrictions.eq("text", subtitleText));
+                                }
+                                if (subtitleTextRu != null) {
+                                    subtitleCriteria.add(Restrictions.eq("text", subtitleTextRu));
+                                }
+                                List<Subtitle> subtitleList = subtitleCriteria.list();
+                                if (subtitleList == null || subtitleList.isEmpty()) {
+                                    Subtitle subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
+                                    LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
+                                    em.persist(subtitle);
+                                }
                             }
-                            if (subtitleTextRu != null) {
-                                subtitleCriteria.add(Restrictions.eq("text", subtitleTextRu));
-                            }
-                            List<Subtitle> subtitleList = subtitleCriteria.list();
-                            if (subtitleList == null || subtitleList.isEmpty()) {
-                                Subtitle subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
-                                LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
-                                em.persist(subtitle);
-                            }
-                            }
-                            
+
                         }
                     }
 
@@ -5107,7 +5127,7 @@ public class DBService {
                             } else {
                                 greetingText = greetingsObject.getString(greetingskey);
                             }
-                            if (greetingText != null&&!greetingText.isEmpty()) {
+                            if (greetingText != null && !greetingText.isEmpty()) {
                                 Criteria greetingsCriteria = session.createCriteria(Greeting.class);
                                 greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
                                 if (greetingText != null) {

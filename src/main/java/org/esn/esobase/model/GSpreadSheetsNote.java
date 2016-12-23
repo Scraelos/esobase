@@ -29,7 +29,7 @@ import org.esn.esobase.model.lib.DAO;
     @Index(columnList = "rowNum", unique = false),
     @Index(columnList = "translator", unique = false),
     @Index(columnList = "aId,bId,cId", unique = true)})
-public class GSpreadSheetsNote extends DAO {
+public class GSpreadSheetsNote extends DAO implements GSpreadSheetEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -72,6 +72,7 @@ public class GSpreadSheetsNote extends DAO {
         this.id = id;
     }
 
+    @Override
     public Long getRowNum() {
         return rowNum;
     }
@@ -128,6 +129,7 @@ public class GSpreadSheetsNote extends DAO {
         this.translatedTexts = translatedTexts;
     }
 
+    @Override
     public Long getaId() {
         return aId;
     }
@@ -136,6 +138,7 @@ public class GSpreadSheetsNote extends DAO {
         this.aId = aId;
     }
 
+    @Override
     public Long getbId() {
         return bId;
     }
@@ -144,6 +147,7 @@ public class GSpreadSheetsNote extends DAO {
         this.bId = bId;
     }
 
+    @Override
     public Long getcId() {
         return cId;
     }

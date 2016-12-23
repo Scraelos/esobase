@@ -30,7 +30,7 @@ import org.esn.esobase.model.lib.DAO;
     @Index(columnList = "textRu", unique = false),
     @Index(columnList = "translator", unique = false),
     @Index(columnList = "aId,bId,cId", unique = true)})
-public class GSpreadSheetsAbilityDescription extends DAO {
+public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheetEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -73,6 +73,7 @@ public class GSpreadSheetsAbilityDescription extends DAO {
         this.id = id;
     }
 
+    @Override
     public Long getRowNum() {
         return rowNum;
     }
@@ -121,6 +122,7 @@ public class GSpreadSheetsAbilityDescription extends DAO {
         this.weight = weight;
     }
 
+    @Override
     public Long getaId() {
         return aId;
     }
@@ -129,6 +131,7 @@ public class GSpreadSheetsAbilityDescription extends DAO {
         this.aId = aId;
     }
 
+    @Override
     public Long getbId() {
         return bId;
     }
@@ -137,6 +140,7 @@ public class GSpreadSheetsAbilityDescription extends DAO {
         this.bId = bId;
     }
 
+    @Override
     public Long getcId() {
         return cId;
     }
