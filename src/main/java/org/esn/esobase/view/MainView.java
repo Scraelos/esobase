@@ -5,10 +5,6 @@
  */
 package org.esn.esobase.view;
 
-import com.vaadin.event.ShortcutAction;
-import com.vaadin.event.ShortcutAction.KeyCode;
-import com.vaadin.event.ShortcutAction.ModifierKey;
-import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
@@ -90,20 +86,20 @@ public class MainView extends Panel implements View, Command {
     public MainView() {
         /*this.shiftTwoListener = new ShortcutListener("Search in catalogs(shift+2)", KeyCode.NUM2, new int[]{ModifierKey.SHIFT}) {
 
-            @Override
-            public void handleAction(Object sender, Object target) {
-                openSearchInCatalogs();
-            }
+         @Override
+         public void handleAction(Object sender, Object target) {
+         openSearchInCatalogs();
+         }
 
-        };
-        this.shiftThreeListener = new ShortcutListener("Search in catalogs(shift+3)", KeyCode.NUM3, new int[]{ModifierKey.SHIFT}) {
+         };
+         this.shiftThreeListener = new ShortcutListener("Search in catalogs(shift+3)", KeyCode.NUM3, new int[]{ModifierKey.SHIFT}) {
 
-            @Override
-            public void handleAction(Object sender, Object target) {
-                openSearchInRaw();
-            }
+         @Override
+         public void handleAction(Object sender, Object target) {
+         openSearchInRaw();
+         }
 
-        };*/
+         };*/
     }
 
     @PostConstruct
@@ -124,7 +120,7 @@ public class MainView extends Panel implements View, Command {
 
         
         setContent(layout);
-        
+
     }
 
     private void buildMenu() {

@@ -13,6 +13,7 @@
     <http security="none" pattern="/favicon.ico"/>
 
     <http auto-config='true' authentication-manager-ref="am">
+        <intercept-url pattern="/searchservlet/*" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
         <intercept-url pattern="/login/" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
         <intercept-url pattern="/**" access="ROLE_USER, ROLE_ADMIN" />
         <form-login login-page="/login/" authentication-failure-url="/login/?error=true"/>

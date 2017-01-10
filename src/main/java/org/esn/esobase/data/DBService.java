@@ -76,6 +76,7 @@ import org.esn.esobase.model.SysAccountRole;
 import org.esn.esobase.model.SystemProperty;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.Topic;
+import org.esn.esobase.model.TranslatedEntity;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -3796,6 +3797,103 @@ public class DBService {
     }
 
     @Transactional
+    public List<TranslatedEntity> searchInCatalogs(String search) {
+        List<TranslatedEntity> result = new ArrayList<>();
+        List<Criterion> searchTermitems = new ArrayList<>();
+        searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("textRu", search, MatchMode.ANYWHERE));
+        Disjunction searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
+        Session session = (Session) em.getDelegate();
+        Criteria npcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+        npcCrit.add(searchTerms);
+        List<GSpreadSheetsNpcName> npcList = npcCrit.list();
+        result.addAll(npcList);
+
+        Criteria locationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+        locationCrit.add(searchTerms);
+        List<GSpreadSheetsLocationName> locationList = locationCrit.list();
+        result.addAll(locationList);
+
+        /*
+         Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class);
+         activatorCrit.add(searchTerms);
+         List<GSpreadSheetsActivator> activatorList = activatorCrit.list();
+         result.addAll(activatorList);
+         */
+        Criteria itemNameCrit = session.createCriteria(GSpreadSheetsItemName.class);
+        itemNameCrit.add(searchTerms);
+        List<GSpreadSheetsItemName> itemNameList = itemNameCrit.list();
+        result.addAll(itemNameList);
+
+        /*Criteria itemDescriptionCrit = session.createCriteria(GSpreadSheetsItemDescription.class);
+         itemDescriptionCrit.add(searchTerms);
+         List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionCrit.list();
+         result.addAll(itemDescriptionList);*/
+        Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
+        questNameCrit.add(searchTerms);
+        List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
+        result.addAll(questNameList);
+
+        /*Criteria questDescriptionCrit = session.createCriteria(GSpreadSheetsQuestDescription.class);
+         questDescriptionCrit.add(searchTerms);
+         List<GSpreadSheetsQuestDescription> questDescriptionList = questDescriptionCrit.list();
+         result.addAll(questDescriptionList);
+
+         Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class);
+         questDirectionCrit.add(searchTerms);
+         List<GSpreadSheetsQuestDirection> questDirectionList = questDirectionCrit.list();
+         result.addAll(questDirectionList);
+
+         Criteria journalEntryCrit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+         journalEntryCrit.add(searchTerms);
+         List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryCrit.list();
+         result.addAll(journalEntryList);
+         */
+
+        /*Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
+         npcPhraseCrit.add(searchTerms);
+         List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseCrit.list();
+         result.addAll(npcPhraseList);
+
+         Criteria playerPhraseCrit = session.createCriteria(GSpreadSheetsPlayerPhrase.class);
+         playerPhraseCrit.add(searchTerms);
+         List<GSpreadSheetsPlayerPhrase> playerPhraseList = playerPhraseCrit.list();
+         result.addAll(playerPhraseList);
+         */
+        Criteria achievementCrit = session.createCriteria(GSpreadSheetsAchievement.class);
+        achievementCrit.add(searchTerms);
+        List<GSpreadSheetsAchievement> achievementList = achievementCrit.list();
+        result.addAll(achievementList);
+
+        /*Criteria achievementDescriptionCrit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+         achievementDescriptionCrit.add(searchTerms);
+         List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionCrit.list();
+         result.addAll(achievementDescriptionList);
+
+         Criteria noteCrit = session.createCriteria(GSpreadSheetsNote.class);
+         noteCrit.add(searchTerms);
+         List<GSpreadSheetsNote> noteList = noteCrit.list();
+         result.addAll(noteList);
+         */
+        Criteria abilityDescriptionCrit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+        abilityDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionCrit.list();
+        result.addAll(abilityDescriptionList);
+
+        Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
+        searchTermitems = new ArrayList<>();
+        searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("textRu", search, MatchMode.ANYWHERE));
+        searchTermitems.add(Restrictions.ilike("name", search, MatchMode.ANYWHERE));
+        searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
+        esoInterfaceVariableCrit.add(searchTerms);
+        List<EsoInterfaceVariable> esoInterfaceVariableList = esoInterfaceVariableCrit.list();
+        result.addAll(esoInterfaceVariableList);
+
+        return result;
+    }
+
+    @Transactional
     public HierarchicalContainer getTextForSpellCheck(Date startDate, Date endDate, HierarchicalContainer hc) {
         hc.removeAllItems();
         List<Criterion> searchTermitems = new ArrayList<>();
@@ -4243,9 +4341,10 @@ public class DBService {
         TypedQuery<GSpreadSheetsActivator> activatorQuery = em.createQuery("select a from GSpreadSheetsActivator a where aId is null", GSpreadSheetsActivator.class);
         List<GSpreadSheetsActivator> activatorList = activatorQuery.getResultList();
         for (GSpreadSheetsActivator item : activatorList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L, 14464837L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L, 14464837L, 207758933L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4258,9 +4357,10 @@ public class DBService {
         TypedQuery<GSpreadSheetsItemDescription> itemDescriptionQuery = em.createQuery("select a from GSpreadSheetsItemDescription a where aId is null", GSpreadSheetsItemDescription.class);
         List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionQuery.getResultList();
         for (GSpreadSheetsItemDescription item : itemDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{139139780L, 228378404L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4273,9 +4373,10 @@ public class DBService {
         TypedQuery<GSpreadSheetsItemName> itemNameQuery = em.createQuery("select a from GSpreadSheetsItemName a where aId is null", GSpreadSheetsItemName.class);
         List<GSpreadSheetsItemName> itemNameList = itemNameQuery.getResultList();
         for (GSpreadSheetsItemName item : itemNameList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{242841733L, 267697733L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4288,9 +4389,10 @@ public class DBService {
         TypedQuery<GSpreadSheetsJournalEntry> journalEntryQuery = em.createQuery("select a from GSpreadSheetsJournalEntry a where aId is null", GSpreadSheetsJournalEntry.class);
         List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryQuery.getResultList();
         for (GSpreadSheetsJournalEntry item : journalEntryList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{103224356L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4303,9 +4405,10 @@ public class DBService {
         TypedQuery<GSpreadSheetsLocationName> locationNameQuery = em.createQuery("select a from GSpreadSheetsLocationName a where aId is null", GSpreadSheetsLocationName.class);
         List<GSpreadSheetsLocationName> locationNameList = locationNameQuery.getResultList();
         for (GSpreadSheetsLocationName item : locationNameList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L, 268015829L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L, 268015829L,111863941L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4319,8 +4422,8 @@ public class DBService {
         npcNameQuery.setMaxResults(1000);
         List<GSpreadSheetsNpcName> npcNameList = npcNameQuery.getResultList();
         for (GSpreadSheetsNpcName item : npcNameList) {
-            String textEn = item.getTextEn();
-            String textEn2 = item.getTextEn();
+            String textEn = item.getTextEn().replace("$", "\n");
+            String textEn2 = item.getTextEn().replace("$", "\n");;
             if (item.getSex() != null) {
                 switch (item.getSex()) {
                     case U:
@@ -4353,10 +4456,11 @@ public class DBService {
                         break;
                 }
             }
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where (textEn=:textEn or textEn=:textEn2) and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where (textEn=:textEn or textEn=:textEn2) and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", textEn);
             rawQ.setParameter("textEn2", textEn2);
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{8290981L, 191999749L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{8290981L, 51188660L, 191999749L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4370,9 +4474,10 @@ public class DBService {
         npcPhraseQuery.setMaxResults(100);
         List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseQuery.getResultList();
         for (GSpreadSheetsNpcPhrase item : npcPhraseList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{55049764L, 115740052L, 149328292L, 3952276L, 165399380L, 200879108L, 116521668L, 211899940L, 234743124L}));
+            rawQ.setParameter("bId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4386,9 +4491,10 @@ public class DBService {
         PlayerPhraseQuery.setMaxResults(100);
         List<GSpreadSheetsPlayerPhrase> PlayerPhraseList = PlayerPhraseQuery.getResultList();
         for (GSpreadSheetsPlayerPhrase item : PlayerPhraseList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId and textDe is not null order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{204987124L, 20958740L, 249936564L, 228103012L, 232026500L, 150525940L, 99155012L}));
+            rawQ.setParameter("bId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4399,9 +4505,10 @@ public class DBService {
         GSpreadSheetsQuestQuery.setMaxResults(100);
         List<GSpreadSheetsQuestDescription> GSpreadSheetsQuestList = GSpreadSheetsQuestQuery.getResultList();
         for (GSpreadSheetsQuestDescription item : GSpreadSheetsQuestList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{265851556L, 205344756L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4412,9 +4519,10 @@ public class DBService {
         QuestDirectionQuery.setMaxResults(100);
         List<GSpreadSheetsQuestDirection> QuestDirectionList = QuestDirectionQuery.getResultList();
         for (GSpreadSheetsQuestDirection item : QuestDirectionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{7949764L, 256430276L, 121487972L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4426,9 +4534,10 @@ public class DBService {
         QuestNameQuery.setMaxResults(100);
         List<GSpreadSheetsQuestName> QuestNameList = QuestNameQuery.getResultList();
         for (GSpreadSheetsQuestName item : QuestNameList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{52420949L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4440,9 +4549,10 @@ public class DBService {
         achievementQuery.setMaxResults(100);
         List<GSpreadSheetsAchievement> achievementList = achievementQuery.getResultList();
         for (GSpreadSheetsAchievement item : achievementList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{12529189L, 172030117L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4454,9 +4564,10 @@ public class DBService {
         achievementDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionQuery.getResultList();
         for (GSpreadSheetsAchievementDescription item : achievementDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{188155806L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4468,9 +4579,10 @@ public class DBService {
         noteQuery.setMaxResults(100);
         List<GSpreadSheetsNote> noteList = noteQuery.getResultList();
         for (GSpreadSheetsNote item : noteList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{219317028L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
@@ -4481,9 +4593,10 @@ public class DBService {
         //abilityDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionQuery.getResultList();
         for (GSpreadSheetsAbilityDescription item : abilityDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{132143172L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);

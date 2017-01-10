@@ -42,6 +42,16 @@
         <param-name>productionMode</param-name>
         <param-value>true</param-value>
     </context-param>
+    
+    <servlet>
+        <servlet-name>search-in-catalogs-servlet</servlet-name>
+        <servlet-class>org.esn.esobase.service.SearchInCatalogsServlet</servlet-class>
+        <load-on-startup>15</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>search-in-catalogs-servlet</servlet-name>
+        <url-pattern>/searchservlet/*</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>SpringLoginDispatcherServlet</servlet-name>

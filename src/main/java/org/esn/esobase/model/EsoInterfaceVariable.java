@@ -22,7 +22,7 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
-public class EsoInterfaceVariable extends DAO {
+public class EsoInterfaceVariable extends DAO implements TranslatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -59,6 +59,7 @@ public class EsoInterfaceVariable extends DAO {
         this.name = name;
     }
 
+    @Override
     public String getTextEn() {
         return textEn;
     }
@@ -67,6 +68,7 @@ public class EsoInterfaceVariable extends DAO {
         this.textEn = textEn;
     }
 
+    @Override
     public String getTextRu() {
         return textRu;
     }
