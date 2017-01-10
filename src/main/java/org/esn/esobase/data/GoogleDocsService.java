@@ -40,6 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
@@ -145,13 +146,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -239,13 +234,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -333,13 +322,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -427,13 +410,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -521,13 +498,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -615,13 +586,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -709,13 +674,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -803,13 +762,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -897,13 +850,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -991,13 +938,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -1085,13 +1026,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -1179,13 +1114,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -1272,13 +1201,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -1435,13 +1358,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -1562,13 +1479,7 @@ public class GoogleDocsService {
                         }
                         break;
                     case 7:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                editTime = dateFormat.parse(value);
-                            } catch (java.text.ParseException | java.lang.NumberFormatException ex) {
-
-                            }
-                        }
+                        editTime=getDateFromCell(cellEntry);
                         break;
                     default:
 
@@ -2658,6 +2569,18 @@ public class GoogleDocsService {
                 .build();
         // authorize
         return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+    }
+    
+    private Date getDateFromCell(CellEntry cell) {
+        Date result=null;
+        if(cell!=null&&cell.getCell()!=null&&cell.getCell().getNumericValue()!=null) {
+            result=DateUtil.getJavaDate(cell.getCell().getNumericValue().doubleValue());
+            Date now=new Date();
+            if(result.after(now)) {
+                result=null;
+            }
+        }
+        return result;
     }
 
 }
