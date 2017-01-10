@@ -61,7 +61,7 @@ public class SearchInRawStringsTab extends VerticalLayout {
         Styles styles = Page.getCurrent().getStyles();
         styles.add(".v-table-cell-wrapper {\n"
                 + "    /* Do not specify any margins, paddings or borders here */\n"
-                + "    white-space: normal;\n"
+                + "    white-space: pre-line;\n"
                 + "    overflow: hidden;\n"
                 + "}");
         resultTable.addStyleName("v-table-cell-wrapper");
