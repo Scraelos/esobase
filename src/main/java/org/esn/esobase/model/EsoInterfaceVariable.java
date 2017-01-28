@@ -77,6 +77,7 @@ public class EsoInterfaceVariable extends DAO implements TranslatedEntity {
         this.textRu = textRu;
     }
 
+    @Override
     public String getTranslator() {
         return translator;
     }
@@ -85,6 +86,7 @@ public class EsoInterfaceVariable extends DAO implements TranslatedEntity {
         this.translator = translator;
     }
 
+    @Override
     public Date getChangeTime() {
         return changeTime;
     }

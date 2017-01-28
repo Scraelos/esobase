@@ -106,6 +106,7 @@ public class GSpreadSheetsNpcName extends DAO implements GSpreadSheetEntity, Tra
         this.textRu = textRu;
     }
 
+    @Override
     public String getTranslator() {
         return translator;
     }
@@ -114,6 +115,7 @@ public class GSpreadSheetsNpcName extends DAO implements GSpreadSheetEntity, Tra
         this.translator = translator;
     }
 
+    @Override
     public Date getChangeTime() {
         return changeTime;
     }
@@ -130,6 +132,7 @@ public class GSpreadSheetsNpcName extends DAO implements GSpreadSheetEntity, Tra
         this.sex = sex;
     }
 
+    @Override
     public Integer getWeight() {
         return weight;
     }

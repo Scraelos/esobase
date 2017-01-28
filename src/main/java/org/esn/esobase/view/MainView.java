@@ -8,6 +8,7 @@ package org.esn.esobase.view;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Page;
 import com.vaadin.ui.*;
 import com.vaadin.ui.MenuBar.Command;
 import org.springframework.context.annotation.Scope;
@@ -82,7 +83,6 @@ public class MainView extends Panel implements View, Command {
 
     //protected final ShortcutListener shiftTwoListener;
     //protected final ShortcutListener shiftThreeListener;
-
     public MainView() {
         /*this.shiftTwoListener = new ShortcutListener("Search in catalogs(shift+2)", KeyCode.NUM2, new int[]{ModifierKey.SHIFT}) {
 
@@ -106,6 +106,12 @@ public class MainView extends Panel implements View, Command {
     public void PostConstruct() {
         setSizeFull();
         this.setHeight(100f, Unit.PERCENTAGE);
+        Page.Styles styles = Page.getCurrent().getStyles();
+        styles.add(".v-label {\n"
+                + "    /* Do not specify any margins, paddings or borders here */\n"
+                + "    white-space: pre-line;\n"
+                + "    overflow: hidden;\n"
+                + "}");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);
         layout.setSpacing(true);
@@ -118,7 +124,6 @@ public class MainView extends Panel implements View, Command {
         layout.setExpandRatio(tabs, 40f);
         buildTabs();
 
-        
         setContent(layout);
 
     }

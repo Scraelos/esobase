@@ -100,6 +100,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         this.textRu = textRu;
     }
 
+    @Override
     public String getTranslator() {
         return translator;
     }
@@ -108,6 +109,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         this.translator = translator;
     }
 
+    @Override
     public Date getChangeTime() {
         return changeTime;
     }
@@ -116,6 +118,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         this.changeTime = changeTime;
     }
 
+    @Override
     public Integer getWeight() {
         return weight;
     }

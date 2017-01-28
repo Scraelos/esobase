@@ -18,4 +18,6 @@ public interface GSpreadSheetEntity {
     public Long getcId();
 
     public Long getRowNum();
+    
+    public Integer getWeight();
 }

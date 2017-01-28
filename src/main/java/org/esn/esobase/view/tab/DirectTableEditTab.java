@@ -18,6 +18,7 @@ import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
@@ -61,6 +62,7 @@ import org.esn.esobase.model.GSpreadSheetsQuestDirection;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
+import org.esn.esobase.model.TranslatedEntity;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -154,6 +156,7 @@ public class DirectTableEditTab extends VerticalLayout {
         searchInCatalogsLayout.setSizeFull();
         HorizontalLayout hl = new HorizontalLayout();
         searchField = new TextField();
+        searchField.setWidth(300, Unit.PIXELS);
         searchField.addShortcutListener(new ShortcutListener("Search shortcut", ShortcutAction.KeyCode.ENTER, null) {
             @Override
             public void handleAction(Object sender, Object target) {
@@ -162,6 +165,7 @@ public class DirectTableEditTab extends VerticalLayout {
         });
         hl.addComponent(searchField);
         searchButton = new Button("Поиск");
+        searchButton.setIcon(FontAwesome.SEARCH);
         searchButton.addStyleName(ValoTheme.BUTTON_SMALL);
         searchButton.addStyleName(ValoTheme.BUTTON_TINY);
         searchButton.addClickListener(new Button.ClickListener() {
@@ -276,26 +280,20 @@ public class DirectTableEditTab extends VerticalLayout {
         npcNameContainer.setBuffered(true);
         npcNameTable.setContainerDataSource(npcNameContainer);
         npcNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        npcNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_NPC_NAMES"));
-        npcNameTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        npcNameTable.setColumnHeaders(new String[]{"Номер строки", "Пол", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        npcNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_NPC_NAMES"));
+        npcNameTable.setColumnCollapsingAllowed(true);
+        npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "infoColumn", "translateColumn"});
+        npcNameTable.setColumnHeaders(new String[]{"№", "Пол", "Текст", "Перевод", "", ""});
         npcNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         npcNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        npcNameTable.setColumnWidth("rowNum", 100);
+        npcNameTable.setColumnWidth("rowNum", 61);
         npcNameTable.setColumnExpandRatio("sex", 1.5f);
-        npcNameTable.setColumnWidth("sex", 110);
-        npcNameTable.setColumnExpandRatio("textEn", 5f);
-        npcNameTable.setColumnExpandRatio("textRu", 5f);
-        npcNameTable.setColumnExpandRatio("translateColumn", 5f);
-        npcNameTable.setColumnExpandRatio("translator", 1f);
-        npcNameTable.setColumnWidth("translator", 131);
-        npcNameTable.setColumnExpandRatio("changeTime", 1.7f);
-        npcNameTable.setColumnWidth("changeTime", 190);
-        npcNameTable.setColumnExpandRatio("saveColumn", 1.1f);
-        npcNameTable.setColumnWidth("saveColumn", 115);
-        npcNameTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        npcNameTable.setColumnWidth("linkedItemCoumn", 47);
+        npcNameTable.setColumnWidth("sex", 70);
+        npcNameTable.setColumnExpandRatio("textEn", 7f);
+        npcNameTable.setColumnExpandRatio("textRu", 7f);
+        npcNameTable.setColumnExpandRatio("translateColumn", 7f);
+        npcNameTable.setColumnExpandRatio("infoColumn", 1.7f);
+        npcNameTable.setColumnWidth("infoColumn", 87);
         npcNameTable.setEditable(true);
         npcNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_NAMES"));
         npcNameTable.setSortEnabled(false);
@@ -309,24 +307,18 @@ public class DirectTableEditTab extends VerticalLayout {
         locationNameContainer.setBuffered(true);
         locationNameTable.setContainerDataSource(locationNameContainer);
         locationNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        locationNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
-        locationNameTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        locationNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        locationNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
+        locationNameTable.setColumnCollapsingAllowed(true);
+        locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        locationNameTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         locationNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         locationNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        locationNameTable.setColumnWidth("rowNum", 100);
-        locationNameTable.setColumnExpandRatio("textEn", 5f);
-        locationNameTable.setColumnExpandRatio("textRu", 5f);
-        locationNameTable.setColumnExpandRatio("translateColumn", 5f);
-        locationNameTable.setColumnExpandRatio("translator", 1f);
-        locationNameTable.setColumnWidth("translator", 131);
-        locationNameTable.setColumnExpandRatio("changeTime", 1.7f);
-        locationNameTable.setColumnWidth("changeTime", 190);
-        locationNameTable.setColumnExpandRatio("saveColumn", 1.1f);
-        locationNameTable.setColumnWidth("saveColumn", 115);
-        locationNameTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        locationNameTable.setColumnWidth("linkedItemCoumn", 47);
+        locationNameTable.setColumnWidth("rowNum", 61);
+        locationNameTable.setColumnExpandRatio("textEn", 7f);
+        locationNameTable.setColumnExpandRatio("textRu", 7f);
+        locationNameTable.setColumnExpandRatio("translateColumn", 7f);
+        locationNameTable.setColumnExpandRatio("infoColumn", 1.7f);
+        locationNameTable.setColumnWidth("infoColumn", 87);
         locationNameTable.setEditable(true);
         locationNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
         locationNameTable.setSortEnabled(false);
@@ -339,24 +331,18 @@ public class DirectTableEditTab extends VerticalLayout {
         activatorContainer.setBuffered(true);
         activatorTable.setContainerDataSource(activatorContainer);
         activatorTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        activatorTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ACTIVATORS"));
-        activatorTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        activatorTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        activatorTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        activatorTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ACTIVATORS"));
+        activatorTable.setColumnCollapsingAllowed(true);
+        activatorTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        activatorTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         activatorTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         activatorTable.setColumnExpandRatio("rowNum", 1.5f);
-        activatorTable.setColumnWidth("rowNum", 100);
-        activatorTable.setColumnExpandRatio("textEn", 5f);
-        activatorTable.setColumnExpandRatio("textRu", 5f);
-        activatorTable.setColumnExpandRatio("translateColumn", 5f);
-        activatorTable.setColumnExpandRatio("translator", 1f);
-        activatorTable.setColumnWidth("translator", 131);
-        activatorTable.setColumnExpandRatio("changeTime", 1.7f);
-        activatorTable.setColumnWidth("changeTime", 190);
-        activatorTable.setColumnExpandRatio("saveColumn", 1.1f);
-        activatorTable.setColumnWidth("saveColumn", 115);
-        activatorTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        activatorTable.setColumnWidth("linkedItemCoumn", 47);
+        activatorTable.setColumnWidth("rowNum", 61);
+        activatorTable.setColumnExpandRatio("textEn", 7f);
+        activatorTable.setColumnExpandRatio("textRu", 7f);
+        activatorTable.setColumnExpandRatio("translateColumn", 7f);
+        activatorTable.setColumnExpandRatio("infoColumn", 1.7f);
+        activatorTable.setColumnWidth("infoColumn", 87);
         activatorTable.setEditable(true);
         activatorTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACTIVATORS"));
         activatorTable.setSortEnabled(false);
@@ -369,24 +355,18 @@ public class DirectTableEditTab extends VerticalLayout {
         playerPhraseContainer.setBuffered(true);
         playerPhraseTable.setContainerDataSource(playerPhraseContainer);
         playerPhraseTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        playerPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
-        playerPhraseTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        playerPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        playerPhraseTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
+        playerPhraseTable.setColumnCollapsingAllowed(true);
+        playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        playerPhraseTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         playerPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         playerPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
-        playerPhraseTable.setColumnWidth("rowNum", 100);
-        playerPhraseTable.setColumnExpandRatio("textEn", 5f);
-        playerPhraseTable.setColumnExpandRatio("textRu", 5f);
-        playerPhraseTable.setColumnExpandRatio("translateColumn", 5f);
-        playerPhraseTable.setColumnExpandRatio("translator", 1f);
-        playerPhraseTable.setColumnWidth("translator", 131);
-        playerPhraseTable.setColumnExpandRatio("changeTime", 1.7f);
-        playerPhraseTable.setColumnWidth("changeTime", 190);
-        playerPhraseTable.setColumnExpandRatio("saveColumn", 1.1f);
-        playerPhraseTable.setColumnWidth("saveColumn", 115);
-        playerPhraseTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        playerPhraseTable.setColumnWidth("linkedItemCoumn", 47);
+        playerPhraseTable.setColumnWidth("rowNum", 61);
+        playerPhraseTable.setColumnExpandRatio("textEn", 7f);
+        playerPhraseTable.setColumnExpandRatio("textRu", 7f);
+        playerPhraseTable.setColumnExpandRatio("translateColumn", 7f);
+        playerPhraseTable.setColumnExpandRatio("infoColumn", 1.7f);
+        playerPhraseTable.setColumnWidth("infoColumn", 87);
         playerPhraseTable.setEditable(true);
         playerPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
         playerPhraseTable.setSortEnabled(false);
@@ -399,24 +379,18 @@ public class DirectTableEditTab extends VerticalLayout {
         npcPhraseContainer.setBuffered(true);
         npcPhraseTable.setContainerDataSource(npcPhraseContainer);
         npcPhraseTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        npcPhraseTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
-        npcPhraseTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        npcPhraseTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        npcPhraseTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
+        npcPhraseTable.setColumnCollapsingAllowed(true);
+        npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        npcPhraseTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         npcPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         npcPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
-        npcPhraseTable.setColumnWidth("rowNum", 100);
-        npcPhraseTable.setColumnExpandRatio("textEn", 5f);
-        npcPhraseTable.setColumnExpandRatio("textRu", 5f);
-        npcPhraseTable.setColumnExpandRatio("translateColumn", 5f);
-        npcPhraseTable.setColumnExpandRatio("translator", 1f);
-        npcPhraseTable.setColumnWidth("translator", 131);
-        npcPhraseTable.setColumnExpandRatio("changeTime", 1.7f);
-        npcPhraseTable.setColumnWidth("changeTime", 190);
-        npcPhraseTable.setColumnExpandRatio("saveColumn", 1.1f);
-        npcPhraseTable.setColumnWidth("saveColumn", 115);
-        npcPhraseTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        npcPhraseTable.setColumnWidth("linkedItemCoumn", 47);
+        npcPhraseTable.setColumnWidth("rowNum", 61);
+        npcPhraseTable.setColumnExpandRatio("textEn", 7f);
+        npcPhraseTable.setColumnExpandRatio("textRu", 7f);
+        npcPhraseTable.setColumnExpandRatio("translateColumn", 7f);
+        npcPhraseTable.setColumnExpandRatio("infoColumn", 1.7f);
+        npcPhraseTable.setColumnWidth("infoColumn", 87);
         npcPhraseTable.setEditable(true);
         npcPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
         npcPhraseTable.setSortEnabled(false);
@@ -429,24 +403,18 @@ public class DirectTableEditTab extends VerticalLayout {
         questNameContainer.setBuffered(true);
         questNameTable.setContainerDataSource(questNameContainer);
         questNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        questNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
-        questNameTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        questNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        questNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        questNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
+        questNameTable.setColumnCollapsingAllowed(true);
+        questNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questNameTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         questNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         questNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        questNameTable.setColumnWidth("rowNum", 100);
-        questNameTable.setColumnExpandRatio("textEn", 5f);
-        questNameTable.setColumnExpandRatio("textRu", 5f);
-        questNameTable.setColumnExpandRatio("translateColumn", 5f);
-        questNameTable.setColumnExpandRatio("translator", 1f);
-        questNameTable.setColumnWidth("translator", 131);
-        questNameTable.setColumnExpandRatio("changeTime", 1.7f);
-        questNameTable.setColumnWidth("changeTime", 190);
-        questNameTable.setColumnExpandRatio("saveColumn", 1.1f);
-        questNameTable.setColumnWidth("saveColumn", 115);
-        questNameTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        questNameTable.setColumnWidth("linkedItemCoumn", 47);
+        questNameTable.setColumnWidth("rowNum", 61);
+        questNameTable.setColumnExpandRatio("textEn", 7f);
+        questNameTable.setColumnExpandRatio("textRu", 7f);
+        questNameTable.setColumnExpandRatio("translateColumn", 7f);
+        questNameTable.setColumnExpandRatio("infoColumn", 1.7f);
+        questNameTable.setColumnWidth("infoColumn", 87);
         questNameTable.setEditable(true);
         questNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
         questNameTable.setSortEnabled(false);
@@ -459,24 +427,18 @@ public class DirectTableEditTab extends VerticalLayout {
         questDescriptionContainer.setBuffered(true);
         questDescriptionTable.setContainerDataSource(questDescriptionContainer);
         questDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        questDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
-        questDescriptionTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        questDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        questDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        questDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
+        questDescriptionTable.setColumnCollapsingAllowed(true);
+        questDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         questDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         questDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        questDescriptionTable.setColumnWidth("rowNum", 100);
-        questDescriptionTable.setColumnExpandRatio("textEn", 5f);
-        questDescriptionTable.setColumnExpandRatio("textRu", 5f);
-        questDescriptionTable.setColumnExpandRatio("translateColumn", 5f);
-        questDescriptionTable.setColumnExpandRatio("translator", 1f);
-        questDescriptionTable.setColumnWidth("translator", 131);
-        questDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
-        questDescriptionTable.setColumnWidth("changeTime", 190);
-        questDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
-        questDescriptionTable.setColumnWidth("saveColumn", 115);
-        questDescriptionTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        questDescriptionTable.setColumnWidth("linkedItemCoumn", 47);
+        questDescriptionTable.setColumnWidth("rowNum", 61);
+        questDescriptionTable.setColumnExpandRatio("textEn", 7f);
+        questDescriptionTable.setColumnExpandRatio("textRu", 7f);
+        questDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
+        questDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
+        questDescriptionTable.setColumnWidth("infoColumn", 87);
         questDescriptionTable.setEditable(true);
         questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
         questDescriptionTable.setSortEnabled(false);
@@ -489,24 +451,18 @@ public class DirectTableEditTab extends VerticalLayout {
         questDirectionContainer.setBuffered(true);
         questDirectionTable.setContainerDataSource(questDirectionContainer);
         questDirectionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        questDirectionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
-        questDirectionTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        questDirectionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        questDirectionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        questDirectionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
+        questDirectionTable.setColumnCollapsingAllowed(true);
+        questDirectionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questDirectionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         questDirectionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         questDirectionTable.setColumnExpandRatio("rowNum", 1.5f);
-        questDirectionTable.setColumnWidth("rowNum", 100);
-        questDirectionTable.setColumnExpandRatio("textEn", 5f);
-        questDirectionTable.setColumnExpandRatio("textRu", 5f);
-        questDirectionTable.setColumnExpandRatio("translateColumn", 5f);
-        questDirectionTable.setColumnExpandRatio("translator", 1f);
-        questDirectionTable.setColumnWidth("translator", 131);
-        questDirectionTable.setColumnExpandRatio("changeTime", 1.7f);
-        questDirectionTable.setColumnWidth("changeTime", 190);
-        questDirectionTable.setColumnExpandRatio("saveColumn", 1.1f);
-        questDirectionTable.setColumnWidth("saveColumn", 115);
-        questDirectionTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        questDirectionTable.setColumnWidth("linkedItemCoumn", 47);
+        questDirectionTable.setColumnWidth("rowNum", 61);
+        questDirectionTable.setColumnExpandRatio("textEn", 7f);
+        questDirectionTable.setColumnExpandRatio("textRu", 7f);
+        questDirectionTable.setColumnExpandRatio("translateColumn", 7f);
+        questDirectionTable.setColumnExpandRatio("infoColumn", 1.7f);
+        questDirectionTable.setColumnWidth("infoColumn", 87);
         questDirectionTable.setEditable(true);
         questDirectionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
         questDirectionTable.setSortEnabled(false);
@@ -514,6 +470,7 @@ public class DirectTableEditTab extends VerticalLayout {
         tableTabs.addTab(questDirectionTable, "Цели квестов");
 
         itemNameLayout = new VerticalLayout();
+        itemNameLayout.setSizeFull();
         Label itemNameLabel = new Label("ВНИМАНИЕ! В этой таблице НЕЛЬЗЯ:  переводить односложные слова, особенно написанные со строчной буквы.");
         itemNameLabel.setStyleName(ValoTheme.LABEL_COLORED);
         itemNameTable = new Table();
@@ -522,29 +479,24 @@ public class DirectTableEditTab extends VerticalLayout {
         itemNameContainer.setBuffered(true);
         itemNameTable.setContainerDataSource(itemNameContainer);
         itemNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        itemNameTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
-        itemNameTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        itemNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        itemNameTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        itemNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
+        itemNameTable.setColumnCollapsingAllowed(true);
+        itemNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        itemNameTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         itemNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         itemNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        itemNameTable.setColumnWidth("rowNum", 100);
-        itemNameTable.setColumnExpandRatio("textEn", 5f);
-        itemNameTable.setColumnExpandRatio("textRu", 5f);
-        itemNameTable.setColumnExpandRatio("translateColumn", 5f);
-        itemNameTable.setColumnExpandRatio("translator", 1f);
-        itemNameTable.setColumnWidth("translator", 131);
-        itemNameTable.setColumnExpandRatio("changeTime", 1.7f);
-        itemNameTable.setColumnWidth("changeTime", 190);
-        itemNameTable.setColumnExpandRatio("saveColumn", 1.1f);
-        itemNameTable.setColumnWidth("saveColumn", 115);
-        itemNameTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        itemNameTable.setColumnWidth("linkedItemCoumn", 47);
+        itemNameTable.setColumnWidth("rowNum", 61);
+        itemNameTable.setColumnExpandRatio("textEn", 7f);
+        itemNameTable.setColumnExpandRatio("textRu", 7f);
+        itemNameTable.setColumnExpandRatio("translateColumn", 7f);
+        itemNameTable.setColumnExpandRatio("infoColumn", 1.7f);
+        itemNameTable.setColumnWidth("infoColumn", 87);
         itemNameTable.setEditable(true);
         itemNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
         itemNameTable.setSortEnabled(false);
         itemNameLayout.addComponent(itemNameLabel);
         itemNameLayout.addComponent(itemNameTable);
+        itemNameLayout.setExpandRatio(itemNameTable, 1f);
         itemNameTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(itemNameLayout, "Названия предметов");
 
@@ -554,24 +506,18 @@ public class DirectTableEditTab extends VerticalLayout {
         itemDescriptionContainer.setBuffered(true);
         itemDescriptionTable.setContainerDataSource(itemDescriptionContainer);
         itemDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        itemDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
-        itemDescriptionTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        itemDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        itemDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        itemDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
+        itemDescriptionTable.setColumnCollapsingAllowed(true);
+        itemDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        itemDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         itemDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         itemDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        itemDescriptionTable.setColumnWidth("rowNum", 100);
-        itemDescriptionTable.setColumnExpandRatio("textEn", 5f);
-        itemDescriptionTable.setColumnExpandRatio("textRu", 5f);
-        itemDescriptionTable.setColumnExpandRatio("translateColumn", 5f);
-        itemDescriptionTable.setColumnExpandRatio("translator", 1f);
-        itemDescriptionTable.setColumnWidth("translator", 131);
-        itemDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
-        itemDescriptionTable.setColumnWidth("changeTime", 190);
-        itemDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
-        itemDescriptionTable.setColumnWidth("saveColumn", 115);
-        itemDescriptionTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        itemDescriptionTable.setColumnWidth("linkedItemCoumn", 47);
+        itemDescriptionTable.setColumnWidth("rowNum", 61);
+        itemDescriptionTable.setColumnExpandRatio("textEn", 7f);
+        itemDescriptionTable.setColumnExpandRatio("textRu", 7f);
+        itemDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
+        itemDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
+        itemDescriptionTable.setColumnWidth("infoColumn", 87);
         itemDescriptionTable.setEditable(true);
         itemDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
         itemDescriptionTable.setSortEnabled(false);
@@ -584,24 +530,18 @@ public class DirectTableEditTab extends VerticalLayout {
         journalEntryContainer.setBuffered(true);
         journalEntryTable.setContainerDataSource(journalEntryContainer);
         journalEntryTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        journalEntryTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
-        journalEntryTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        journalEntryTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        journalEntryTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        journalEntryTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
+        journalEntryTable.setColumnCollapsingAllowed(true);
+        journalEntryTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        journalEntryTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         journalEntryTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         journalEntryTable.setColumnExpandRatio("rowNum", 1.5f);
-        journalEntryTable.setColumnWidth("rowNum", 100);
-        journalEntryTable.setColumnExpandRatio("textEn", 5f);
-        journalEntryTable.setColumnExpandRatio("textRu", 5f);
-        journalEntryTable.setColumnExpandRatio("translateColumn", 5f);
-        journalEntryTable.setColumnExpandRatio("translator", 1f);
-        journalEntryTable.setColumnWidth("translator", 131);
-        journalEntryTable.setColumnExpandRatio("changeTime", 1.7f);
-        journalEntryTable.setColumnWidth("changeTime", 190);
-        journalEntryTable.setColumnExpandRatio("saveColumn", 1.1f);
-        journalEntryTable.setColumnWidth("saveColumn", 115);
-        journalEntryTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        journalEntryTable.setColumnWidth("linkedItemCoumn", 47);
+        journalEntryTable.setColumnWidth("rowNum", 61);
+        journalEntryTable.setColumnExpandRatio("textEn", 7f);
+        journalEntryTable.setColumnExpandRatio("textRu", 7f);
+        journalEntryTable.setColumnExpandRatio("translateColumn", 7f);
+        journalEntryTable.setColumnExpandRatio("infoColumn", 1.7f);
+        journalEntryTable.setColumnWidth("infoColumn", 87);
         journalEntryTable.setEditable(true);
         journalEntryTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
         journalEntryTable.setSortEnabled(false);
@@ -614,24 +554,18 @@ public class DirectTableEditTab extends VerticalLayout {
         achievementContainer.setBuffered(true);
         achievementTable.setContainerDataSource(achievementContainer);
         achievementTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        achievementTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
-        achievementTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        achievementTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        achievementTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        achievementTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
+        achievementTable.setColumnCollapsingAllowed(true);
+        achievementTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        achievementTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         achievementTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         achievementTable.setColumnExpandRatio("rowNum", 1.5f);
-        achievementTable.setColumnWidth("rowNum", 100);
-        achievementTable.setColumnExpandRatio("textEn", 5f);
-        achievementTable.setColumnExpandRatio("textRu", 5f);
-        achievementTable.setColumnExpandRatio("translateColumn", 5f);
-        achievementTable.setColumnExpandRatio("translator", 1f);
-        achievementTable.setColumnWidth("translator", 131);
-        achievementTable.setColumnExpandRatio("changeTime", 1.7f);
-        achievementTable.setColumnWidth("changeTime", 190);
-        achievementTable.setColumnExpandRatio("saveColumn", 1.1f);
-        achievementTable.setColumnWidth("saveColumn", 115);
-        achievementTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        achievementTable.setColumnWidth("linkedItemCoumn", 47);
+        achievementTable.setColumnWidth("rowNum", 61);
+        achievementTable.setColumnExpandRatio("textEn", 7f);
+        achievementTable.setColumnExpandRatio("textRu", 7f);
+        achievementTable.setColumnExpandRatio("translateColumn", 7f);
+        achievementTable.setColumnExpandRatio("infoColumn", 1.7f);
+        achievementTable.setColumnWidth("infoColumn", 87);
         achievementTable.setEditable(true);
         achievementTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
         achievementTable.setSortEnabled(false);
@@ -644,24 +578,18 @@ public class DirectTableEditTab extends VerticalLayout {
         achievementDescriptionContainer.setBuffered(true);
         achievementDescriptionTable.setContainerDataSource(achievementDescriptionContainer);
         achievementDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        achievementDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
-        achievementDescriptionTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        achievementDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        achievementDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        achievementDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
+        achievementDescriptionTable.setColumnCollapsingAllowed(true);
+        achievementDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        achievementDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         achievementDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         achievementDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        achievementDescriptionTable.setColumnWidth("rowNum", 100);
-        achievementDescriptionTable.setColumnExpandRatio("textEn", 5f);
-        achievementDescriptionTable.setColumnExpandRatio("textRu", 5f);
-        achievementDescriptionTable.setColumnExpandRatio("translateColumn", 5f);
-        achievementDescriptionTable.setColumnExpandRatio("translator", 1f);
-        achievementDescriptionTable.setColumnWidth("translator", 131);
-        achievementDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
-        achievementDescriptionTable.setColumnWidth("changeTime", 190);
-        achievementDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
-        achievementDescriptionTable.setColumnWidth("saveColumn", 115);
-        achievementDescriptionTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        achievementDescriptionTable.setColumnWidth("linkedItemCoumn", 47);
+        achievementDescriptionTable.setColumnWidth("rowNum", 61);
+        achievementDescriptionTable.setColumnExpandRatio("textEn", 7f);
+        achievementDescriptionTable.setColumnExpandRatio("textRu", 7f);
+        achievementDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
+        achievementDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
+        achievementDescriptionTable.setColumnWidth("infoColumn", 87);
         achievementDescriptionTable.setEditable(true);
         achievementDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
         achievementDescriptionTable.setSortEnabled(false);
@@ -674,24 +602,18 @@ public class DirectTableEditTab extends VerticalLayout {
         abilityDescriptionContainer.setBuffered(true);
         abilityDescriptionTable.setContainerDataSource(abilityDescriptionContainer);
         abilityDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        abilityDescriptionTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
-        abilityDescriptionTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        abilityDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        abilityDescriptionTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        abilityDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
+        abilityDescriptionTable.setColumnCollapsingAllowed(true);
+        abilityDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        abilityDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         abilityDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         abilityDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        abilityDescriptionTable.setColumnWidth("rowNum", 100);
-        abilityDescriptionTable.setColumnExpandRatio("textEn", 5f);
-        abilityDescriptionTable.setColumnExpandRatio("textRu", 5f);
-        abilityDescriptionTable.setColumnExpandRatio("translateColumn", 5f);
-        abilityDescriptionTable.setColumnExpandRatio("translator", 1f);
-        abilityDescriptionTable.setColumnWidth("translator", 131);
-        abilityDescriptionTable.setColumnExpandRatio("changeTime", 1.7f);
-        abilityDescriptionTable.setColumnWidth("changeTime", 190);
-        abilityDescriptionTable.setColumnExpandRatio("saveColumn", 1.1f);
-        abilityDescriptionTable.setColumnWidth("saveColumn", 115);
-        abilityDescriptionTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        abilityDescriptionTable.setColumnWidth("linkedItemCoumn", 47);
+        abilityDescriptionTable.setColumnWidth("rowNum", 61);
+        abilityDescriptionTable.setColumnExpandRatio("textEn", 7f);
+        abilityDescriptionTable.setColumnExpandRatio("textRu", 7f);
+        abilityDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
+        abilityDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
+        abilityDescriptionTable.setColumnWidth("infoColumn", 87);
         abilityDescriptionTable.setEditable(true);
         abilityDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
         abilityDescriptionTable.setSortEnabled(false);
@@ -704,24 +626,18 @@ public class DirectTableEditTab extends VerticalLayout {
         noteContainer.setBuffered(true);
         noteTable.setContainerDataSource(noteContainer);
         noteTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        noteTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_NOTES"));
-        noteTable.addGeneratedColumn("linkedItemCoumn", linkedItemColumnGenerator);
-        noteTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "saveColumn", "linkedItemCoumn", "weight", "translator", "changeTime", "translateColumn"});
-        noteTable.setColumnHeaders(new String[]{"Номер строки", "Текст", "Перевод", "", "", "Порядок", "Переводчик", "Время", ""});
+        noteTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_NOTES"));
+        noteTable.setColumnCollapsingAllowed(true);
+        noteTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        noteTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
         noteTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
         noteTable.setColumnExpandRatio("rowNum", 1.5f);
-        noteTable.setColumnWidth("rowNum", 100);
-        noteTable.setColumnExpandRatio("textEn", 5f);
-        noteTable.setColumnExpandRatio("textRu", 5f);
-        noteTable.setColumnExpandRatio("translateColumn", 5f);
-        noteTable.setColumnExpandRatio("translator", 1f);
-        noteTable.setColumnWidth("translator", 131);
-        noteTable.setColumnExpandRatio("changeTime", 1.7f);
-        noteTable.setColumnWidth("changeTime", 190);
-        noteTable.setColumnExpandRatio("saveColumn", 1.1f);
-        noteTable.setColumnWidth("saveColumn", 115);
-        noteTable.setColumnExpandRatio("linkedItemCoumn", 1.1f);
-        noteTable.setColumnWidth("linkedItemCoumn", 47);
+        noteTable.setColumnWidth("rowNum", 61);
+        noteTable.setColumnExpandRatio("textEn", 7f);
+        noteTable.setColumnExpandRatio("textRu", 7f);
+        noteTable.setColumnExpandRatio("translateColumn", 7f);
+        noteTable.setColumnExpandRatio("infoColumn", 1.7f);
+        noteTable.setColumnWidth("infoColumn", 87);
         noteTable.setEditable(true);
         noteTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NOTES"));
         noteTable.setSortEnabled(false);
@@ -734,20 +650,18 @@ public class DirectTableEditTab extends VerticalLayout {
         esoInterfaceContainer.setBuffered(true);
         esoInterfaceTable.setContainerDataSource(esoInterfaceContainer);
         esoInterfaceTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        esoInterfaceTable.addGeneratedColumn("saveColumn", new SaveColumnGenerator("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
-        esoInterfaceTable.setVisibleColumns(new Object[]{"name", "textEn", "textRu", "saveColumn", "translator", "changeTime", "translateColumn"});
-        esoInterfaceTable.setColumnHeaders(new String[]{"Переменная", "Текст", "Перевод", "", "Переводчик", "Время", ""});
+        esoInterfaceTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
+        esoInterfaceTable.setColumnCollapsingAllowed(true);
+        esoInterfaceTable.setVisibleColumns(new Object[]{"name", "textEn", "textRu", "infoColumn", "translateColumn"});
+        esoInterfaceTable.setColumnHeaders(new String[]{"Переменная", "Текст", "Перевод", "", ""});
         esoInterfaceTable.sort(new Object[]{"id"}, new boolean[]{true});
-        esoInterfaceTable.setColumnExpandRatio("name", 3f);
-        esoInterfaceTable.setColumnExpandRatio("textEn", 4f);
-        esoInterfaceTable.setColumnExpandRatio("textRu", 4f);
-        esoInterfaceTable.setColumnExpandRatio("translateColumn", 5f);
-        esoInterfaceTable.setColumnExpandRatio("translator", 1f);
-        esoInterfaceTable.setColumnWidth("translator", 131);
-        esoInterfaceTable.setColumnExpandRatio("changeTime", 1.7f);
-        esoInterfaceTable.setColumnWidth("changeTime", 190);
-        esoInterfaceTable.setColumnExpandRatio("saveColumn", 1.1f);
-        esoInterfaceTable.setColumnWidth("saveColumn", 115);
+        esoInterfaceTable.setColumnExpandRatio("name", 1.5f);
+        esoInterfaceTable.setColumnWidth("name", 61);
+        esoInterfaceTable.setColumnExpandRatio("textEn", 7f);
+        esoInterfaceTable.setColumnExpandRatio("textRu", 7f);
+        esoInterfaceTable.setColumnExpandRatio("translateColumn", 7f);
+        esoInterfaceTable.setColumnExpandRatio("infoColumn", 1.7f);
+        esoInterfaceTable.setColumnWidth("infoColumn", 87);
         esoInterfaceTable.setEditable(true);
         esoInterfaceTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
         esoInterfaceTable.setSortEnabled(false);
@@ -909,7 +823,9 @@ public class DirectTableEditTab extends VerticalLayout {
                 }
             }
             if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-                Button addTranslation = new Button("Добавить");
+                Button addTranslation = new Button();
+                addTranslation.setIcon(FontAwesome.PLUS_SQUARE);
+                addTranslation.setDescription("Добавить перевод");
                 addTranslation.addClickListener(new AddTranslationClickListener(item, result, (JPAContainer) source.getContainerDataSource(), source));
                 if (list != null && !list.isEmpty()) {
                     TranslationCell component = (TranslationCell) result.getComponent(result.getComponentCount() - 1);
@@ -963,13 +879,13 @@ public class DirectTableEditTab extends VerticalLayout {
 
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
-            Button button = new Button("Сохранить");
+            Button button = new Button();
+            button.setIcon(FontAwesome.SAVE);
+            button.setDescription("Сохранить");
             button.addClickListener(new SaveButtonClickListener(itemId, (JPAContainer) source.getContainerDataSource()));
             if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
                 button.setEnabled(false);
             }
-            button.addStyleName(ValoTheme.BUTTON_SMALL);
-            button.addStyleName(ValoTheme.BUTTON_TINY);
             return button;
         }
 
@@ -983,12 +899,70 @@ public class DirectTableEditTab extends VerticalLayout {
             GSpreadSheetEntity entity = (GSpreadSheetEntity) item.getEntity();
             GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(entity.getaId());
             if (route != null) {
-                Button b = new Button("->");
+                Button b = new Button();
+                b.setIcon(FontAwesome.LINK);
+                b.setDescription("Перейти к связанной записи");
                 b.setData(entity);
                 b.addClickListener(linkedItemClickListener);
                 return b;
             }
             return null;
+        }
+
+    }
+
+    private class InfoColumnGenerator implements Table.ColumnGenerator {
+
+        private final String tableEditRole;
+
+        public InfoColumnGenerator(String tableEditRole) {
+            this.tableEditRole = tableEditRole;
+        }
+
+        @Override
+        public Object generateCell(Table source, Object itemId, Object columnId) {
+            VerticalLayout result = new VerticalLayout();
+
+            EntityItem item = (EntityItem) source.getContainerDataSource().getItem(itemId);
+            TranslatedEntity entity = (TranslatedEntity) item.getEntity();
+            StringBuilder sb = new StringBuilder("");
+            if(item.getEntity() instanceof GSpreadSheetEntity) {
+                sb.append(((GSpreadSheetEntity)item.getEntity()).getWeight().toString());
+                sb.append("\n");
+            }
+            if (entity.getTranslator() != null) {
+                sb.append(entity.getTranslator());
+            }
+            if (entity.getChangeTime() != null) {
+                sb.append("\n");
+                sb.append(sdf.format(entity.getChangeTime()));
+            }
+            Label l = new Label(sb.toString());
+            l.addStyleName("v-label");
+            result.addComponent(l);
+            HorizontalLayout actions = new HorizontalLayout();
+            Button button = new Button();
+            button.setIcon(FontAwesome.SAVE);
+            button.setDescription("Сохранить");
+            button.addClickListener(new SaveButtonClickListener(itemId, (JPAContainer) source.getContainerDataSource()));
+            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
+                button.setEnabled(false);
+            }
+            actions.addComponent(button);
+            if (item.getEntity() instanceof GSpreadSheetEntity) {
+                GSpreadSheetEntity e = (GSpreadSheetEntity) item.getEntity();
+                GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(e.getaId());
+                if (route != null) {
+                    Button b = new Button();
+                    b.setIcon(FontAwesome.LINK);
+                    b.setDescription("Перейти к связанной записи");
+                    b.setData(e);
+                    b.addClickListener(linkedItemClickListener);
+                    actions.addComponent(b);
+                }
+            }
+            result.addComponent(actions);
+            return result;
         }
 
     }
@@ -1341,10 +1315,12 @@ public class DirectTableEditTab extends VerticalLayout {
                     save.setVisible(true);
 
                     if (event.getText() == null || event.getText().isEmpty()) {
-                        save.setCaption("Удалить");
+                        save.setIcon(FontAwesome.RECYCLE);
+                        save.setDescription("Удалить");
                     } else {
                         translatedText.setText(event.getText());
-                        save.setCaption("Сохранить");
+                        save.setIcon(FontAwesome.SAVE);
+                        save.setDescription("Сохранить");
                     }
                     String status = "нет";
                     if (translatedText.getStatus() != null) {
@@ -1373,7 +1349,9 @@ public class DirectTableEditTab extends VerticalLayout {
                 translation.setReadOnly(true);
             }
             this.addComponent(translation);
-            save = new Button("Сохранить");
+            save = new Button();
+            save.setIcon(FontAwesome.SAVE);
+            save.setDescription("Сохранить");
             save.addClickListener(new Button.ClickListener() {
 
                 @Override
@@ -1392,7 +1370,9 @@ public class DirectTableEditTab extends VerticalLayout {
             save.setVisible(false);
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
                 if (translatedText.getId() != null && translatedText.getStatus() == TRANSLATE_STATUS.NEW) {
-                    accept = new Button("Принять");
+                    accept = new Button();
+                    accept.setIcon(FontAwesome.THUMBS_UP);
+                    accept.setDescription("Принять");
                     accept.addClickListener(new Button.ClickListener() {
 
                         @Override
@@ -1408,7 +1388,9 @@ public class DirectTableEditTab extends VerticalLayout {
                         }
                     });
                     actionLayout.addComponent(accept);
-                    reject = new Button("Отклонить");
+                    reject = new Button();
+                    reject.setIcon(FontAwesome.THUMBS_DOWN);
+                    reject.setDescription("Отклонить");
                     reject.addClickListener(new Button.ClickListener() {
 
                         @Override

@@ -101,6 +101,7 @@ public class GSpreadSheetsAchievementDescription extends DAO implements GSpreadS
         this.textRu = textRu;
     }
 
+    @Override
     public String getTranslator() {
         return translator;
     }
@@ -109,6 +110,7 @@ public class GSpreadSheetsAchievementDescription extends DAO implements GSpreadS
         this.translator = translator;
     }
 
+    @Override
     public Date getChangeTime() {
         return changeTime;
     }
@@ -117,6 +119,7 @@ public class GSpreadSheetsAchievementDescription extends DAO implements GSpreadS
         this.changeTime = changeTime;
     }
 
+    @Override
     public Integer getWeight() {
         return weight;
     }
