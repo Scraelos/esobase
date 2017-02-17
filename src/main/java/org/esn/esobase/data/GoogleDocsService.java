@@ -1525,6 +1525,8 @@ public class GoogleDocsService {
                         + "?min-row=" + phrase.getRowNum().intValue() + "&max-row=" + phrase.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1539,16 +1541,18 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(phrase.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (phrase.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(phrase.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 3, phrase.getTranslator());
                     feedc.insert(cellEntry);
                 }
@@ -1593,6 +1597,8 @@ public class GoogleDocsService {
                         + "?min-row=" + phrase.getRowNum().intValue() + "&max-row=" + phrase.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1607,16 +1613,18 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(phrase.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (phrase.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(phrase.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(phrase.getRowNum().intValue(), 3, phrase.getTranslator());
                     feedc.insert(cellEntry);
                 }
@@ -1661,6 +1669,8 @@ public class GoogleDocsService {
                         + "?min-row=" + name.getRowNum().intValue() + "&max-row=" + name.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1696,16 +1706,18 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(name.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (name.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(name.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 3, name.getTranslator());
                     feedc.insert(cellEntry);
                 }
@@ -1750,6 +1762,8 @@ public class GoogleDocsService {
                         + "?min-row=" + name.getRowNum().intValue() + "&max-row=" + name.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1765,16 +1779,18 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(name.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (name.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(name.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(name.getRowNum().intValue(), 3, name.getTranslator());
                     feedc.insert(cellEntry);
                 }
@@ -1819,6 +1835,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1834,20 +1852,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -1888,6 +1908,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1903,20 +1925,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -1957,6 +1981,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -1972,20 +1998,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2026,6 +2054,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2041,20 +2071,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2095,6 +2127,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2110,20 +2144,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2164,6 +2200,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2179,20 +2217,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2233,6 +2273,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2248,20 +2290,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2302,6 +2346,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2317,20 +2363,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2371,6 +2419,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2386,20 +2436,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2440,6 +2492,8 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
@@ -2455,20 +2509,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
@@ -2508,12 +2564,13 @@ public class GoogleDocsService {
                         + "?min-row=" + item.getRowNum().intValue() + "&max-row=" + item.getRowNum().intValue() + "&min-col=1&max-col=4").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
                 List<CellEntry> entries = feedc.getEntries();
+                boolean hasTranslator=false;
+                boolean hasChangeTime=false;
                 for (CellEntry cellEntry : entries) {
                     Cell cell = cellEntry.getCell();
 
                     switch (cell.getCol()) {
                         case 1:
-
                             break;
                         case 2:
                             String textRu = item.getTextRu();
@@ -2523,20 +2580,22 @@ public class GoogleDocsService {
                         case 3:
                             cellEntry.changeInputValueLocal(item.getTranslator());
                             cellEntry.update();
+                            hasTranslator=true;
                             break;
                         case 7:
                             if (item.getChangeTime() != null) {
                                 cellEntry.changeInputValueLocal(dateFormat.format(item.getChangeTime()));
                                 cellEntry.update();
                             }
+                            hasChangeTime=true;
                             break;
                     }
                 }
-                if (entries.size() < 3) {
+                if (!hasTranslator) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 3, item.getTranslator());
                     feedc.insert(cellEntry);
                 }
-                if (entries.size() < 7 && item.getChangeTime() != null) {
+                if (!hasChangeTime && item.getChangeTime() != null) {
                     CellEntry cellEntry = new CellEntry(item.getRowNum().intValue(), 7, dateFormat.format(item.getChangeTime()));
                     feedc.insert(cellEntry);
                 }
