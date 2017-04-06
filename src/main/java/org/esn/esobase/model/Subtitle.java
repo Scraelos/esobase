@@ -14,8 +14,10 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import org.esn.esobase.model.lib.DAO;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -46,6 +48,11 @@ public class Subtitle extends DAO {
     @OneToMany(mappedBy = "subtitle", fetch = FetchType.EAGER)
     private Set<TranslatedText> translations;
     private Integer weight;
+    @OneToOne
+    @JoinColumn(unique = true)
+    private Subtitle nextSubtitle;
+    @OneToOne(mappedBy = "nextSubtitle")
+    private Subtitle previousSubtitle;
 
     public Subtitle() {
     }
@@ -121,7 +128,21 @@ public class Subtitle extends DAO {
     public void setWeight(Integer weight) {
         this.weight = weight;
     }
-    
-    
+
+    public Subtitle getNextSubtitle() {
+        return nextSubtitle;
+    }
+
+    public void setNextSubtitle(Subtitle nextSubtitle) {
+        this.nextSubtitle = nextSubtitle;
+    }
+
+    public Subtitle getPreviousSubtitle() {
+        return previousSubtitle;
+    }
+
+    public void setPreviousSubtitle(Subtitle previousSubtitle) {
+        this.previousSubtitle = previousSubtitle;
+    }
 
 }

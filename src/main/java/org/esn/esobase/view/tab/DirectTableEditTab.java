@@ -6,32 +6,30 @@
 package org.esn.esobase.view.tab;
 
 import com.vaadin.addon.jpacontainer.EntityItem;
-import com.vaadin.addon.jpacontainer.JPAContainer;
-import com.vaadin.data.Container;
+import com.vaadin.data.Item;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.data.util.converter.Converter;
-import com.vaadin.data.util.filter.Compare;
-import com.vaadin.data.util.filter.IsNull;
+import com.vaadin.data.util.PropertyValueGenerator;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.shared.ui.combobox.FilteringMode;
+import com.vaadin.shared.ui.grid.ScrollDestination;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Field;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.TableFieldFactory;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -40,9 +38,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.specification.TranslatedTextSpecification;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.GSpreadSheetEntity;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
@@ -67,6 +65,13 @@ import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.GSpreadSheetLinkRouter;
+import org.esn.esobase.view.ui.GspreadSheetGrid;
+import org.esn.esobase.view.ui.RefreshableGrid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.vaadin.viritin.SortableLazyList;
+import org.vaadin.viritin.grid.GeneratedPropertyListContainer;
+import org.vaadin.viritin.grid.MGrid;
 
 /**
  *
@@ -74,61 +79,61 @@ import org.esn.esobase.tools.GSpreadSheetLinkRouter;
  */
 public class DirectTableEditTab extends VerticalLayout {
 
-    private final DBService service;
-    private final TextField searchField;
-    private final Button searchButton;
-    private final Table resultTable;
+    private DBService service;
+    private TextField searchField;
+    private Button searchButton;
+    private Table resultTable;
     private TabSheet searchTabs;
     private HierarchicalContainer hc = new HierarchicalContainer();
     private TabSheet tableTabs;
-    private Table npcNameTable;
-    private JPAContainer<GSpreadSheetsNpcName> npcNameContainer;
 
-    private Table locationNameTable;
-    private JPAContainer<GSpreadSheetsLocationName> locationNameContainer;
+    static final int PAGESIZE = 20;
 
-    private Table activatorTable;
-    private JPAContainer<GSpreadSheetsActivator> activatorContainer;
+    private GeneratedPropertyListContainer<GSpreadSheetsNpcName> gSpreadSheetsNpcNameContainer;
+    private GspreadSheetGrid npcNameTable;
 
-    private Table playerPhraseTable;
-    private JPAContainer<GSpreadSheetsPlayerPhrase> playerPhraseContainer;
+    private GeneratedPropertyListContainer<GSpreadSheetsLocationName> locationNameContainer;
+    private GspreadSheetGrid locationNameTable;
 
-    private Table npcPhraseTable;
-    private JPAContainer<GSpreadSheetsNpcPhrase> npcPhraseContainer;
+    private GspreadSheetGrid activatorTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsActivator> activatorContainer;
 
-    private Table questNameTable;
-    private JPAContainer<GSpreadSheetsQuestName> questNameContainer;
+    private GspreadSheetGrid playerPhraseTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsPlayerPhrase> playerPhraseContainer;
 
-    private Table questDescriptionTable;
-    private JPAContainer<GSpreadSheetsQuestDescription> questDescriptionContainer;
+    private GspreadSheetGrid npcPhraseTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsNpcPhrase> npcPhraseContainer;
 
-    private Table questDirectionTable;
-    private JPAContainer<GSpreadSheetsQuestDirection> questDirectionContainer;
+    private GspreadSheetGrid questNameTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsQuestName> questNameContainer;
+
+    private GspreadSheetGrid questDescriptionTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsQuestDescription> questDescriptionContainer;
+
+    private GspreadSheetGrid questDirectionTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsQuestDirection> questDirectionContainer;
 
     private VerticalLayout itemNameLayout;
-    private Table itemNameTable;
-    private JPAContainer<GSpreadSheetsItemName> itemNameContainer;
+    private GspreadSheetGrid itemNameTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsItemName> itemNameContainer;
 
-    private Table itemDescriptionTable;
-    private JPAContainer<GSpreadSheetsItemDescription> itemDescriptionContainer;
+    private GspreadSheetGrid itemDescriptionTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsItemDescription> itemDescriptionContainer;
 
-    private Table journalEntryTable;
-    private JPAContainer<GSpreadSheetsJournalEntry> journalEntryContainer;
+    private GspreadSheetGrid journalEntryTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsJournalEntry> journalEntryContainer;
 
-    private Table achievementTable;
-    private JPAContainer<GSpreadSheetsAchievement> achievementContainer;
+    private GspreadSheetGrid achievementTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsAchievement> achievementContainer;
 
-    private Table achievementDescriptionTable;
-    private JPAContainer<GSpreadSheetsAchievementDescription> achievementDescriptionContainer;
+    private GspreadSheetGrid achievementDescriptionTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsAchievementDescription> achievementDescriptionContainer;
 
-    private Table abilityDescriptionTable;
-    private JPAContainer<GSpreadSheetsAbilityDescription> abilityDescriptionContainer;
+    private GspreadSheetGrid abilityDescriptionTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsAbilityDescription> abilityDescriptionContainer;
 
-    private Table noteTable;
-    private JPAContainer<GSpreadSheetsNote> noteContainer;
-
-    private Table esoInterfaceTable;
-    private JPAContainer<EsoInterfaceVariable> esoInterfaceContainer;
+    private GspreadSheetGrid noteTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsNote> noteContainer;
 
     private LinkedItemColumnGenerator linkedItemColumnGenerator;
     private LinkedItemClickListener linkedItemClickListener;
@@ -139,14 +144,14 @@ public class DirectTableEditTab extends VerticalLayout {
     private ComboBox translatorBox;
     private ComboBox translateTypeBox;
     private Button filterTranslationButton;
-    private Table newTranslationsTable;
-    private JPAContainer<TranslatedText> newTranslationsContainer;
+    private MGrid newTranslationsTable;
+    private TranslatedTextSpecification translatedTextSpecification;
+    private GeneratedPropertyListContainer<TranslatedText> newTranslationsContainer;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
 
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
-        this.setWidth(100f, Unit.PERCENTAGE);
-        this.setHeight(100f, Unit.PERCENTAGE);
+        this.setSizeFull();
         linkedItemColumnGenerator = new LinkedItemColumnGenerator();
         linkedItemClickListener = new LinkedItemClickListener();
         searchTabs = new TabSheet();
@@ -178,6 +183,7 @@ public class DirectTableEditTab extends VerticalLayout {
         });
         hl.addComponent(searchButton);
         searchInCatalogsLayout.addComponent(hl);
+        translatedTextSpecification = new TranslatedTextSpecification();
         resultTable = new Table("Результаты поиска");
         resultTable.addStyleName(ValoTheme.TABLE_SMALL);
         resultTable.addStyleName(ValoTheme.TABLE_COMPACT);
@@ -213,36 +219,34 @@ public class DirectTableEditTab extends VerticalLayout {
         translateTypeBox = new ComboBox("Таблица");
         translateTypeBox.setNullSelectionAllowed(true);
         translateTypeBox.setPageLength(15);
-        translateTypeBox.addItem("GSpreadSheetsActivator");
-        translateTypeBox.setItemCaption("GSpreadSheetsActivator", "Активаторы");
-        translateTypeBox.addItem("GSpreadSheetsAchievement");
-        translateTypeBox.setItemCaption("GSpreadSheetsAchievement", "Достижения");
-        translateTypeBox.addItem("GSpreadSheetsAchievementDescription");
-        translateTypeBox.setItemCaption("GSpreadSheetsAchievementDescription", "Описания достижений");
-        translateTypeBox.addItem("GSpreadSheetsNote");
-        translateTypeBox.setItemCaption("GSpreadSheetsNote", "Письма");
-        translateTypeBox.addItem("GSpreadSheetsItemDescription");
-        translateTypeBox.setItemCaption("GSpreadSheetsItemDescription", "Описания предметов");
-        translateTypeBox.addItem("GSpreadSheetsItemName");
-        translateTypeBox.setItemCaption("GSpreadSheetsItemName", "Названия предметов");
-        translateTypeBox.addItem("GSpreadSheetsJournalEntry");
-        translateTypeBox.setItemCaption("GSpreadSheetsJournalEntry", "Записи в журнале");
-        translateTypeBox.addItem("GSpreadSheetsLocationName");
-        translateTypeBox.setItemCaption("GSpreadSheetsLocationName", "Названия локаций");
-        translateTypeBox.addItem("GSpreadSheetsNpcName");
-        translateTypeBox.setItemCaption("GSpreadSheetsNpcName", "Имена NPC");
-        translateTypeBox.addItem("GSpreadSheetsNpcPhrase");
-        translateTypeBox.setItemCaption("GSpreadSheetsNpcPhrase", "Фразы NPC");
-        translateTypeBox.addItem("GSpreadSheetsPlayerPhrase");
-        translateTypeBox.setItemCaption("GSpreadSheetsPlayerPhrase", "Фразы игрока");
-        translateTypeBox.addItem("GSpreadSheetsQuestDescription");
-        translateTypeBox.setItemCaption("GSpreadSheetsQuestDescription", "Описания квестов");
-        translateTypeBox.addItem("GSpreadSheetsQuestDirection");
-        translateTypeBox.setItemCaption("GSpreadSheetsQuestDirection", "Цели квестов");
-        translateTypeBox.addItem("GSpreadSheetsQuestName");
-        translateTypeBox.setItemCaption("GSpreadSheetsQuestName", "Названия квестов");
-        translateTypeBox.addItem("EsoInterfaceVariable");
-        translateTypeBox.setItemCaption("EsoInterfaceVariable", "Строки интерфейса");
+        translateTypeBox.addItem("spreadSheetsActivator");
+        translateTypeBox.setItemCaption("spreadSheetsActivator", "Активаторы");
+        translateTypeBox.addItem("spreadSheetsAchievement");
+        translateTypeBox.setItemCaption("spreadSheetsAchievement", "Достижения");
+        translateTypeBox.addItem("spreadSheetsAchievementDescription");
+        translateTypeBox.setItemCaption("spreadSheetsAchievementDescription", "Описания достижений");
+        translateTypeBox.addItem("spreadSheetsNote");
+        translateTypeBox.setItemCaption("spreadSheetsNote", "Письма");
+        translateTypeBox.addItem("spreadSheetsItemDescription");
+        translateTypeBox.setItemCaption("spreadSheetsItemDescription", "Описания предметов");
+        translateTypeBox.addItem("spreadSheetsItemName");
+        translateTypeBox.setItemCaption("spreadSheetsItemName", "Названия предметов");
+        translateTypeBox.addItem("spreadSheetsJournalEntry");
+        translateTypeBox.setItemCaption("spreadSheetsJournalEntry", "Записи в журнале");
+        translateTypeBox.addItem("spreadSheetsLocationName");
+        translateTypeBox.setItemCaption("spreadSheetsLocationName", "Названия локаций");
+        translateTypeBox.addItem("spreadSheetsNpcName");
+        translateTypeBox.setItemCaption("spreadSheetsNpcName", "Имена NPC");
+        translateTypeBox.addItem("spreadSheetsNpcPhrase");
+        translateTypeBox.setItemCaption("spreadSheetsNpcPhrase", "Фразы NPC");
+        translateTypeBox.addItem("spreadSheetsPlayerPhrase");
+        translateTypeBox.setItemCaption("spreadSheetsPlayerPhrase", "Фразы игрока");
+        translateTypeBox.addItem("spreadSheetsQuestDescription");
+        translateTypeBox.setItemCaption("spreadSheetsQuestDescription", "Описания квестов");
+        translateTypeBox.addItem("spreadSheetsQuestDirection");
+        translateTypeBox.setItemCaption("spreadSheetsQuestDirection", "Цели квестов");
+        translateTypeBox.addItem("spreadSheetsQuestName");
+        translateTypeBox.setItemCaption("spreadSheetsQuestName", "Названия квестов");
         translateTypeBox.setFilteringMode(FilteringMode.CONTAINS);
         traslationsFilterslayout.addComponent(translateTypeBox);
         filterTranslationButton = new Button("Поиск");
@@ -256,487 +260,224 @@ public class DirectTableEditTab extends VerticalLayout {
         traslationsFilterslayout.addComponent(filterTranslationButton);
         traslationsFilterslayout.setComponentAlignment(filterTranslationButton, Alignment.BOTTOM_LEFT);
         translationsLayout.addComponent(traslationsFilterslayout);
-        newTranslationsTable = new Table();
-        newTranslationsTable.addStyleName(ValoTheme.TABLE_SMALL);
-        newTranslationsTable.addStyleName(ValoTheme.TABLE_COMPACT);
+        newTranslationsTable = new MGrid();
         newTranslationsTable.setSizeFull();
-        newTranslationsContainer = service.getJPAContainerContainerForClass(TranslatedText.class);
+        newTranslationsContainer = new GeneratedPropertyListContainer<>(TranslatedText.class);
+        newTranslationsTable.setContainerDataSource(newTranslationsContainer);
         filterTranslations();
         newTranslationsContainer.sort(new Object[]{"id"}, new boolean[]{true});
         newTranslationsTable.setContainerDataSource(newTranslationsContainer);
-        newTranslationsTable.setVisibleColumns(new Object[]{"author", "createTime", "text"});
-        newTranslationsTable.setColumnHeaders(new String[]{"Автор", "Дата", "Перевод"});
+        newTranslationsTable.setColumns("author", "createTime", "text");
+        newTranslationsTable.getColumn("author").setHeaderCaption("Автор");
+        newTranslationsTable.getColumn("createTime").setHeaderCaption("Дата");
+        newTranslationsTable.getColumn("text").setHeaderCaption("Перевод");
         newTranslationsTable.addItemClickListener(new TranslationsTableRowClickListener());
         translationsLayout.addComponent(newTranslationsTable);
         translationsLayout.setExpandRatio(newTranslationsTable, 5f);
-
         searchTabs.addTab(translationsLayout, "Переводы");
         this.addComponent(searchTabs);
         tableTabs = new TabSheet();
         tableTabs.setSizeFull();
-        npcNameTable = new Table();
-        npcNameTable.setSizeFull();
-        npcNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNpcName.class);
-        npcNameContainer.setBuffered(true);
-        npcNameTable.setContainerDataSource(npcNameContainer);
-        npcNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        npcNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_NPC_NAMES"));
-        npcNameTable.setColumnCollapsingAllowed(true);
-        npcNameTable.setVisibleColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "infoColumn", "translateColumn"});
-        npcNameTable.setColumnHeaders(new String[]{"№", "Пол", "Текст", "Перевод", "", ""});
-        npcNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        npcNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        npcNameTable.setColumnWidth("rowNum", 61);
-        npcNameTable.setColumnExpandRatio("sex", 1.5f);
-        npcNameTable.setColumnWidth("sex", 70);
-        npcNameTable.setColumnExpandRatio("textEn", 7f);
-        npcNameTable.setColumnExpandRatio("textRu", 7f);
-        npcNameTable.setColumnExpandRatio("translateColumn", 7f);
-        npcNameTable.setColumnExpandRatio("infoColumn", 1.7f);
-        npcNameTable.setColumnWidth("infoColumn", 87);
-        npcNameTable.setEditable(true);
-        npcNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_NAMES"));
-        npcNameTable.setSortEnabled(false);
-        npcNameTable.setConverter("weight", new WeightConverter());
+        gSpreadSheetsNpcNameContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsNpcName.class);
+        npcNameTable = new GspreadSheetGrid(gSpreadSheetsNpcNameContainer, PAGESIZE, service.getgSpreadSheetsNpcNameRepository());
+        gSpreadSheetsNpcNameContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        gSpreadSheetsNpcNameContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(npcNameTable));
         tableTabs.addTab(npcNameTable, "NPC");
+        npcNameTable.build();
+        npcNameTable.setColumns(new Object[]{"rowNum", "sex", "textEn", "textRu", "infoColumn", "translateColumn"});
+        npcNameTable.getColumn("sex").setMinimumWidth(87).setHeaderCaption("Пол").setSortable(false);
+        npcNameTable.Refresh();
 
-        locationNameTable = new Table();
-        locationNameTable.setPageLength(10);
-        locationNameTable.setSizeFull();
-        locationNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsLocationName.class);
-        locationNameContainer.setBuffered(true);
-        locationNameTable.setContainerDataSource(locationNameContainer);
-        locationNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        locationNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
-        locationNameTable.setColumnCollapsingAllowed(true);
-        locationNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        locationNameTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        locationNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        locationNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        locationNameTable.setColumnWidth("rowNum", 61);
-        locationNameTable.setColumnExpandRatio("textEn", 7f);
-        locationNameTable.setColumnExpandRatio("textRu", 7f);
-        locationNameTable.setColumnExpandRatio("translateColumn", 7f);
-        locationNameTable.setColumnExpandRatio("infoColumn", 1.7f);
-        locationNameTable.setColumnWidth("infoColumn", 87);
-        locationNameTable.setEditable(true);
-        locationNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_LOCATION_NAMES"));
-        locationNameTable.setSortEnabled(false);
-        locationNameTable.setConverter("weight", new WeightConverter());
+        locationNameContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsLocationName.class);
+        locationNameTable = new GspreadSheetGrid(locationNameContainer, PAGESIZE, service.getgSpreadSheetsLocationNameRepository());
+        locationNameContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        locationNameContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(locationNameTable));
         tableTabs.addTab(locationNameTable, "Локации");
+        locationNameTable.build();
+        locationNameTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        locationNameTable.Refresh();
 
-        activatorTable = new Table();
-        activatorTable.setSizeFull();
-        activatorContainer = service.getJPAContainerContainerForClass(GSpreadSheetsActivator.class);
-        activatorContainer.setBuffered(true);
-        activatorTable.setContainerDataSource(activatorContainer);
-        activatorTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        activatorTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ACTIVATORS"));
-        activatorTable.setColumnCollapsingAllowed(true);
-        activatorTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        activatorTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        activatorTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        activatorTable.setColumnExpandRatio("rowNum", 1.5f);
-        activatorTable.setColumnWidth("rowNum", 61);
-        activatorTable.setColumnExpandRatio("textEn", 7f);
-        activatorTable.setColumnExpandRatio("textRu", 7f);
-        activatorTable.setColumnExpandRatio("translateColumn", 7f);
-        activatorTable.setColumnExpandRatio("infoColumn", 1.7f);
-        activatorTable.setColumnWidth("infoColumn", 87);
-        activatorTable.setEditable(true);
-        activatorTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACTIVATORS"));
-        activatorTable.setSortEnabled(false);
-        activatorTable.setConverter("weight", new WeightConverter());
+        activatorContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsActivator.class);
+        activatorTable = new GspreadSheetGrid(activatorContainer, PAGESIZE, service.getgSpreadSheetsActivatorRepository());
+        activatorContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        activatorContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(activatorTable));
         tableTabs.addTab(activatorTable, "Активаторы");
+        activatorTable.build();
+        activatorTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        activatorTable.Refresh();
 
-        playerPhraseTable = new Table();
-        playerPhraseTable.setSizeFull();
-        playerPhraseContainer = service.getJPAContainerContainerForClass(GSpreadSheetsPlayerPhrase.class);
-        playerPhraseContainer.setBuffered(true);
-        playerPhraseTable.setContainerDataSource(playerPhraseContainer);
-        playerPhraseTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        playerPhraseTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
-        playerPhraseTable.setColumnCollapsingAllowed(true);
-        playerPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        playerPhraseTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        playerPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        playerPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
-        playerPhraseTable.setColumnWidth("rowNum", 61);
-        playerPhraseTable.setColumnExpandRatio("textEn", 7f);
-        playerPhraseTable.setColumnExpandRatio("textRu", 7f);
-        playerPhraseTable.setColumnExpandRatio("translateColumn", 7f);
-        playerPhraseTable.setColumnExpandRatio("infoColumn", 1.7f);
-        playerPhraseTable.setColumnWidth("infoColumn", 87);
-        playerPhraseTable.setEditable(true);
-        playerPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_PLAYER_PHRASES"));
-        playerPhraseTable.setSortEnabled(false);
-        playerPhraseTable.setConverter("weight", new WeightConverter());
+        playerPhraseContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsPlayerPhrase.class);
+        playerPhraseTable = new GspreadSheetGrid(playerPhraseContainer, PAGESIZE, service.getgSpreadSheetsPlayerPhraseRepository());
+        playerPhraseContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        playerPhraseContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(playerPhraseTable));
         tableTabs.addTab(playerPhraseTable, "Фразы игрока");
+        playerPhraseTable.build();
+        playerPhraseTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        playerPhraseTable.Refresh();
 
-        npcPhraseTable = new Table();
-        npcPhraseTable.setSizeFull();
-        npcPhraseContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNpcPhrase.class);
-        npcPhraseContainer.setBuffered(true);
-        npcPhraseTable.setContainerDataSource(npcPhraseContainer);
-        npcPhraseTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        npcPhraseTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
-        npcPhraseTable.setColumnCollapsingAllowed(true);
-        npcPhraseTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        npcPhraseTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        npcPhraseTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        npcPhraseTable.setColumnExpandRatio("rowNum", 1.5f);
-        npcPhraseTable.setColumnWidth("rowNum", 61);
-        npcPhraseTable.setColumnExpandRatio("textEn", 7f);
-        npcPhraseTable.setColumnExpandRatio("textRu", 7f);
-        npcPhraseTable.setColumnExpandRatio("translateColumn", 7f);
-        npcPhraseTable.setColumnExpandRatio("infoColumn", 1.7f);
-        npcPhraseTable.setColumnWidth("infoColumn", 87);
-        npcPhraseTable.setEditable(true);
-        npcPhraseTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NPC_PHRASES"));
-        npcPhraseTable.setSortEnabled(false);
-        npcPhraseTable.setConverter("weight", new WeightConverter());
+        Page.Styles styles = Page.getCurrent().getStyles();
+        styles.add(".wrapped-text {\n"
+                + "    white-space: normal;\n"
+                + "    overflow: hidden;\n"
+                + "}");
+        npcPhraseContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsNpcPhrase.class);
+        npcPhraseTable = new GspreadSheetGrid(npcPhraseContainer, PAGESIZE, service.getgSpreadSheetsNpcPhraseRepository());
+        npcPhraseContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        npcPhraseContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(npcPhraseTable));
         tableTabs.addTab(npcPhraseTable, "Фразы NPC");
+        npcPhraseTable.build();
+        npcPhraseTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        npcPhraseTable.Refresh();
 
-        questNameTable = new Table();
-        questNameTable.setSizeFull();
-        questNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestName.class);
-        questNameContainer.setBuffered(true);
-        questNameTable.setContainerDataSource(questNameContainer);
-        questNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        questNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
-        questNameTable.setColumnCollapsingAllowed(true);
-        questNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        questNameTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        questNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        questNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        questNameTable.setColumnWidth("rowNum", 61);
-        questNameTable.setColumnExpandRatio("textEn", 7f);
-        questNameTable.setColumnExpandRatio("textRu", 7f);
-        questNameTable.setColumnExpandRatio("translateColumn", 7f);
-        questNameTable.setColumnExpandRatio("infoColumn", 1.7f);
-        questNameTable.setColumnWidth("infoColumn", 87);
-        questNameTable.setEditable(true);
-        questNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_NAMES"));
-        questNameTable.setSortEnabled(false);
-        questNameTable.setConverter("weight", new WeightConverter());
+        questNameContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsQuestName.class);
+        questNameTable = new GspreadSheetGrid(questNameContainer, PAGESIZE, service.getgSpreadSheetsQuestNameRepository());
+        questNameContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        questNameContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(questNameTable));
         tableTabs.addTab(questNameTable, "Названия квестов");
+        questNameTable.build();
+        questNameTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questNameTable.Refresh();
 
-        questDescriptionTable = new Table();
-        questDescriptionTable.setSizeFull();
-        questDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDescription.class);
-        questDescriptionContainer.setBuffered(true);
-        questDescriptionTable.setContainerDataSource(questDescriptionContainer);
-        questDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        questDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
-        questDescriptionTable.setColumnCollapsingAllowed(true);
-        questDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        questDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        questDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        questDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        questDescriptionTable.setColumnWidth("rowNum", 61);
-        questDescriptionTable.setColumnExpandRatio("textEn", 7f);
-        questDescriptionTable.setColumnExpandRatio("textRu", 7f);
-        questDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
-        questDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
-        questDescriptionTable.setColumnWidth("infoColumn", 87);
-        questDescriptionTable.setEditable(true);
-        questDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DESCRIPTIONS"));
-        questDescriptionTable.setSortEnabled(false);
-        questDescriptionTable.setConverter("weight", new WeightConverter());
+        questDescriptionContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsQuestDescription.class);
+        questDescriptionTable = new GspreadSheetGrid(questDescriptionContainer, PAGESIZE, service.getgSpreadSheetsQuestDescriptionRepository());
+        questDescriptionContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        questDescriptionContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(questDescriptionTable));
         tableTabs.addTab(questDescriptionTable, "Описания квестов");
+        questDescriptionTable.build();
+        questDescriptionTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questDescriptionTable.Refresh();
 
-        questDirectionTable = new Table();
-        questDirectionTable.setSizeFull();
-        questDirectionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsQuestDirection.class);
-        questDirectionContainer.setBuffered(true);
-        questDirectionTable.setContainerDataSource(questDirectionContainer);
-        questDirectionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        questDirectionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
-        questDirectionTable.setColumnCollapsingAllowed(true);
-        questDirectionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        questDirectionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        questDirectionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        questDirectionTable.setColumnExpandRatio("rowNum", 1.5f);
-        questDirectionTable.setColumnWidth("rowNum", 61);
-        questDirectionTable.setColumnExpandRatio("textEn", 7f);
-        questDirectionTable.setColumnExpandRatio("textRu", 7f);
-        questDirectionTable.setColumnExpandRatio("translateColumn", 7f);
-        questDirectionTable.setColumnExpandRatio("infoColumn", 1.7f);
-        questDirectionTable.setColumnWidth("infoColumn", 87);
-        questDirectionTable.setEditable(true);
-        questDirectionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_QUEST_DIRECTIONS"));
-        questDirectionTable.setSortEnabled(false);
-        questDirectionTable.setConverter("weight", new WeightConverter());
+        questDirectionContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsQuestDirection.class);
+        questDirectionTable = new GspreadSheetGrid(questDirectionContainer, PAGESIZE, service.getgSpreadSheetsQuestDirectionRepository());
+        questDirectionContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        questDirectionContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(questDirectionTable));
         tableTabs.addTab(questDirectionTable, "Цели квестов");
+        questDirectionTable.build();
+        questDirectionTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questDirectionTable.Refresh();
 
         itemNameLayout = new VerticalLayout();
         itemNameLayout.setSizeFull();
         Label itemNameLabel = new Label("ВНИМАНИЕ! В этой таблице НЕЛЬЗЯ:  переводить односложные слова, особенно написанные со строчной буквы.");
         itemNameLabel.setStyleName(ValoTheme.LABEL_COLORED);
-        itemNameTable = new Table();
-        itemNameTable.setSizeFull();
-        itemNameContainer = service.getJPAContainerContainerForClass(GSpreadSheetsItemName.class);
-        itemNameContainer.setBuffered(true);
-        itemNameTable.setContainerDataSource(itemNameContainer);
-        itemNameTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        itemNameTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
-        itemNameTable.setColumnCollapsingAllowed(true);
-        itemNameTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        itemNameTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        itemNameTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        itemNameTable.setColumnExpandRatio("rowNum", 1.5f);
-        itemNameTable.setColumnWidth("rowNum", 61);
-        itemNameTable.setColumnExpandRatio("textEn", 7f);
-        itemNameTable.setColumnExpandRatio("textRu", 7f);
-        itemNameTable.setColumnExpandRatio("translateColumn", 7f);
-        itemNameTable.setColumnExpandRatio("infoColumn", 1.7f);
-        itemNameTable.setColumnWidth("infoColumn", 87);
-        itemNameTable.setEditable(true);
-        itemNameTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_NAMES"));
-        itemNameTable.setSortEnabled(false);
+        itemNameContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsItemName.class);
+        itemNameTable = new GspreadSheetGrid(itemNameContainer, PAGESIZE, service.getgSpreadSheetsItemNameRepository());
+        itemNameContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        itemNameContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(itemNameTable));
         itemNameLayout.addComponent(itemNameLabel);
         itemNameLayout.addComponent(itemNameTable);
         itemNameLayout.setExpandRatio(itemNameTable, 1f);
-        itemNameTable.setConverter("weight", new WeightConverter());
         tableTabs.addTab(itemNameLayout, "Названия предметов");
+        itemNameTable.build();
+        itemNameTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        itemNameTable.Refresh();
 
-        itemDescriptionTable = new Table();
-        itemDescriptionTable.setSizeFull();
-        itemDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsItemDescription.class);
-        itemDescriptionContainer.setBuffered(true);
-        itemDescriptionTable.setContainerDataSource(itemDescriptionContainer);
-        itemDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        itemDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
-        itemDescriptionTable.setColumnCollapsingAllowed(true);
-        itemDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        itemDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        itemDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        itemDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        itemDescriptionTable.setColumnWidth("rowNum", 61);
-        itemDescriptionTable.setColumnExpandRatio("textEn", 7f);
-        itemDescriptionTable.setColumnExpandRatio("textRu", 7f);
-        itemDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
-        itemDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
-        itemDescriptionTable.setColumnWidth("infoColumn", 87);
-        itemDescriptionTable.setEditable(true);
-        itemDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ITEM_DESCRIPTIONS"));
-        itemDescriptionTable.setSortEnabled(false);
-        itemDescriptionTable.setConverter("weight", new WeightConverter());
+        itemDescriptionContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsItemDescription.class);
+        itemDescriptionTable = new GspreadSheetGrid(itemDescriptionContainer, PAGESIZE, service.getgSpreadSheetsItemDescriptionRepository());
+        itemDescriptionContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        itemDescriptionContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(itemDescriptionTable));
         tableTabs.addTab(itemDescriptionTable, "Описания предметов");
+        itemDescriptionTable.build();
+        itemDescriptionTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        itemDescriptionTable.Refresh();
 
-        journalEntryTable = new Table();
-        journalEntryTable.setSizeFull();
-        journalEntryContainer = service.getJPAContainerContainerForClass(GSpreadSheetsJournalEntry.class);
-        journalEntryContainer.setBuffered(true);
-        journalEntryTable.setContainerDataSource(journalEntryContainer);
-        journalEntryTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        journalEntryTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
-        journalEntryTable.setColumnCollapsingAllowed(true);
-        journalEntryTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        journalEntryTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        journalEntryTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        journalEntryTable.setColumnExpandRatio("rowNum", 1.5f);
-        journalEntryTable.setColumnWidth("rowNum", 61);
-        journalEntryTable.setColumnExpandRatio("textEn", 7f);
-        journalEntryTable.setColumnExpandRatio("textRu", 7f);
-        journalEntryTable.setColumnExpandRatio("translateColumn", 7f);
-        journalEntryTable.setColumnExpandRatio("infoColumn", 1.7f);
-        journalEntryTable.setColumnWidth("infoColumn", 87);
-        journalEntryTable.setEditable(true);
-        journalEntryTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_JOURNAL_ENTRIES"));
-        journalEntryTable.setSortEnabled(false);
-        journalEntryTable.setConverter("weight", new WeightConverter());
+        journalEntryContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsJournalEntry.class);
+        journalEntryTable = new GspreadSheetGrid(journalEntryContainer, PAGESIZE, service.getgSpreadSheetsJournalEntryRepository());
+        journalEntryContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        journalEntryContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(journalEntryTable));
         tableTabs.addTab(journalEntryTable, "Записи журнала");
+        journalEntryTable.build();
+        journalEntryTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        journalEntryTable.Refresh();
 
-        achievementTable = new Table();
-        achievementTable.setSizeFull();
-        achievementContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAchievement.class);
-        achievementContainer.setBuffered(true);
-        achievementTable.setContainerDataSource(achievementContainer);
-        achievementTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        achievementTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
-        achievementTable.setColumnCollapsingAllowed(true);
-        achievementTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        achievementTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        achievementTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        achievementTable.setColumnExpandRatio("rowNum", 1.5f);
-        achievementTable.setColumnWidth("rowNum", 61);
-        achievementTable.setColumnExpandRatio("textEn", 7f);
-        achievementTable.setColumnExpandRatio("textRu", 7f);
-        achievementTable.setColumnExpandRatio("translateColumn", 7f);
-        achievementTable.setColumnExpandRatio("infoColumn", 1.7f);
-        achievementTable.setColumnWidth("infoColumn", 87);
-        achievementTable.setEditable(true);
-        achievementTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACHIEVEMENTS"));
-        achievementTable.setSortEnabled(false);
-        achievementTable.setConverter("weight", new WeightConverter());
+        achievementContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsAchievement.class);
+        achievementTable = new GspreadSheetGrid(achievementContainer, PAGESIZE, service.getgSpreadSheetsAchievementRepository());
+        achievementContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        achievementContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(achievementTable));
         tableTabs.addTab(achievementTable, "Достижения");
+        achievementTable.build();
+        achievementTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        achievementTable.Refresh();
 
-        achievementDescriptionTable = new Table();
-        achievementDescriptionTable.setSizeFull();
-        achievementDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAchievementDescription.class);
-        achievementDescriptionContainer.setBuffered(true);
-        achievementDescriptionTable.setContainerDataSource(achievementDescriptionContainer);
-        achievementDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        achievementDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
-        achievementDescriptionTable.setColumnCollapsingAllowed(true);
-        achievementDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        achievementDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        achievementDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        achievementDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        achievementDescriptionTable.setColumnWidth("rowNum", 61);
-        achievementDescriptionTable.setColumnExpandRatio("textEn", 7f);
-        achievementDescriptionTable.setColumnExpandRatio("textRu", 7f);
-        achievementDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
-        achievementDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
-        achievementDescriptionTable.setColumnWidth("infoColumn", 87);
-        achievementDescriptionTable.setEditable(true);
-        achievementDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ACHIEVEMENT_DESCRIPTIONS"));
-        achievementDescriptionTable.setSortEnabled(false);
-        achievementDescriptionTable.setConverter("weight", new WeightConverter());
+        achievementDescriptionContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsAchievementDescription.class);
+        achievementDescriptionTable = new GspreadSheetGrid(achievementDescriptionContainer, PAGESIZE, service.getgSpreadSheetsAchievementDescriptionRepository());
+        achievementDescriptionContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        achievementDescriptionContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(achievementDescriptionTable));
         tableTabs.addTab(achievementDescriptionTable, "Описания достижений");
+        achievementDescriptionTable.build();
+        achievementDescriptionTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        achievementDescriptionTable.Refresh();
 
-        abilityDescriptionTable = new Table();
-        abilityDescriptionTable.setSizeFull();
-        abilityDescriptionContainer = service.getJPAContainerContainerForClass(GSpreadSheetsAbilityDescription.class);
-        abilityDescriptionContainer.setBuffered(true);
-        abilityDescriptionTable.setContainerDataSource(abilityDescriptionContainer);
-        abilityDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        abilityDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
-        abilityDescriptionTable.setColumnCollapsingAllowed(true);
-        abilityDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        abilityDescriptionTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        abilityDescriptionTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        abilityDescriptionTable.setColumnExpandRatio("rowNum", 1.5f);
-        abilityDescriptionTable.setColumnWidth("rowNum", 61);
-        abilityDescriptionTable.setColumnExpandRatio("textEn", 7f);
-        abilityDescriptionTable.setColumnExpandRatio("textRu", 7f);
-        abilityDescriptionTable.setColumnExpandRatio("translateColumn", 7f);
-        abilityDescriptionTable.setColumnExpandRatio("infoColumn", 1.7f);
-        abilityDescriptionTable.setColumnWidth("infoColumn", 87);
-        abilityDescriptionTable.setEditable(true);
-        abilityDescriptionTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS"));
-        abilityDescriptionTable.setSortEnabled(false);
-        abilityDescriptionTable.setConverter("weight", new WeightConverter());
+        abilityDescriptionContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsAbilityDescription.class);
+        abilityDescriptionTable = new GspreadSheetGrid(abilityDescriptionContainer, PAGESIZE, service.getgSpreadSheetsAbilityDescriptionRepository());
+        abilityDescriptionContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        abilityDescriptionContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(abilityDescriptionTable));
         tableTabs.addTab(abilityDescriptionTable, "Описания способностей");
+        abilityDescriptionTable.build();
+        abilityDescriptionTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        abilityDescriptionTable.Refresh();
 
-        noteTable = new Table();
-        noteTable.setSizeFull();
-        noteContainer = service.getJPAContainerContainerForClass(GSpreadSheetsNote.class);
-        noteContainer.setBuffered(true);
-        noteTable.setContainerDataSource(noteContainer);
-        noteTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        noteTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_NOTES"));
-        noteTable.setColumnCollapsingAllowed(true);
-        noteTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
-        noteTable.setColumnHeaders(new String[]{"№", "Текст", "Перевод", "", ""});
-        noteTable.sort(new Object[]{"rowNum"}, new boolean[]{true});
-        noteTable.setColumnExpandRatio("rowNum", 1.5f);
-        noteTable.setColumnWidth("rowNum", 61);
-        noteTable.setColumnExpandRatio("textEn", 7f);
-        noteTable.setColumnExpandRatio("textRu", 7f);
-        noteTable.setColumnExpandRatio("translateColumn", 7f);
-        noteTable.setColumnExpandRatio("infoColumn", 1.7f);
-        noteTable.setColumnWidth("infoColumn", 87);
-        noteTable.setEditable(true);
-        noteTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_NOTES"));
-        noteTable.setSortEnabled(false);
-        noteTable.setConverter("weight", new WeightConverter());
+        noteContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsNote.class);
+        noteTable = new GspreadSheetGrid(noteContainer, PAGESIZE, service.getgSpreadSheetsNoteRepository());
+        noteContainer.addGeneratedProperty("infoColumn", new InfoPropertyGenerator());
+        noteContainer.addGeneratedProperty("translateColumn", new TranslatePropertyGenerator(noteTable));
         tableTabs.addTab(noteTable, "Письма");
+        noteTable.build();
+        noteTable.setColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        noteTable.Refresh();
 
-        esoInterfaceTable = new Table();
-        esoInterfaceTable.setSizeFull();
-        esoInterfaceContainer = service.getJPAContainerContainerForClass(EsoInterfaceVariable.class);
-        esoInterfaceContainer.setBuffered(true);
-        esoInterfaceTable.setContainerDataSource(esoInterfaceContainer);
-        esoInterfaceTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
-        esoInterfaceTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
-        esoInterfaceTable.setColumnCollapsingAllowed(true);
-        esoInterfaceTable.setVisibleColumns(new Object[]{"name", "textEn", "textRu", "infoColumn", "translateColumn"});
-        esoInterfaceTable.setColumnHeaders(new String[]{"Переменная", "Текст", "Перевод", "", ""});
-        esoInterfaceTable.sort(new Object[]{"id"}, new boolean[]{true});
-        esoInterfaceTable.setColumnExpandRatio("name", 1.5f);
-        esoInterfaceTable.setColumnWidth("name", 61);
-        esoInterfaceTable.setColumnExpandRatio("textEn", 7f);
-        esoInterfaceTable.setColumnExpandRatio("textRu", 7f);
-        esoInterfaceTable.setColumnExpandRatio("translateColumn", 7f);
-        esoInterfaceTable.setColumnExpandRatio("infoColumn", 1.7f);
-        esoInterfaceTable.setColumnWidth("infoColumn", 87);
-        esoInterfaceTable.setEditable(true);
-        esoInterfaceTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
-        esoInterfaceTable.setSortEnabled(false);
-        tableTabs.addTab(esoInterfaceTable, "Строки интерфейса");
-
+        /*esoInterfaceTable = new Table();
+         esoInterfaceTable.setSizeFull();
+         esoInterfaceContainer = service.getJPAContainerContainerForClass(EsoInterfaceVariable.class);
+         esoInterfaceContainer.setBuffered(true);
+         esoInterfaceTable.setContainerDataSource(esoInterfaceContainer);
+         esoInterfaceTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator());
+         esoInterfaceTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
+         esoInterfaceTable.setColumnCollapsingAllowed(true);
+         esoInterfaceTable.setVisibleColumns(new Object[]{"name", "textEn", "textRu", "infoColumn", "translateColumn"});
+         esoInterfaceTable.setColumnHeaders(new String[]{"Переменная", "Текст", "Перевод", "", ""});
+         esoInterfaceTable.sort(new Object[]{"id"}, new boolean[]{true});
+         esoInterfaceTable.setColumnExpandRatio("name", 1.5f);
+         esoInterfaceTable.setColumnWidth("name", 61);
+         esoInterfaceTable.setColumnExpandRatio("textEn", 7f);
+         esoInterfaceTable.setColumnExpandRatio("textRu", 7f);
+         esoInterfaceTable.setColumnExpandRatio("translateColumn", 7f);
+         esoInterfaceTable.setColumnExpandRatio("infoColumn", 1.7f);
+         esoInterfaceTable.setColumnWidth("infoColumn", 87);
+         esoInterfaceTable.setEditable(true);
+         esoInterfaceTable.setTableFieldFactory(new TranslateTableFieldFactory("ROLE_DIRECT_ACCESS_INTERFACE_VARIABLES"));
+         esoInterfaceTable.setSortEnabled(false);
+         tableTabs.addTab(esoInterfaceTable, "Строки интерфейса");*/
         this.addComponent(tableTabs);
         this.setExpandRatio(tableTabs, 20f);
-
     }
 
     private void filterTranslations() {
-        try {
-            newTranslationsContainer.refresh();
-        } catch (Exception ex) {
-
-        }
-        newTranslationsContainer.removeAllContainerFilters();
-        newTranslationsContainer.addContainerFilter(new IsNull("playerTopic"));
-        newTranslationsContainer.addContainerFilter(new IsNull("npcTopic"));
-        newTranslationsContainer.addContainerFilter(new IsNull("greeting"));
-        newTranslationsContainer.addContainerFilter(new IsNull("subtitle"));
-        newTranslationsContainer.addContainerFilter(new Compare.Equal("status", statusFilter.getValue()));
         if (translatorBox.getValue() != null) {
-            newTranslationsContainer.addContainerFilter(new Compare.Equal("author", translatorBox.getValue()));
+            translatedTextSpecification.setAuthor((SysAccount) translatorBox.getValue());
+        } else {
+            translatedTextSpecification.setAuthor(null);
+        }
+        if (statusFilter.getValue() != null) {
+            translatedTextSpecification.setStatus((TRANSLATE_STATUS) statusFilter.getValue());
+        } else {
+            translatedTextSpecification.setStatus(null);
         }
         if (translateTypeBox.getValue() != null) {
-            if (translateTypeBox.getValue().equals("GSpreadSheetsActivator")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsActivator")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsAchievement")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsAchievement")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsAchievementDescription")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsAchievementDescription")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsNote")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNote")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsItemDescription")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsItemDescription")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsItemName")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsItemName")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsJournalEntry")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsJournalEntry")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsLocationName")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsLocationName")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsNpcName")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNpcName")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsNpcPhrase")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsNpcPhrase")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsPlayerPhrase")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsPlayerPhrase")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsQuestDescription")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestDescription")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsQuestDirection")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestDirection")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsQuestName")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("spreadSheetsQuestName")));
-            }
-            if (translateTypeBox.getValue().equals("GSpreadSheetsAbilityDescription")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("sheetsAbilityDescription")));
-            }
-            if (translateTypeBox.getValue().equals("EsoInterfaceVariable")) {
-                newTranslationsContainer.addContainerFilter(new com.vaadin.data.util.filter.Not(new com.vaadin.data.util.filter.IsNull("esoInterfaceVariable")));
-            }
+            translatedTextSpecification.setTranslationType((String) translateTypeBox.getValue());
+        } else {
+            translatedTextSpecification.setTranslationType(null);
         }
+        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> service.getTranslatedTextRepository().findAll(translatedTextSpecification, new PageRequest(
+                firstRow / PAGESIZE,
+                PAGESIZE,
+                sortAscending ? Sort.Direction.ASC : Sort.Direction.DESC,
+                property == null ? "createTime" : property
+        )).getContent(),
+                () -> (int) service.getTranslatedTextRepository().count(translatedTextSpecification),
+                PAGESIZE);
+        newTranslationsContainer.setCollection(lazyList);
+
     }
 
     private void search() {
@@ -749,23 +490,20 @@ public class DirectTableEditTab extends VerticalLayout {
         resultTable.setWidth(this.getUI().getWidth() - 5f, this.getUI().getWidthUnits());
     }
 
-    private class AddTranslationClickListener implements ClickListener {
+    private class AddGridTranslationClickListener implements ClickListener {
 
-        private final EntityItem item;
+        private final Object entity;
         private final VerticalLayout vl;
-        private final JPAContainer container;
-        private final Table table;
+        private final RefreshableGrid grid;
 
-        public AddTranslationClickListener(EntityItem item_, VerticalLayout vl_, JPAContainer container_, Table table_) {
-            this.item = item_;
+        public AddGridTranslationClickListener(Object entity_, VerticalLayout vl_, RefreshableGrid grid_) {
+            this.entity = entity_;
             this.vl = vl_;
-            this.container = container_;
-            this.table = table_;
+            this.grid = grid_;
         }
 
         @Override
         public void buttonClick(Button.ClickEvent event) {
-            Object entity = item.getEntity();
             TranslatedText tt = new TranslatedText();
             tt.setAuthor(SpringSecurityHelper.getSysAccount());
             if (entity instanceof GSpreadSheetsActivator) {
@@ -801,24 +539,34 @@ public class DirectTableEditTab extends VerticalLayout {
             } else if (entity instanceof EsoInterfaceVariable) {
                 tt.setEsoInterfaceVariable((EsoInterfaceVariable) entity);
             }
-            vl.addComponent(new TranslationCell(tt, container, item, table));
+            vl.addComponent(new GridTranslationCell(tt, grid, entity));
             event.getButton().setVisible(false);
         }
 
     }
 
-    private class TranslateColumnGenerator implements Table.ColumnGenerator {
+    private class TranslatePropertyGenerator extends PropertyValueGenerator<Component> {
+
+        private final RefreshableGrid grid;
+
+        public TranslatePropertyGenerator(RefreshableGrid grid) {
+            this.grid = grid;
+        }
 
         @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            final VerticalLayout result = new VerticalLayout();
-            result.setSizeFull();
-            EntityItem item = (EntityItem) source.getItem(itemId);
+        public Component getValue(Item item, Object itemId, Object propertyId) {
+            Panel panel = new Panel();
+            panel.setHeight(98f, Unit.PIXELS);
+            panel.setWidth(460f, Unit.PIXELS);
+            panel.addStyleName(ValoTheme.PANEL_BORDERLESS);
+            final VerticalLayout tabSheet = new VerticalLayout();
+
             Set<TranslatedText> list = (Set<TranslatedText>) item.getItemProperty("translatedTexts").getValue();
             List<SysAccount> accounts = new ArrayList<>();
             if (list != null) {
                 for (TranslatedText tt : list) {
-                    result.addComponent(new TranslationCell(tt, (JPAContainer) source.getContainerDataSource(), item, source));
+                    GridTranslationCell cell = new GridTranslationCell(tt, grid, itemId);
+                    tabSheet.addComponent(cell);
                     accounts.add(tt.getAuthor());
                 }
             }
@@ -826,67 +574,22 @@ public class DirectTableEditTab extends VerticalLayout {
                 Button addTranslation = new Button();
                 addTranslation.setIcon(FontAwesome.PLUS_SQUARE);
                 addTranslation.setDescription("Добавить перевод");
-                addTranslation.addClickListener(new AddTranslationClickListener(item, result, (JPAContainer) source.getContainerDataSource(), source));
+                addTranslation.addClickListener(new AddGridTranslationClickListener(itemId, tabSheet, grid));
                 if (list != null && !list.isEmpty()) {
-                    TranslationCell component = (TranslationCell) result.getComponent(result.getComponentCount() - 1);
+                    GridTranslationCell component = (GridTranslationCell) tabSheet.getComponent(tabSheet.getComponentCount() - 1);
                     component.getActionLayout().addComponent(addTranslation);
                 } else {
-                    result.addComponent(addTranslation);
+                    tabSheet.addComponent(addTranslation);
                 }
 
             }
-            return result;
-        }
-
-    }
-
-    private class TranslateTableFieldFactory implements TableFieldFactory {
-
-        private final String tableEditRole;
-
-        public TranslateTableFieldFactory(String tableEditRole_) {
-            this.tableEditRole = tableEditRole_;
+            panel.setContent(tabSheet);
+            return panel;
         }
 
         @Override
-        public Field<?> createField(Container container, Object itemId, Object propertyId, Component uiContext) {
-            Field result = null;
-            if (propertyId.equals("textRu")) {
-                TextArea area = new TextArea();
-                area.setSizeFull();
-                if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
-                    area.setReadOnly(true);
-                }
-                result = area;
-            } else if (propertyId.equals("textEn")) {
-                TextArea area = new TextArea();
-                area.setSizeFull();
-                area.setReadOnly(true);
-                result = area;
-            }
-            return result;
-        }
-
-    }
-
-    private class SaveColumnGenerator implements Table.ColumnGenerator {
-
-        private final String tableEditRole;
-
-        public SaveColumnGenerator(String tableEditRole_) {
-            this.tableEditRole = tableEditRole_;
-        }
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            Button button = new Button();
-            button.setIcon(FontAwesome.SAVE);
-            button.setDescription("Сохранить");
-            button.addClickListener(new SaveButtonClickListener(itemId, (JPAContainer) source.getContainerDataSource()));
-            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
-                button.setEnabled(false);
-            }
-            return button;
+        public Class<Component> getType() {
+            return Component.class;
         }
 
     }
@@ -911,23 +614,20 @@ public class DirectTableEditTab extends VerticalLayout {
 
     }
 
-    private class InfoColumnGenerator implements Table.ColumnGenerator {
+    private class InfoPropertyGenerator extends PropertyValueGenerator<Component> {
 
-        private final String tableEditRole;
-
-        public InfoColumnGenerator(String tableEditRole) {
-            this.tableEditRole = tableEditRole;
+        public InfoPropertyGenerator() {
         }
 
         @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
+        public Component getValue(Item item, Object itemId, Object propertyId) {
             VerticalLayout result = new VerticalLayout();
+            result.setSizeFull();
 
-            EntityItem item = (EntityItem) source.getContainerDataSource().getItem(itemId);
-            TranslatedEntity entity = (TranslatedEntity) item.getEntity();
+            TranslatedEntity entity = (TranslatedEntity) itemId;
             StringBuilder sb = new StringBuilder("");
-            if(item.getEntity() instanceof GSpreadSheetEntity) {
-                sb.append(((GSpreadSheetEntity)item.getEntity()).getWeight().toString());
+            if (itemId instanceof GSpreadSheetEntity) {
+                sb.append(((GSpreadSheetEntity) itemId).getWeight().toString());
                 sb.append("\n");
             }
             if (entity.getTranslator() != null) {
@@ -941,16 +641,8 @@ public class DirectTableEditTab extends VerticalLayout {
             l.addStyleName("v-label");
             result.addComponent(l);
             HorizontalLayout actions = new HorizontalLayout();
-            Button button = new Button();
-            button.setIcon(FontAwesome.SAVE);
-            button.setDescription("Сохранить");
-            button.addClickListener(new SaveButtonClickListener(itemId, (JPAContainer) source.getContainerDataSource()));
-            if (!SpringSecurityHelper.hasRole("ROLE_DIRECT_ACCESS") && !SpringSecurityHelper.hasRole(tableEditRole)) {
-                button.setEnabled(false);
-            }
-            actions.addComponent(button);
-            if (item.getEntity() instanceof GSpreadSheetEntity) {
-                GSpreadSheetEntity e = (GSpreadSheetEntity) item.getEntity();
+            if (itemId instanceof GSpreadSheetEntity) {
+                GSpreadSheetEntity e = (GSpreadSheetEntity) itemId;
                 GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(e.getaId());
                 if (route != null) {
                     Button b = new Button();
@@ -963,6 +655,11 @@ public class DirectTableEditTab extends VerticalLayout {
             }
             result.addComponent(actions);
             return result;
+        }
+
+        @Override
+        public Class<Component> getType() {
+            return Component.class;
         }
 
     }
@@ -978,34 +675,9 @@ public class DirectTableEditTab extends VerticalLayout {
 
     }
 
-    private class SaveButtonClickListener implements Button.ClickListener {
-
-        private final Object itemId;
-        private final JPAContainer container;
-
-        public SaveButtonClickListener(Object itemId, JPAContainer container) {
-            this.itemId = itemId;
-            this.container = container;
-        }
-
-        @Override
-        public void buttonClick(Button.ClickEvent event) {
-            try {
-                EntityItem item = container.getItem(itemId);
-                if (item.isDirty()) {
-                    service.commitTableEntityItem(item);
-                    container.refresh();
-                }
-            } catch (Exception ex) {
-
-            }
-        }
-
-    }
-
     private void goToItem(DAO entity) {
         Component targetTabId = null;
-        Table targetTable = null;
+        RefreshableGrid targetTable = null;
         Integer rowNum = 1;
         Long itemId = null;
         if (entity instanceof GSpreadSheetsNpcName) {
@@ -1083,27 +755,12 @@ public class DirectTableEditTab extends VerticalLayout {
             targetTable = abilityDescriptionTable;
             rowNum = ((GSpreadSheetsAbilityDescription) entity).getRowNum().intValue();
             itemId = ((GSpreadSheetsAbilityDescription) entity).getId();
-        } else if (entity instanceof EsoInterfaceVariable) {
-            targetTabId = esoInterfaceTable;
-            targetTable = esoInterfaceTable;
-            rowNum = null;
-            itemId = ((EsoInterfaceVariable) entity).getId();
         }
         if (rowNum != null) {
             rowNum--;
-            if (rowNum > 0) {
-                rowNum--;
-            }
             if (targetTabId != null) {
                 tableTabs.setSelectedTab(targetTabId);
-                targetTable.setCurrentPageFirstItemIndex(rowNum);
-                targetTable.select(itemId);
-            }
-        } else {
-            if (targetTabId != null) {
-                tableTabs.setSelectedTab(targetTabId);
-                targetTable.select(itemId);
-                targetTable.setCurrentPageFirstItemId(itemId);
+                targetTable.scrollToRow(rowNum, ScrollDestination.START);
             }
         }
     }
@@ -1122,10 +779,9 @@ public class DirectTableEditTab extends VerticalLayout {
 
         @Override
         public void itemClick(ItemClickEvent event) {
-            EntityItem item = (EntityItem) event.getItem();
-            TranslatedText tt = (TranslatedText) item.getEntity();
+            TranslatedText tt = (TranslatedText) event.getItemId();
             Component targetTabId = null;
-            Table targetTable = null;
+            RefreshableGrid targetTable = null;
             Integer rowNum = 1;
             Long itemId = null;
             if (tt.getSpreadSheetsNpcName() != null) {
@@ -1203,85 +859,35 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = abilityDescriptionTable;
                 rowNum = tt.getSheetsAbilityDescription().getRowNum().intValue();
                 itemId = tt.getSheetsAbilityDescription().getId();
-            } else if (tt.getEsoInterfaceVariable() != null) {
-                targetTabId = esoInterfaceTable;
-                targetTable = esoInterfaceTable;
-                rowNum = null;
-                itemId = tt.getEsoInterfaceVariable().getId();
             }
             if (rowNum != null) {
                 rowNum--;
-                if (rowNum > 0) {
-                    rowNum--;
-                }
-                if (targetTabId != null) {
+                if (targetTabId != null && targetTable != null) {
                     tableTabs.setSelectedTab(targetTabId);
-                    targetTable.setCurrentPageFirstItemIndex(rowNum);
-                    targetTable.select(itemId);
-                }
-            } else {
-                if (targetTabId != null) {
-                    tableTabs.setSelectedTab(targetTabId);
-                    targetTable.setCurrentPageFirstItemId(itemId);
-                    targetTable.select(itemId);
+                    targetTable.scrollToRow(rowNum, ScrollDestination.START);
                 }
             }
         }
 
     }
 
-    private class WeightConverter implements Converter<String, Integer> {
-
-        @Override
-        public Integer convertToModel(String value, Class<? extends Integer> targetType, Locale locale) throws ConversionException {
-            Integer result = null;
-            try {
-                result = new Integer(value);
-            } catch (NumberFormatException ex) {
-
-            }
-            return result;
-        }
-
-        @Override
-        public String convertToPresentation(Integer value, Class<? extends String> targetType, Locale locale) throws ConversionException {
-            if (value != null) {
-                return value.toString();
-            } else {
-                return "";
-            }
-        }
-
-        @Override
-        public Class<Integer> getModelType() {
-            return Integer.class;
-        }
-
-        @Override
-        public Class<String> getPresentationType() {
-            return String.class;
-        }
-
-    }
-
-    private class TranslationCell extends HorizontalLayout {
+    private class GridTranslationCell extends HorizontalLayout {
 
         private TextArea translation;
         private Button save;
         private Button accept;
         private Button reject;
         private final TranslatedText translatedText;
-        private final JPAContainer container;
-        private final EntityItem item;
-        private final Table table;
         private VerticalLayout actionLayout;
+        private RefreshableGrid grid;
+        private Object itemId;
 
-        public TranslationCell(TranslatedText translatedText_, JPAContainer container_, EntityItem item_, Table table_) {
-            this.setSizeFull();
+        public GridTranslationCell(TranslatedText translatedText_, RefreshableGrid grid_, Object itemId_) {
+            this.setHeight(95f, Unit.PIXELS);
+            this.setWidth(460f, Unit.PIXELS);
             this.translatedText = translatedText_;
-            this.container = container_;
-            this.item = item_;
-            this.table = table_;
+            this.grid = grid_;
+            this.itemId = itemId_;
             String translatedStatus = "нет";
             if (translatedText.getStatus() != null) {
                 translatedStatus = translatedText.getStatus().toString();
@@ -1298,11 +904,14 @@ public class DirectTableEditTab extends VerticalLayout {
                 caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
             actionLayout = new VerticalLayout();
-            actionLayout.setSizeFull();
+            actionLayout.setDefaultComponentAlignment(Alignment.TOP_LEFT);
+            actionLayout.setWidth(40f, Unit.PIXELS);
+            actionLayout.setHeight(80f, Unit.PIXELS);
 
             translation = new TextArea();
             translation.setDescription(caption.toString());
-            translation.setSizeFull();
+            translation.setWidth(400f, Unit.PIXELS);
+            translation.setHeight(95f, Unit.PIXELS);
             translation.setNullRepresentation("");
             translation.setImmediate(true);
             translation.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.TIMEOUT);
@@ -1358,11 +967,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 public void buttonClick(Button.ClickEvent event) {
                     translatedText.setText(translation.getValue());
                     service.saveTranslatedText(translatedText);
-                    try {
-                        container.refresh();
-                    } catch (Exception ex) {
-
-                    }
+                    grid.Refresh();
                 }
             });
 
@@ -1379,12 +984,7 @@ public class DirectTableEditTab extends VerticalLayout {
                         public void buttonClick(Button.ClickEvent event) {
                             translatedText.setText(translation.getValue());
                             service.acceptTranslatedText(translatedText);
-                            try {
-                                container.refresh();
-
-                            } catch (Exception ex) {
-
-                            }
+                            grid.Refresh();
                         }
                     });
                     actionLayout.addComponent(accept);
@@ -1397,11 +997,7 @@ public class DirectTableEditTab extends VerticalLayout {
                         public void buttonClick(Button.ClickEvent event) {
                             translatedText.setText(translation.getValue());
                             service.rejectTranslatedText(translatedText);
-                            try {
-                                container.refresh();
-                            } catch (Exception ex) {
-
-                            }
+                            grid.Refresh();
                         }
                     });
                     actionLayout.addComponent(reject);
@@ -1410,8 +1006,7 @@ public class DirectTableEditTab extends VerticalLayout {
 
             }
             this.addComponent(actionLayout);
-            this.setExpandRatio(translation, 8f);
-            this.setExpandRatio(actionLayout, 2f);
+            this.setExpandRatio(translation, 1f);
         }
 
         public VerticalLayout getActionLayout() {

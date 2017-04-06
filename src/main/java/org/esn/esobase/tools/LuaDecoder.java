@@ -51,6 +51,8 @@ public class LuaDecoder {
             String locationNameRu = null;
             if (EsnDecoder.IsEsnEncoding(locationKey)) {
                 locationNameRu = EsnDecoder.decode(locationKey);
+            } else if (EsnDecoder.IsRu(locationKey)) {
+                locationNameRu = locationKey;
             } else {
                 locationName = locationKey;
             }
@@ -63,6 +65,8 @@ public class LuaDecoder {
                 String npcNameRu = null;
                 if (EsnDecoder.IsEsnEncoding(npcKey)) {
                     npcNameRu = EsnDecoder.decode(npcKey);
+                } else if (EsnDecoder.IsRu(npcKey)) {
+                    npcNameRu = npcKey;
                 } else {
                     npcName = npcKey;
                 }
@@ -76,7 +80,7 @@ public class LuaDecoder {
                         String subtitlekey = (String) subtitlesKeys.next();
                         String subtitleText = null;
                         String subtitleTextRu = null;
-                        if (EsnDecoder.IsEsnEncoding(subtitlekey)||EsnDecoder.IsRu(subtitlekey)) {
+                        if (EsnDecoder.IsEsnEncoding(subtitlekey) || EsnDecoder.IsRu(subtitlekey)) {
                             subtitleTextRu = EsnDecoder.decode(subtitlekey);
                         } else {
                             subtitleText = subtitlekey;
@@ -104,12 +108,12 @@ public class LuaDecoder {
                         String playerTextRu = null;
                         String npcText = null;
                         String npcTextRu = null;
-                        if (EsnDecoder.IsEsnEncoding(topickey)||EsnDecoder.IsRu(topickey)) {
+                        if (EsnDecoder.IsEsnEncoding(topickey) || EsnDecoder.IsRu(topickey)) {
                             playerTextRu = EsnDecoder.decode(topickey);
                         } else {
                             playerText = topickey.replace("Óàeæäeîèe ", "").replace("Óâpoça ", "");
                         }
-                        if (EsnDecoder.IsEsnEncoding(topicsObject.getString(topickey))||EsnDecoder.IsRu(topicsObject.getString(topickey))) {
+                        if (EsnDecoder.IsEsnEncoding(topicsObject.getString(topickey)) || EsnDecoder.IsRu(topicsObject.getString(topickey))) {
                             npcTextRu = EsnDecoder.decode(topicsObject.getString(topickey));
                         } else {
                             npcText = topicsObject.getString(topickey);
@@ -139,7 +143,7 @@ public class LuaDecoder {
                         String greetingskey = (String) greetingsKeys.next();
                         String greetingText = null;
                         String greetingTextRu = null;
-                        if (EsnDecoder.IsEsnEncoding(greetingsObject.getString(greetingskey))||EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
+                        if (EsnDecoder.IsEsnEncoding(greetingsObject.getString(greetingskey)) || EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
                             greetingTextRu = EsnDecoder.decode(greetingsObject.getString(greetingskey));
                         } else {
                             greetingText = greetingsObject.getString(greetingskey);

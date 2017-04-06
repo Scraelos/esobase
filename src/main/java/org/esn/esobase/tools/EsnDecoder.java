@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 public class EsnDecoder {
 
     private static final Pattern esnEncodingPattern = Pattern.compile("^.*[ÀÁÂÄÆÇÈÉÊÌÍÎÏÒÓÑŒÙÚÅŸÖËÔÜàáâäæçèéêìíîïòóñœùúûåÿöëôü]+.*");
-    private static final Pattern enEncodingPattern = Pattern.compile("^.*[BDFGHIJKLMNQRSTUVWYZbdfghijklmnqrstuvwyz]+.*");
-    private static final Pattern ruPattern = Pattern.compile("^.*[а-я]+.*");
+    private static final Pattern enEncodingPattern = Pattern.compile("[a-zA-Z]");
+    private static final Pattern ruPattern = Pattern.compile("[а-яА-я]");
 
     public static boolean IsEsnEncoding(String text) {
         boolean result = false;

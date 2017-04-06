@@ -11,6 +11,7 @@ import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.data.util.filter.Or;
 import com.vaadin.event.FieldEvents;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Button;
@@ -18,6 +19,7 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnGenerator;
@@ -284,7 +286,7 @@ public class TranslateTab extends VerticalLayout {
             greetingsContainer.sort(new Object[]{"id"}, new boolean[]{true});
             npcTabSheet.getTab(npcGreetingsTable).setCaption("Приветствие(" + greetingsContainer.size() + ")");
             subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
-            subtitlesContainer.sort(new Object[]{"id"}, new boolean[]{true});
+            //subtitlesContainer.sort(new Object[]{"id"}, new boolean[]{true});
             npcTabSheet.getTab(npcSubtitlesTable).setCaption("Субтитры(" + subtitlesContainer.size() + ")");
         }
     }
@@ -459,37 +461,62 @@ public class TranslateTab extends VerticalLayout {
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
             VerticalLayout result = new VerticalLayout();
+            result.setMargin(new MarginInfo(false, false, true, false));
+            MarginInfo areaMarginInfo = new MarginInfo(true, false, false, false);
             Subtitle subtitle = (Subtitle) itemId;
+            String labelText = subtitle.getNpc().toString();
+            if (subtitle.getPreviousSubtitle() == null && subtitle.getNextSubtitle() != null) {
+                labelText = labelText + " - Начало диалога";
+            }
+            if (subtitle.getNextSubtitle() == null && subtitle.getPreviousSubtitle() != null) {
+                labelText = labelText + " - Конец диалога";
+            }
+            Label l = new Label(labelText);
+            l.addStyleName(ValoTheme.LABEL_COLORED);
+            l.addStyleName(ValoTheme.LABEL_H3);
+            result.addComponent(l);
             if (subtitle.getText() != null && !subtitle.getText().isEmpty()) {
-                TextArea textEnArea = new TextArea("Текст в игре");
+                Label textEnAreaLabel = new Label("Текст в игре");
+                textEnAreaLabel.addStyleName(ValoTheme.LABEL_H3);
+                result.addComponent(textEnAreaLabel);
+                Label textEnArea = new Label();
+                textEnArea.addStyleName("v-label");
                 textEnArea.setValue(subtitle.getText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.setNullRepresentation("");
                 result.addComponent(textEnArea);//, "Текст в игре"
             }
             if (subtitle.getTextRu() != null && !subtitle.getTextRu().isEmpty()) {
-                TextArea textRuArea = new TextArea("Перевод в игре");
+                Label textRuAreaLabel = new Label("Перевод в игре");
+                textRuAreaLabel.addStyleName(ValoTheme.LABEL_H3);
+                result.addComponent(textRuAreaLabel);
+                Label textRuArea = new Label();
+                textRuArea.addStyleName("v-label");
                 textRuArea.setValue(subtitle.getTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.setNullRepresentation("");
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
 
             if (subtitle.getExtNpcPhrase() != null) {
-                TextArea textEnRawArea = new TextArea("Текст в таблицах");
+                Label textEnRawArealabel = new Label("Текст в таблицах");
+                textEnRawArealabel.addStyleName(ValoTheme.LABEL_H3);
+                result.addComponent(textEnRawArealabel);
+                Label textEnRawArea = new Label();
+                textEnRawArea.addStyleName("v-label");
                 textEnRawArea.setValue(subtitle.getExtNpcPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (subtitle.getExtNpcPhrase().getTextRu() != null && !subtitle.getExtNpcPhrase().getTextRu().equals(subtitle.getExtNpcPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + subtitle.getExtNpcPhrase().getTranslator());
+                    Label textRuRawAreaLabel = new Label("Перевод в таблицах от " + subtitle.getExtNpcPhrase().getTranslator());
+                    textRuRawAreaLabel.addStyleName(ValoTheme.LABEL_H3);
+                    result.addComponent(textRuRawAreaLabel);
+                    Label textRuRawArea = new Label();
+                    textRuRawArea.addStyleName("v-label");
                     textRuRawArea.setValue(subtitle.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.setNullRepresentation("");
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
 

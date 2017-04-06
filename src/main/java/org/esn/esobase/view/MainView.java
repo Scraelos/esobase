@@ -108,10 +108,10 @@ public class MainView extends Panel implements View, Command {
         this.setHeight(100f, Unit.PERCENTAGE);
         Page.Styles styles = Page.getCurrent().getStyles();
         styles.add(".v-label {\n"
-                + "    /* Do not specify any margins, paddings or borders here */\n"
                 + "    white-space: pre-line;\n"
                 + "    overflow: hidden;\n"
-                + "}");
+                + "}"+
+                ".my-grid .v-grid-body .v-grid-cell { height: 100px; }");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);
         layout.setSpacing(true);

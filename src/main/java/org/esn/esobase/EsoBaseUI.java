@@ -22,6 +22,7 @@ import ru.xpoft.vaadin.DiscoveryNavigator;
 @Component
 @Scope("prototype")
 @Theme("tests-valo-reindeer")
+//@Theme("valo")
 @PreserveOnRefresh
 public class EsoBaseUI extends UI {
 
@@ -33,7 +34,7 @@ public class EsoBaseUI extends UI {
         setSizeFull();
 
         DiscoveryNavigator navigator = new DiscoveryNavigator(this, this);
-
+        
     }
 
 }

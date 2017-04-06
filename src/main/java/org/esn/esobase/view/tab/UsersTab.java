@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.SysAccountRole;
-import org.esn.esobase.security.EsnUser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
