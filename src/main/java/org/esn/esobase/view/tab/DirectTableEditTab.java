@@ -49,9 +49,12 @@ import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsCollectible;
+import org.esn.esobase.model.GSpreadSheetsCollectibleDescription;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
+import org.esn.esobase.model.GSpreadSheetsLoadscreen;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNote;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -136,6 +139,15 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private GspreadSheetTable noteTable;
     private GeneratedPropertyListContainer<GSpreadSheetsNote> noteContainer;
+
+    private GspreadSheetTable collectibleTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsCollectible> collectibleContainer;
+
+    private GspreadSheetTable collectibleDescriptionTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsCollectibleDescription> collectibleDescriptionContainer;
+
+    private GspreadSheetTable loadscreenTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsLoadscreen> loadscreenContainer;
 
     private LinkedItemColumnGenerator linkedItemColumnGenerator;
     private LinkedItemClickListener linkedItemClickListener;
@@ -429,6 +441,33 @@ public class DirectTableEditTab extends VerticalLayout {
         noteTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
         noteTable.Load();
 
+        collectibleContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsCollectible.class);
+        collectibleTable = new GspreadSheetTable(collectibleContainer, PAGESIZE, service.getgSpreadSheetsCollectibleRepository());
+        collectibleTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator());
+        collectibleTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator(collectibleTable));
+        tableTabs.addTab(collectibleTable, "Коллекционные предметы");
+        collectibleTable.build();
+        collectibleTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        collectibleTable.Load();
+
+        collectibleDescriptionContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsCollectibleDescription.class);
+        collectibleDescriptionTable = new GspreadSheetTable(collectibleDescriptionContainer, PAGESIZE, service.getgSpreadSheetsCollectibleDescriptionRepository());
+        collectibleDescriptionTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator());
+        collectibleDescriptionTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator(collectibleDescriptionTable));
+        tableTabs.addTab(collectibleDescriptionTable, "Описания коллекционных предметов");
+        collectibleDescriptionTable.build();
+        collectibleDescriptionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        collectibleDescriptionTable.Load();
+
+        loadscreenContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsLoadscreen.class);
+        loadscreenTable = new GspreadSheetTable(loadscreenContainer, PAGESIZE, service.getgSpreadSheetsLoadscreenRepository());
+        loadscreenTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator());
+        loadscreenTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator(loadscreenTable));
+        tableTabs.addTab(loadscreenTable, "Загрузочные экраны");
+        loadscreenTable.build();
+        loadscreenTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        loadscreenTable.Load();
+
         /*esoInterfaceTable = new Table();
          esoInterfaceTable.setSizeFull();
          esoInterfaceContainer = service.getJPAContainerContainerForClass(EsoInterfaceVariable.class);
@@ -564,8 +603,9 @@ public class DirectTableEditTab extends VerticalLayout {
         }
 
     }
-    
-    private class TranslateLayout extends VerticalLayout{
+
+    private class TranslateLayout extends VerticalLayout {
+
         private final Table source;
         private final Object itemId;
         private final Object columnId;
@@ -603,7 +643,7 @@ public class DirectTableEditTab extends VerticalLayout {
 
             }
         }
-        
+
     }
 
     private class TranslatePropertyGenerator extends PropertyValueGenerator<Component> {
@@ -858,6 +898,21 @@ public class DirectTableEditTab extends VerticalLayout {
             targetTable = abilityDescriptionTable;
             rowNum = ((GSpreadSheetsAbilityDescription) entity).getRowNum().intValue();
             itemId = ((GSpreadSheetsAbilityDescription) entity).getId();
+        } else if (entity instanceof GSpreadSheetsCollectible) {
+            targetTabId = collectibleTable;
+            targetTable = collectibleTable;
+            rowNum = ((GSpreadSheetsCollectible) entity).getRowNum().intValue();
+            itemId = ((GSpreadSheetsCollectible) entity).getId();
+        } else if (entity instanceof GSpreadSheetsCollectibleDescription) {
+            targetTabId = collectibleDescriptionTable;
+            targetTable = collectibleDescriptionTable;
+            rowNum = ((GSpreadSheetsCollectibleDescription) entity).getRowNum().intValue();
+            itemId = ((GSpreadSheetsCollectibleDescription) entity).getId();
+        } else if (entity instanceof GSpreadSheetsLoadscreen) {
+            targetTabId = loadscreenTable;
+            targetTable = loadscreenTable;
+            rowNum = ((GSpreadSheetsLoadscreen) entity).getRowNum().intValue();
+            itemId = ((GSpreadSheetsLoadscreen) entity).getId();
         }
         if (rowNum != null) {
             rowNum--;
@@ -962,6 +1017,21 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = abilityDescriptionTable;
                 rowNum = tt.getSheetsAbilityDescription().getRowNum().intValue();
                 itemId = tt.getSheetsAbilityDescription().getId();
+            } else if (tt.getSheetsCollectible() != null) {
+                targetTabId = collectibleTable;
+                targetTable = collectibleTable;
+                rowNum = tt.getSheetsCollectible().getRowNum().intValue();
+                itemId = tt.getSheetsCollectible().getId();
+            } else if (tt.getSheetsCollectibleDescription() != null) {
+                targetTabId = collectibleDescriptionTable;
+                targetTable = collectibleDescriptionTable;
+                rowNum = tt.getSheetsCollectibleDescription().getRowNum().intValue();
+                itemId = tt.getSheetsCollectibleDescription().getId();
+            } else if (tt.getSheetsLoadscreen() != null) {
+                targetTabId = loadscreenTable;
+                targetTable = loadscreenTable;
+                rowNum = tt.getSheetsLoadscreen().getRowNum().intValue();
+                itemId = tt.getSheetsLoadscreen().getId();
             }
             if (rowNum != null) {
                 rowNum--;

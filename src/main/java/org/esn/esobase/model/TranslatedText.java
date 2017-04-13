@@ -86,6 +86,12 @@ public class TranslatedText extends DAO {
     private GSpreadSheetsNote spreadSheetsNote;
     @ManyToOne
     private GSpreadSheetsAbilityDescription sheetsAbilityDescription;
+    @ManyToOne
+    private GSpreadSheetsCollectible sheetsCollectible;
+    @ManyToOne
+    private GSpreadSheetsCollectibleDescription sheetsCollectibleDescription;
+    @ManyToOne
+    private GSpreadSheetsLoadscreen sheetsLoadscreen;
 
     @Override
     public Long getId() {
@@ -311,6 +317,30 @@ public class TranslatedText extends DAO {
 
     public void setSheetsAbilityDescription(GSpreadSheetsAbilityDescription sheetsAbilityDescription) {
         this.sheetsAbilityDescription = sheetsAbilityDescription;
+    }
+
+    public GSpreadSheetsCollectible getSheetsCollectible() {
+        return sheetsCollectible;
+    }
+
+    public void setSheetsCollectible(GSpreadSheetsCollectible sheetsCollectible) {
+        this.sheetsCollectible = sheetsCollectible;
+    }
+
+    public GSpreadSheetsCollectibleDescription getSheetsCollectibleDescription() {
+        return sheetsCollectibleDescription;
+    }
+
+    public void setSheetsCollectibleDescription(GSpreadSheetsCollectibleDescription sheetsCollectibleDescription) {
+        this.sheetsCollectibleDescription = sheetsCollectibleDescription;
+    }
+
+    public GSpreadSheetsLoadscreen getSheetsLoadscreen() {
+        return sheetsLoadscreen;
+    }
+
+    public void setSheetsLoadscreen(GSpreadSheetsLoadscreen sheetsLoadscreen) {
+        this.sheetsLoadscreen = sheetsLoadscreen;
     }
 
 }

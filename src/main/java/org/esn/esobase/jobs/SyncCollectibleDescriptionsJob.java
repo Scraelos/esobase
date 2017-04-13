@@ -13,10 +13,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
-import org.esn.esobase.data.diffs.LocationsDiff;
 import org.esn.esobase.data.OriginalTextMismatchException;
 import org.esn.esobase.data.SYNC_TYPE;
-import org.esn.esobase.model.GSpreadSheetsLocationName;
+import org.esn.esobase.data.diffs.CollectibleDescriptionsDiff;
+import org.esn.esobase.model.GSpreadSheetsCollectibleDescription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -24,14 +24,14 @@ import org.springframework.scheduling.annotation.Scheduled;
  *
  * @author scraelos
  */
-public class SyncLocationNamesJob {
+public class SyncCollectibleDescriptionsJob {
 
     @Autowired
     private DBService dbService;
     @Autowired
     private GoogleDocsService docsService;
-    private static final Logger LOG = Logger.getLogger(SyncLocationNamesJob.class.getName());
-    private static final String TABLE_NAME = "locations names";
+    private static final Logger LOG = Logger.getLogger(SyncCollectibleDescriptionsJob.class.getName());
+    private static final String TABLE_NAME = "collectible descriptions";
 
     @Scheduled(fixedDelay = 1800000, initialDelay = 2000)
     public void execute() throws OriginalTextMismatchException {
@@ -46,13 +46,13 @@ public class SyncLocationNamesJob {
             hc.addContainerProperty("dbDate", Date.class, null);
             hc.addContainerProperty("syncType", String.class, null);
             LOG.info("loading " + TABLE_NAME);
-            List<GSpreadSheetsLocationName> items = docsService.getLocationsNames();
+            List<GSpreadSheetsCollectibleDescription> items = docsService.getCollectibleDescriptions();
             LOG.info("making diff for " + TABLE_NAME);
-            hc = dbService.getLocationNamesDiff(items, hc);
-            List<LocationsDiff> diffs = (List<LocationsDiff>) hc.getItemIds();
-            List<GSpreadSheetsLocationName> itemsToSh = new ArrayList<>();
-            List<GSpreadSheetsLocationName> itemsToDb = new ArrayList<>();
-            for (LocationsDiff diff : diffs) {
+            hc = dbService.getCollectibleDescriptionsDiff(items, hc);
+            List<CollectibleDescriptionsDiff> diffs = (List<CollectibleDescriptionsDiff>) hc.getItemIds();
+            List<GSpreadSheetsCollectibleDescription> itemsToSh = new ArrayList<>();
+            List<GSpreadSheetsCollectibleDescription> itemsToDb = new ArrayList<>();
+            for (CollectibleDescriptionsDiff diff : diffs) {
                 if (diff.getSyncType() == SYNC_TYPE.TO_SPREADSHEET) {
                     itemsToSh.add(diff.getDbName());
                 } else if (diff.getSyncType() == SYNC_TYPE.TO_DB) {
@@ -60,10 +60,10 @@ public class SyncLocationNamesJob {
                 }
             }
             LOG.log(Level.INFO, "uploading {0}" + " " + TABLE_NAME, itemsToSh.size());
-            docsService.uploadLocationNames(itemsToSh);
+            docsService.uploadCollectibleDescriptions(itemsToSh);
             LOG.log(Level.INFO, "saving to db {0}" + " " + TABLE_NAME, itemsToDb.size());
-            dbService.saveLocationNames(itemsToDb);
-            LOG.info("sync finished for "+TABLE_NAME);
+            dbService.saveCollectibleDescriptions(itemsToDb);
+            LOG.info("sync finished for " + TABLE_NAME);
             hc.removeAllItems();
         } else {
             LOG.info(TABLE_NAME + ": automatic sync disabled");

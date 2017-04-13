@@ -38,7 +38,7 @@ public class SyncNotesJob {
     @Scheduled(fixedDelay = 1800000, initialDelay = 2000)
     public void execute() throws OriginalTextMismatchException {
         if (dbService.getIsAutoSynchronizationEnabled()) {
-            LOG.info("automatic sync enabled");
+            LOG.info(TABLE_NAME+": automatic sync enabled");
             HierarchicalContainer hc = new HierarchicalContainer();
             hc.addContainerProperty("shText", String.class, null);
             hc.addContainerProperty("shNic", String.class, null);
@@ -68,7 +68,7 @@ public class SyncNotesJob {
             LOG.info("sync finished for " + TABLE_NAME);
             hc.removeAllItems();
         } else {
-            LOG.info("automatic sync disabled");
+            LOG.info(TABLE_NAME + ": automatic sync disabled");
         }
 
     }

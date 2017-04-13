@@ -8,7 +8,6 @@ package org.esn.esobase.service;
 import com.vaadin.data.util.HierarchicalContainer;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

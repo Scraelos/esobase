@@ -4,9 +4,12 @@ import org.esn.esobase.jobs.SyncAbilityDescriptionsJob;
 import org.esn.esobase.jobs.SyncAchievementDescriptionsJob;
 import org.esn.esobase.jobs.SyncAchievementsJob;
 import org.esn.esobase.jobs.SyncActivatorsJob;
+import org.esn.esobase.jobs.SyncCollectibleDescriptionsJob;
+import org.esn.esobase.jobs.SyncCollectiblesJob;
 import org.esn.esobase.jobs.SyncItemDescriptionsJob;
 import org.esn.esobase.jobs.SyncItemNamesJob;
 import org.esn.esobase.jobs.SyncJournalEntriesJob;
+import org.esn.esobase.jobs.SyncLoadscreensJob;
 import org.esn.esobase.jobs.SyncLocationNamesJob;
 import org.esn.esobase.jobs.SyncNotesJob;
 import org.esn.esobase.jobs.SyncNpcNamesJob;
@@ -97,5 +100,20 @@ public class JobContext {
     @Bean
     public SyncAbilityDescriptionsJob syncAbilityDescriptionsJob() {
         return new SyncAbilityDescriptionsJob();
+    }
+
+    @Bean
+    public SyncCollectiblesJob syncCollectiblesJob() {
+        return new SyncCollectiblesJob();
+    }
+
+    @Bean
+    public SyncCollectibleDescriptionsJob syncCollectibleDescriptionsJob() {
+        return new SyncCollectibleDescriptionsJob();
+    }
+
+    @Bean
+    public SyncLoadscreensJob syncLoadscreensJob() {
+        return new SyncLoadscreensJob();
     }
 }

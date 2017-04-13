@@ -45,14 +45,20 @@ import javax.persistence.TypedQuery;
 import org.esn.esobase.data.diffs.AbilityDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementsDiff;
+import org.esn.esobase.data.diffs.CollectibleDescriptionsDiff;
+import org.esn.esobase.data.diffs.CollectiblesDiff;
+import org.esn.esobase.data.diffs.LoadscreensDiff;
 import org.esn.esobase.data.diffs.NotesDiff;
 import org.esn.esobase.data.repository.GSpreadSheetsAbilityDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsAchievementDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsAchievementRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsActivatorRepository;
+import org.esn.esobase.data.repository.GSpreadSheetsCollectibleDescriptionRepository;
+import org.esn.esobase.data.repository.GSpreadSheetsCollectibleRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsItemDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsItemNameRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsJournalEntryRepository;
+import org.esn.esobase.data.repository.GSpreadSheetsLoadscreenRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsLocationNameRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsNoteRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsNpcNameRepository;
@@ -69,9 +75,12 @@ import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsCollectible;
+import org.esn.esobase.model.GSpreadSheetsCollectibleDescription;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
+import org.esn.esobase.model.GSpreadSheetsLoadscreen;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNote;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -150,6 +159,12 @@ public class DBService {
     private GSpreadSheetsNoteRepository gSpreadSheetsNoteRepository;
     @Autowired
     private TranslatedTextRepository translatedTextRepository;
+    @Autowired
+    private GSpreadSheetsLoadscreenRepository gSpreadSheetsLoadscreenRepository;
+    @Autowired
+    private GSpreadSheetsCollectibleRepository gSpreadSheetsCollectibleRepository;
+    @Autowired
+    private GSpreadSheetsCollectibleDescriptionRepository gSpreadSheetsCollectibleDescriptionRepository;
 
     public GSpreadSheetsNpcNameRepository getgSpreadSheetsNpcNameRepository() {
         return gSpreadSheetsNpcNameRepository;
@@ -213,6 +228,18 @@ public class DBService {
 
     public TranslatedTextRepository getTranslatedTextRepository() {
         return translatedTextRepository;
+    }
+
+    public GSpreadSheetsLoadscreenRepository getgSpreadSheetsLoadscreenRepository() {
+        return gSpreadSheetsLoadscreenRepository;
+    }
+
+    public GSpreadSheetsCollectibleRepository getgSpreadSheetsCollectibleRepository() {
+        return gSpreadSheetsCollectibleRepository;
+    }
+
+    public GSpreadSheetsCollectibleDescriptionRepository getgSpreadSheetsCollectibleDescriptionRepository() {
+        return gSpreadSheetsCollectibleDescriptionRepository;
     }
 
     @PersistenceContext
@@ -1224,6 +1251,162 @@ public class DBService {
     }
 
     @Transactional
+    public void loadCollectiblesFromSpreadSheet(List<GSpreadSheetsCollectible> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsCollectible.class);
+        Map<String, GSpreadSheetsCollectible> itemMap = new HashMap<>();
+        List<GSpreadSheetsCollectible> allItems = crit.list();
+        for (GSpreadSheetsCollectible item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsCollectible item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "collectible {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsCollectible result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for collectible: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for collectible: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsCollectible item : items) {
+            GSpreadSheetsCollectible result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting collectible for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsCollectible> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsCollectible item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsCollectible item : allItems) {
+            GSpreadSheetsCollectible result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing collectible rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadCollectibleDescriptionsFromSpreadSheet(List<GSpreadSheetsCollectibleDescription> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+        Map<String, GSpreadSheetsCollectibleDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsCollectibleDescription> allItems = crit.list();
+        for (GSpreadSheetsCollectibleDescription item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsCollectibleDescription item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "collectible description {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsCollectibleDescription result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for collectible description: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for collectible description: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsCollectibleDescription item : items) {
+            GSpreadSheetsCollectibleDescription result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting collectible description for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsCollectibleDescription> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsCollectibleDescription item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsCollectibleDescription item : allItems) {
+            GSpreadSheetsCollectibleDescription result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing collectible description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadLoadscreensFromSpreadSheet(List<GSpreadSheetsLoadscreen> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+        Map<String, GSpreadSheetsLoadscreen> itemMap = new HashMap<>();
+        List<GSpreadSheetsLoadscreen> allItems = crit.list();
+        for (GSpreadSheetsLoadscreen item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsLoadscreen item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "loadscreen {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsLoadscreen result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for loadscreen: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for loadscreen: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsLoadscreen item : items) {
+            GSpreadSheetsLoadscreen result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting loadscreen for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsLoadscreen> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsLoadscreen item : items) {
+            spreadSheetItemMap.put(item.getTextEn(), item);
+        }
+        for (GSpreadSheetsLoadscreen item : allItems) {
+            GSpreadSheetsLoadscreen result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing loadscreen rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
     public void loadJournalEntriesFromSpreadSheet(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
@@ -2192,6 +2375,165 @@ public class DBService {
             }
         }
         for (AbilityDescriptionsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getCollectiblesDiff(List<GSpreadSheetsCollectible> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<CollectiblesDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsCollectible.class);
+        Map<Long, GSpreadSheetsCollectible> itemMap = new HashMap<>();
+        List<GSpreadSheetsCollectible> allItems = crit.list();
+        for (GSpreadSheetsCollectible item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsCollectible item : items) {
+            GSpreadSheetsCollectible result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new CollectiblesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new CollectiblesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new CollectiblesDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new CollectiblesDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new CollectiblesDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (CollectiblesDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getCollectibleDescriptionsDiff(List<GSpreadSheetsCollectibleDescription> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<CollectibleDescriptionsDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+        Map<Long, GSpreadSheetsCollectibleDescription> itemMap = new HashMap<>();
+        List<GSpreadSheetsCollectibleDescription> allItems = crit.list();
+        for (GSpreadSheetsCollectibleDescription item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsCollectibleDescription item : items) {
+            GSpreadSheetsCollectibleDescription result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new CollectibleDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new CollectibleDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new CollectibleDescriptionsDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new CollectibleDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new CollectibleDescriptionsDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (CollectibleDescriptionsDiff diff : diffs) {
+            Item item = hc.addItem(diff);
+            item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
+            item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
+            item.getItemProperty("shDate").setValue(diff.getSpreadsheetsName().getChangeTime());
+            item.getItemProperty("dbText").setValue(diff.getDbName().getTextRu());
+            item.getItemProperty("dbNic").setValue(diff.getDbName().getTranslator());
+            item.getItemProperty("dbDate").setValue(diff.getDbName().getChangeTime());
+            item.getItemProperty("syncType").setValue(diff.getSyncType().toString());
+            hc.setChildrenAllowed(item, false);
+        }
+        return hc;
+    }
+
+    @Transactional
+    public HierarchicalContainer getLoadscreensDiff(List<GSpreadSheetsLoadscreen> items, HierarchicalContainer hc) throws OriginalTextMismatchException {
+        if (hc == null) {
+            hc = new HierarchicalContainer();
+            hc.addContainerProperty("shText", String.class, null);
+            hc.addContainerProperty("shNic", String.class, null);
+            hc.addContainerProperty("shDate", Date.class, null);
+            hc.addContainerProperty("dbText", String.class, null);
+            hc.addContainerProperty("dbNic", String.class, null);
+            hc.addContainerProperty("dbDate", Date.class, null);
+        }
+        hc.removeAllItems();
+        List<LoadscreensDiff> diffs = new ArrayList<>();
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+        Map<Long, GSpreadSheetsLoadscreen> itemMap = new HashMap<>();
+        List<GSpreadSheetsLoadscreen> allItems = crit.list();
+        for (GSpreadSheetsLoadscreen item : allItems) {
+            itemMap.put(item.getRowNum(), item);
+        }
+        for (GSpreadSheetsLoadscreen item : items) {
+            GSpreadSheetsLoadscreen result = itemMap.get(item.getRowNum());
+            if (result != null) {
+                if (!item.getTextEn().equals(result.getTextEn())) {
+                    throw new OriginalTextMismatchException(item.getRowNum(), item.getTextEn(), result.getTextEn());
+                }
+                if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().before(result.getChangeTime())) {
+                    diffs.add(new LoadscreensDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (item.getChangeTime() != null && result.getChangeTime() != null && item.getChangeTime().after(result.getChangeTime())) {
+                    diffs.add(new LoadscreensDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() != null && item.getChangeTime() == null) {
+                    diffs.add(new LoadscreensDiff(item, result, SYNC_TYPE.TO_SPREADSHEET));
+                } else if (result.getChangeTime() == null && item.getChangeTime() != null) {
+                    diffs.add(new LoadscreensDiff(item, result, SYNC_TYPE.TO_DB));
+                } else if (result.getChangeTime() == null && item.getChangeTime() == null && (item.getTextRu() != null) && (result.getTextRu() != null) && !item.getTextRu().equals(result.getTextRu())) {
+                    diffs.add(new LoadscreensDiff(item, result, SYNC_TYPE.TO_DB));
+                }
+            }
+        }
+        for (LoadscreensDiff diff : diffs) {
             Item item = hc.addItem(diff);
             item.getItemProperty("shText").setValue(diff.getSpreadsheetsName().getTextRu());
             item.getItemProperty("shNic").setValue(diff.getSpreadsheetsName().getTranslator());
@@ -3258,6 +3600,60 @@ public class DBService {
     }
 
     @Transactional
+    public void saveCollectibles(List<GSpreadSheetsCollectible> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsCollectible item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsCollectible.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsCollectible result = (GSpreadSheetsCollectible) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void saveCollectibleDescriptions(List<GSpreadSheetsCollectibleDescription> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsCollectibleDescription item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsCollectibleDescription result = (GSpreadSheetsCollectibleDescription) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void saveLoadscreens(List<GSpreadSheetsLoadscreen> items) {
+        Session session = (Session) em.getDelegate();
+        for (GSpreadSheetsLoadscreen item : items) {
+            Criteria crit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+            crit.add(Restrictions.eq("rowNum", item.getRowNum()));
+            GSpreadSheetsLoadscreen result = (GSpreadSheetsLoadscreen) crit.uniqueResult();
+            if (result != null) {
+                result.setChangeTime(item.getChangeTime());
+                result.setTextRu(item.getTextRu());
+                result.setTranslator(item.getTranslator());
+                em.merge(result);
+            } else {
+                em.persist(item);
+            }
+        }
+    }
+
+    @Transactional
     public void saveJournalEntries(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
         for (GSpreadSheetsJournalEntry item : items) {
@@ -3374,6 +3770,27 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getSheetsAbilityDescription() != null) {
             GSpreadSheetsAbilityDescription gs = em.find(GSpreadSheetsAbilityDescription.class, entity.getSheetsAbilityDescription().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSheetsCollectible() != null) {
+            GSpreadSheetsCollectible gs = em.find(GSpreadSheetsCollectible.class, entity.getSheetsCollectible().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSheetsCollectibleDescription() != null) {
+            GSpreadSheetsCollectibleDescription gs = em.find(GSpreadSheetsCollectibleDescription.class, entity.getSheetsCollectibleDescription().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSheetsLoadscreen() != null) {
+            GSpreadSheetsLoadscreen gs = em.find(GSpreadSheetsLoadscreen.class, entity.getSheetsLoadscreen().getId());
             gs.setTextRu(entity.getText());
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
@@ -3918,6 +4335,39 @@ public class DBService {
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание способности");
         }
+        Criteria collectibleCrit = session.createCriteria(GSpreadSheetsCollectible.class);
+        collectibleCrit.add(searchTerms);
+        List<GSpreadSheetsCollectible> collectibleList = collectibleCrit.list();
+        for (GSpreadSheetsCollectible i : collectibleList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Коллекционный предмет");
+        }
+        Criteria collectibleDescriptionCrit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+        collectibleDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsCollectibleDescription> collectibleDescriptionList = collectibleDescriptionCrit.list();
+        for (GSpreadSheetsCollectibleDescription i : collectibleDescriptionList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Описание коллекционного предмета");
+        }
+        Criteria loadscreenCrit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+        loadscreenCrit.add(searchTerms);
+        List<GSpreadSheetsLoadscreen> loadscreenList = loadscreenCrit.list();
+        for (GSpreadSheetsLoadscreen i : loadscreenList) {
+            Item item = hc.addItem(i);
+            item.getItemProperty("textEn").setValue(i.getTextEn());
+            item.getItemProperty("textRu").setValue(i.getTextRu());
+            item.getItemProperty("weight").setValue(i.getWeight());
+            item.getItemProperty("translator").setValue(i.getTranslator());
+            item.getItemProperty("catalogType").setValue("Загрузочный экран");
+        }
         Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
         searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
@@ -4020,6 +4470,21 @@ public class DBService {
         abilityDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionCrit.list();
         result.addAll(abilityDescriptionList);
+
+        Criteria collectibleCrit = session.createCriteria(GSpreadSheetsCollectible.class);
+        collectibleCrit.add(searchTerms);
+        List<GSpreadSheetsCollectible> collectibleList = collectibleCrit.list();
+        result.addAll(collectibleList);
+
+        Criteria collectibleDescriptionCrit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+        collectibleDescriptionCrit.add(searchTerms);
+        List<GSpreadSheetsCollectibleDescription> collectibleDescriptionList = collectibleDescriptionCrit.list();
+        result.addAll(collectibleDescriptionList);
+
+        Criteria loadscreenCrit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+        loadscreenCrit.add(searchTerms);
+        List<GSpreadSheetsLoadscreen> loadscreenList = loadscreenCrit.list();
+        result.addAll(loadscreenList);
 
         Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
         searchTermitems = new ArrayList<>();
@@ -4164,7 +4629,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote) || (item.getEntity() instanceof GSpreadSheetsAbilityDescription)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote) || (item.getEntity() instanceof GSpreadSheetsAbilityDescription) || (item.getEntity() instanceof GSpreadSheetsCollectible) || (item.getEntity() instanceof GSpreadSheetsCollectibleDescription) || (item.getEntity() instanceof GSpreadSheetsLoadscreen)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             String textRu = (String) item.getItemProperty("textRu").getValue();
@@ -4262,6 +4727,18 @@ public class DBService {
                 ((GSpreadSheetsAbilityDescription) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsAbilityDescription) itemId).setTextRu(textRu);
                 ((GSpreadSheetsAbilityDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsCollectible) {
+                ((GSpreadSheetsCollectible) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsCollectible) itemId).setTextRu(textRu);
+                ((GSpreadSheetsCollectible) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsCollectibleDescription) {
+                ((GSpreadSheetsCollectibleDescription) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsCollectibleDescription) itemId).setTextRu(textRu);
+                ((GSpreadSheetsCollectibleDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsLoadscreen) {
+                ((GSpreadSheetsLoadscreen) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsLoadscreen) itemId).setTextRu(textRu);
+                ((GSpreadSheetsLoadscreen) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
             } else if (itemId instanceof GSpreadSheetsJournalEntry) {
                 ((GSpreadSheetsJournalEntry) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsJournalEntry) itemId).setTextRu(textRu);
@@ -4332,6 +4809,9 @@ public class DBService {
                 + "select 'Перевод целей квестов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsquestdirection where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsquestdirection) as qres union all\n"
                 + "select 'Перевод названий предметов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsitemname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsitemname) as qres union all\n"
                 + "select 'Перевод описаний предметов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsitemdescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsitemdescription) as qres union all\n"
+                + "select 'Перевод названий коллекционных предметов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetscollectible where texten!=textru union all select null as translated,count(*) as total from gspreadsheetscollectible) as qres union all\n"
+                + "select 'Перевод описаний коллекционных предметов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetscollectibledescription where texten!=textru union all select null as translated,count(*) as total from gspreadsheetscollectibledescription) as qres union all\n"
+                + "select 'Перевод загрузочных экранов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsloadscreen where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsloadscreen) as qres union all\n"
                 + "select 'Перевод записей в журнале', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsjournalentry where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsjournalentry) as qres union all\n"
                 + "select 'Перевод реплик NPC', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsnpcphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsnpcphrase) as qres union all\n"
                 + "select 'Перевод реплик игрока', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsplayerphrase where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsplayerphrase) as qres;");
@@ -4744,6 +5224,51 @@ public class DBService {
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
             }
         }
+
+        TypedQuery<GSpreadSheetsCollectible> collectibleQuery = em.createQuery("select a from GSpreadSheetsCollectible a where aId is null order by changeTime", GSpreadSheetsCollectible.class);
+        //abilityDescriptionQuery.setMaxResults(100);
+        List<GSpreadSheetsCollectible> collectibleList = collectibleQuery.getResultList();
+        for (GSpreadSheetsCollectible item : collectibleList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{18173141L,70328405L,160914197L,245765621L,213229525L,204530069L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+
+        TypedQuery<GSpreadSheetsCollectibleDescription> collectibleDescriptionQuery = em.createQuery("select a from GSpreadSheetsCollectibleDescription a where aId is null order by changeTime", GSpreadSheetsCollectibleDescription.class);
+        //abilityDescriptionQuery.setMaxResults(100);
+        List<GSpreadSheetsCollectibleDescription> collectibleDescriptionList = collectibleDescriptionQuery.getResultList();
+        for (GSpreadSheetsCollectibleDescription item : collectibleDescriptionList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{211640654L,263796174L,86917166L,69169806L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
+
+        TypedQuery<GSpreadSheetsLoadscreen> loadscreenQuery = em.createQuery("select a from GSpreadSheetsLoadscreen a where aId is null order by changeTime", GSpreadSheetsLoadscreen.class);
+        //abilityDescriptionQuery.setMaxResults(100);
+        List<GSpreadSheetsLoadscreen> loadscreenList = loadscreenQuery.getResultList();
+        for (GSpreadSheetsLoadscreen item : loadscreenList) {
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{70901198L,153349653L}));
+            rawQ.setParameter("cId", item.getWeight().longValue());
+            List<EsoRawString> rList = rawQ.getResultList();
+            if (rList != null && !rList.isEmpty()) {
+                EsoRawString s = rList.get(0);
+                setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+            }
+        }
     }
 
     @Transactional
@@ -5084,6 +5609,51 @@ public class DBService {
             if (!gTextEn.equals(eTextEn)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
                 Query updateQ = em.createNativeQuery("update gspreadsheetsabilitydescription set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetCollectiblesQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetscollectible g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetCollectiblesQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetscollectible set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetCollectibleDescriptionsQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetscollectibledescription g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetCollectibleDescriptionsQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetscollectibledescription set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextEn);
+                updateQ.executeUpdate();
+            }
+        }
+        Query gspreadsheetLoadscreensQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru from gspreadsheetsloadscreen g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = gspreadsheetLoadscreensQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]).replace("\n", "$");
+            if (!gTextEn.equals(eTextEn)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update gspreadsheetsloadscreen set textEn=:textEn,textRu=:textRu,translator=null,changeTime=null where id=:id");
                 updateQ.setParameter("id", id);
                 updateQ.setParameter("textEn", eTextEn);
                 updateQ.setParameter("textRu", eTextEn);

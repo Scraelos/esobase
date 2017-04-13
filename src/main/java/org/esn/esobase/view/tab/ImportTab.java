@@ -36,9 +36,12 @@ import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsCollectible;
+import org.esn.esobase.model.GSpreadSheetsCollectibleDescription;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsJournalEntry;
+import org.esn.esobase.model.GSpreadSheetsLoadscreen;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNote;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
@@ -78,6 +81,9 @@ public class ImportTab extends VerticalLayout {
     private Button importAchievementDescriptionsFromG;
     private Button importNotesFromG;
     private Button importAbilityDescriptionsFromG;
+    private Button importCollectiblesFromG;
+    private Button importCollectibleDescriptionsFromG;
+    private Button importLoadscreensFromG;
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
@@ -273,6 +279,42 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importAbilityDescriptionsFromG);
+            
+            importCollectiblesFromG = new Button("Импорт коллекционных предметов из гугл-таблиц");
+            importCollectiblesFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsCollectible> items = docsService.getCollectibles();
+                    service.loadCollectiblesFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importCollectiblesFromG);
+            
+            importCollectibleDescriptionsFromG = new Button("Импорт описаний коллекционных предметов из гугл-таблиц");
+            importCollectibleDescriptionsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsCollectibleDescription> items = docsService.getCollectibleDescriptions();
+                    service.loadCollectibleDescriptionsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importCollectibleDescriptionsFromG);
+            
+            importLoadscreensFromG = new Button("Импорт загрузочных экранов из гугл-таблиц");
+            importLoadscreensFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsLoadscreen> items = docsService.getLoadscreens();
+                    service.loadLoadscreensFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importLoadscreensFromG);
 
             importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
             importNpcNamesFromG.addClickListener(new Button.ClickListener() {
@@ -357,7 +399,7 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    for (int i = 0; i < 100; i++) {
+                    for (int i = 0; i < 1; i++) {
                         service.assignSpreadSheetRowsToRawStrings();
                     }
 
@@ -369,7 +411,7 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    for (int i = 0; i < 100; i++) {
+                    for (int i = 0; i < 1; i++) {
                         service.updateGspreadSheetTextEn();
                     }
 

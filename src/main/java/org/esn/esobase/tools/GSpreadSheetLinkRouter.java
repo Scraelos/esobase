@@ -10,8 +10,12 @@ import java.util.Map;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.esn.esobase.model.GSpreadSheetsActivator;
+import org.esn.esobase.model.GSpreadSheetsCollectible;
+import org.esn.esobase.model.GSpreadSheetsCollectibleDescription;
 import org.esn.esobase.model.GSpreadSheetsItemDescription;
 import org.esn.esobase.model.GSpreadSheetsItemName;
+import org.esn.esobase.model.GSpreadSheetsLoadscreen;
+import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
@@ -46,7 +50,7 @@ public class GSpreadSheetLinkRouter {
         //
         ////загрузочные экраны: описания - названия
         //links[70901198] = 162658389;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(70901198L, new RouteEntry(162658389L, GSpreadSheetsLocationName.class));
         //
         ////задания: названия - описания
         //links[52420949] = 265851556;
@@ -58,29 +62,31 @@ public class GSpreadSheetLinkRouter {
         //
         ////коллекционные предметы: названия - описания
         //links[18173141] = 211640654;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(18173141L, new RouteEntry(211640654L, GSpreadSheetsCollectibleDescription.class));
         //links[70328405] = 263796174;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(70328405L, new RouteEntry(263796174L, GSpreadSheetsCollectibleDescription.class));
         //links[160914197] = 69169806;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(160914197L, new RouteEntry(69169806L, GSpreadSheetsCollectibleDescription.class));
         //links[245765621] = 86917166;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(245765621L, new RouteEntry(86917166L, GSpreadSheetsCollectibleDescription.class));
         //links[213229525] = 121484878;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(213229525L, new RouteEntry(121484878L, GSpreadSheetsCollectibleDescription.class));
         //
         ////коллекционные предметы: описания - названия
         //links[211640654] = 18173141;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(211640654L, new RouteEntry(18173141L, GSpreadSheetsCollectible.class));
         //links[263796174] = 70328405;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(263796174L, new RouteEntry(70328405L, GSpreadSheetsCollectible.class));
         //links[69169806] = 160914197;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(69169806L, new RouteEntry(160914197L, GSpreadSheetsCollectible.class));
         //links[86917166] = 245765621;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(86917166L, new RouteEntry(245765621L, GSpreadSheetsCollectible.class));
+        
+        routeMap.put(121484878L, new RouteEntry(213229525L, GSpreadSheetsCollectible.class));
         //
         ////локации: названия - описания
         //links[162658389] = 70901198;
-        //routeMap.put(null, new RouteEntry(null, null));
+        routeMap.put(162658389L, new RouteEntry(70901198L, GSpreadSheetsLoadscreen.class));
         //
         ////письма: описания - названия
         //links[219317028] = 191189508;
