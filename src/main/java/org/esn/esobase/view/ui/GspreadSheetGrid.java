@@ -51,49 +51,6 @@ public class GspreadSheetGrid extends Grid implements RefreshableGrid, DetailsGe
         setStyleName("my-grid");
         setCellStyleGenerator(new CustomCellStyleGenerator());
         setSelectionMode(Grid.SelectionMode.NONE);
-        /*container.addGeneratedProperty("mtextEn", new PropertyValueGenerator() {
-
-            @Override
-            public Object getValue(Item item, Object itemId, Object propertyId) {
-                Panel p = new Panel();
-                p.setSizeFull();
-                TextArea t = new TextArea();
-                t.setSizeFull();
-                t.setRows(4);
-                t.setValue((String) item.getItemProperty("textEn").getValue());
-                t.addStyleName(ValoTheme.TEXTAREA_BORDERLESS);
-                t.setReadOnly(true);
-                p.setContent(t);
-                return p;
-            }
-
-            @Override
-            public Class getType() {
-                return Label.class;
-            }
-        });
-        container.addGeneratedProperty("mtextRu", new PropertyValueGenerator() {
-
-            @Override
-            public Object getValue(Item item, Object itemId, Object propertyId) {
-                Panel p = new Panel();
-                p.setSizeFull();
-                TextArea t = new TextArea();
-                t.setSizeFull();
-                t.setRows(4);
-                t.setValue((String) item.getItemProperty("textRu").getValue());
-                t.addStyleName(ValoTheme.TEXTAREA_BORDERLESS);
-                t.setReadOnly(true);
-                p.setContent(t);
-                return p;
-            }
-
-            @Override
-            public Class getType() {
-                return Label.class;
-            }
-        });
-                */
         setContainerDataSource(container);
         setDetailsGenerator(this);
         addItemClickListener(this);

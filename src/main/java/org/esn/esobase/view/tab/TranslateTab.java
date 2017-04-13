@@ -54,9 +54,11 @@ public class TranslateTab extends VerticalLayout {
     private HorizontalLayout npcListlayout;
     private VerticalLayout npcContentLayout;
     private ComboBox locationTable;
+    private ComboBox subLocationTable;
     private ComboBox questTable;
     private ComboBox npcTable;
     private BeanItemContainer<Location> locationContainer;
+    private BeanItemContainer<Location> subLocationContainer;
     private BeanItemContainer<Quest> questContainer;
     private BeanItemContainer<Npc> npcContainer;
     private TabSheet npcTabSheet;
@@ -90,8 +92,7 @@ public class TranslateTab extends VerticalLayout {
         SubtitleColumnGenerator subtitleColumnGenerator = new SubtitleColumnGenerator();
         TranslationColumnGenerator translationColumnGenerator = new TranslationColumnGenerator();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
-        this.setWidth(100f, Unit.PERCENTAGE);
-        this.setHeight(100f, Unit.PERCENTAGE);
+        this.setSizeFull();
         this.service = service;
         npcListlayout = new HorizontalLayout();
         npcListlayout.setSizeFull();
@@ -109,6 +110,15 @@ public class TranslateTab extends VerticalLayout {
         locationTable.addValueChangeListener(filterChangeListener);
         locationTable.setContainerDataSource(locationContainer);
         locationTable.setFilteringMode(FilteringMode.CONTAINS);
+
+        subLocationContainer = new BeanItemContainer<>(Location.class);
+        subLocationTable = new ComboBox("Сублокация");
+        subLocationTable.setPageLength(15);
+
+        subLocationTable.setWidth(100f, Unit.PERCENTAGE);
+        subLocationTable.addValueChangeListener(filterChangeListener);
+        subLocationTable.setContainerDataSource(subLocationContainer);
+        subLocationTable.setFilteringMode(FilteringMode.CONTAINS);
         questContainer = new BeanItemContainer<>(Quest.class);
         questTable = new ComboBox("Квест");
         questTable.setPageLength(15);
@@ -122,10 +132,11 @@ public class TranslateTab extends VerticalLayout {
         npcTable.setContainerDataSource(npcContainer);
         npcContainer.addNestedContainerProperty("location.name");
         npcContainer.addNestedContainerProperty("location.nameRu");
+        npcContainer.addNestedContainerProperty("location.parentLocation");
 
-        FormLayout locationAndNpc = new FormLayout(questTable, locationTable, npcTable);
+        FormLayout locationAndNpc = new FormLayout(questTable, locationTable, subLocationTable, npcTable);
         locationAndNpc.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
-        locationAndNpc.setWidth(95f, Unit.PERCENTAGE);
+        locationAndNpc.setSizeFull();
 
         npcListlayout.addComponent(locationAndNpc);
 
@@ -176,7 +187,7 @@ public class TranslateTab extends VerticalLayout {
         });
         FormLayout questAndWithNewTranslations = new FormLayout(translateStatus, translatorBox, checkBoxlayout);
         questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
-        questAndWithNewTranslations.setWidth(95f, Unit.PERCENTAGE);
+        questAndWithNewTranslations.setSizeFull();
         npcListlayout.addComponent(questAndWithNewTranslations);
         npcListlayout.addComponent(refreshButton);
         npcListlayout.setExpandRatio(locationAndNpc, 0.4f);
@@ -253,8 +264,8 @@ public class TranslateTab extends VerticalLayout {
         npcContentLayout.addComponent(npcTabSheet);
         this.addComponent(npcListlayout);
         this.addComponent(npcContentLayout);
-        this.npcListlayout.setHeight(72f, Unit.PIXELS);
-        this.setExpandRatio(npcContentLayout, 20f);
+        this.npcListlayout.setHeight(105f, Unit.PIXELS);
+        this.setExpandRatio(npcContentLayout, 1f);
         LoadFilters();
     }
 
@@ -263,11 +274,22 @@ public class TranslateTab extends VerticalLayout {
         npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
         List<Location> locations = new ArrayList<>();
         for (Npc npc : npcContainer.getItemIds()) {
-            locations.add(npc.getLocation());
+            if (npc.getLocation().getParentLocation() == null) {
+                locations.add(npc.getLocation());
+            }
         }
         locationContainer.removeAllItems();
         locationContainer.addAll(locations);
         locationContainer.sort(new Object[]{"name"}, new boolean[]{true});
+        List<Location> subLocations = new ArrayList<>();
+        for (Npc npc : npcContainer.getItemIds()) {
+            if (npc.getLocation().getParentLocation() != null) {
+                subLocations.add(npc.getLocation());
+            }
+        }
+        subLocationContainer.removeAllItems();
+        subLocationContainer.addAll(subLocations);
+        subLocationContainer.sort(new Object[]{"name"}, new boolean[]{true});
         questContainer = service.loadBeanItems(questContainer);
         questContainer.sort(new Object[]{"name"}, new boolean[]{true});
 
@@ -547,8 +569,14 @@ public class TranslateTab extends VerticalLayout {
         public void valueChange(Property.ValueChangeEvent event) {
 
             npcContainer.removeAllContainerFilters();
+            if (subLocationTable.getValue() != null) {
+                npcContainer.addContainerFilter(new Compare.Equal("location", subLocationTable.getValue()));
+            } else if (locationTable.getValue() != null) {
+                npcContainer.addContainerFilter(new Or(new Compare.Equal("location", locationTable.getValue()), new Compare.Equal("location.parentLocation", locationTable.getValue())));
+            }
             if (locationTable.getValue() != null) {
-                npcContainer.addContainerFilter(new Compare.Equal("location", locationTable.getValue()));
+                subLocationContainer.removeAllContainerFilters();
+                subLocationContainer.addContainerFilter(new Compare.Equal("parentLocation", locationTable.getValue()));
             }
             if (questTable.getValue() != null) {
                 List<Filter> equals = new ArrayList<>();

@@ -97,10 +97,10 @@ public class ImportTab extends VerticalLayout {
         ConversationsReceiver receiver = new ConversationsReceiver(service);
 
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
-        upload = new Upload("Загрузите файл Conversations.lua", receiver);
-        upload.addSucceededListener(receiver);
-        upload.setImmediate(true);
-        this.addComponent(upload);
+            upload = new Upload("Загрузите файл Conversations.lua", receiver);
+            upload.addSucceededListener(receiver);
+            upload.setImmediate(true);
+            this.addComponent(upload);
         }
 
         NewConversationsReceiver newReceiver = new NewConversationsReceiver(service);
@@ -632,8 +632,14 @@ public class ImportTab extends VerticalLayout {
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
-            service.newFormatImportNpcs(jsonFromLua);
-            service.newFormatImportSubtitles(jsonFromLua);
+            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")) {
+                service.newFormatImportNpcsWithSublocations(jsonFromLua);
+                service.newFormatImportSubtitlesWithSublocations(jsonFromLua);
+            } else {
+                service.newFormatImportNpcs(jsonFromLua);
+                service.newFormatImportSubtitles(jsonFromLua);
+            }
+
         }
 
     }

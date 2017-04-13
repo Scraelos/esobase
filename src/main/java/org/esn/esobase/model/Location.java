@@ -40,6 +40,10 @@ public class Location extends DAO {
     private BigDecimal progress;
     @ManyToOne
     private GSpreadSheetsLocationName sheetsLocationName;
+    @ManyToOne
+    private Location parentLocation;
+    @OneToMany(mappedBy = "parentLocation")
+    private List<Location> subLocations;
 
     public Location() {
     }
@@ -98,6 +102,22 @@ public class Location extends DAO {
 
     public void setSheetsLocationName(GSpreadSheetsLocationName sheetsLocationName) {
         this.sheetsLocationName = sheetsLocationName;
+    }
+
+    public Location getParentLocation() {
+        return parentLocation;
+    }
+
+    public void setParentLocation(Location parentLocation) {
+        this.parentLocation = parentLocation;
+    }
+
+    public List<Location> getSubLocations() {
+        return subLocations;
+    }
+
+    public void setSubLocations(List<Location> subLocations) {
+        this.subLocations = subLocations;
     }
 
     @Override

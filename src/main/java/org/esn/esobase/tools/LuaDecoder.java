@@ -182,5 +182,10 @@ public class LuaDecoder {
         result = new JSONObject(jsonString);
         return result;
     }
+    
+    public static String getFileheader(String source) {
+        String[] lines = source.split("\n");
+        return lines[0].replace("\r", "");
+    }
 
 }
