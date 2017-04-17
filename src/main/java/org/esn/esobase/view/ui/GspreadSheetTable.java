@@ -5,19 +5,19 @@
  */
 package org.esn.esobase.view.ui;
 
-import com.vaadin.data.Container;
-import com.vaadin.shared.ui.grid.ScrollDestination;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.shared.ui.grid.ScrollDestination;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Field;
-import com.vaadin.ui.TableFieldFactory;
-import com.vaadin.ui.TextArea;
+import com.vaadin.v7.ui.Field;
+import com.vaadin.v7.ui.TableFieldFactory;
+import com.vaadin.v7.ui.TextArea;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.vaadin.viritin.SortableLazyList;
-import org.vaadin.viritin.fields.MTable;
-import org.vaadin.viritin.grid.GeneratedPropertyListContainer;
+import org.vaadin.viritin.v7.SortableLazyList;
+import org.vaadin.viritin.v7.fields.MTable;
+import org.vaadin.viritin.v7.grid.GeneratedPropertyListContainer;
 
 /**
  *

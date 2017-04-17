@@ -5,7 +5,7 @@
  */
 package org.esn.esobase.jobs;
 
-import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.v7.data.util.HierarchicalContainer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

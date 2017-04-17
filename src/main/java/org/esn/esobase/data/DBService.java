@@ -16,12 +16,9 @@ import org.esn.esobase.data.diffs.QuestNamesDiff;
 import org.esn.esobase.data.diffs.ItemDescriptionsDiff;
 import org.esn.esobase.data.diffs.JournalEntriesDiff;
 import org.esn.esobase.data.diffs.PlayerPhraseDiff;
-import com.vaadin.addon.jpacontainer.EntityItem;
-import com.vaadin.addon.jpacontainer.JPAContainer;
-import com.vaadin.addon.jpacontainer.JPAContainerFactory;
-import com.vaadin.data.Item;
-import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.v7.data.util.HierarchicalContainer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -4620,60 +4617,6 @@ public class DBService {
         String hashedPassword = passwordEncoder.encode(newPassword);
         a.setPassword(hashedPassword);
         em.merge(a);
-    }
-
-    @Transactional
-    public JPAContainer getJPAContainerContainerForClass(Class c) {
-        return JPAContainerFactory.makeBatchable(c, em);
-    }
-
-    @Transactional
-    public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote) || (item.getEntity() instanceof GSpreadSheetsAbilityDescription) || (item.getEntity() instanceof GSpreadSheetsCollectible) || (item.getEntity() instanceof GSpreadSheetsCollectibleDescription) || (item.getEntity() instanceof GSpreadSheetsLoadscreen)) {
-            item.getItemProperty("changeTime").setValue(new Date());
-            item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
-            String textRu = (String) item.getItemProperty("textRu").getValue();
-            textRu = textRu.trim().replace("\n", "$").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ");
-            item.getItemProperty("textRu").setValue(textRu);
-            em.merge(item.getEntity());
-            if (item.getEntity() instanceof GSpreadSheetsLocationName) {
-                GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) item.getEntity();
-                Session session = (Session) em.getDelegate();
-                Criteria crit = session.createCriteria(Location.class);
-                crit.add(Restrictions.ilike("name", locationName.getTextEn()));
-                List<Location> list = crit.list();
-                for (Location l : list) {
-                    l.setNameRu(locationName.getTextRu());
-                    em.merge(l);
-                }
-            }
-            if (item.getEntity() instanceof GSpreadSheetsQuestName) {
-                GSpreadSheetsQuestName questName = (GSpreadSheetsQuestName) item.getEntity();
-                Session session = (Session) em.getDelegate();
-                Criteria crit = session.createCriteria(Quest.class);
-                crit.add(Restrictions.ilike("name", questName.getTextEn()));
-                List<Quest> list = crit.list();
-                for (Quest q : list) {
-                    q.setNameRu(questName.getTextRu());
-                    em.merge(q);
-                }
-            }
-            if (item.getEntity() instanceof GSpreadSheetsNpcName) {
-                GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) item.getEntity();
-                Session session = (Session) em.getDelegate();
-                Criteria crit = session.createCriteria(Npc.class);
-                crit.add(Restrictions.ilike("name", npcName.getTextEn()));
-                List<Npc> list = crit.list();
-                for (Npc n : list) {
-                    if (n.getSex() == null || n.getSex() == NPC_SEX.U) {
-                        n.setSex(npcName.getSex());
-                    }
-                    n.setName(npcName.getTextEn());
-                    n.setNameRu(npcName.getTextRu());
-                    em.merge(n);
-                }
-            }
-        }
     }
 
     @Transactional

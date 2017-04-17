@@ -9,11 +9,11 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
+import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 import com.vaadin.ui.MenuBar.Command;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import ru.xpoft.vaadin.VaadinView;
 
 import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
@@ -37,10 +37,8 @@ import org.springframework.security.core.userdetails.User;
 /**
  * @author xpoft
  */
-@Component
-@Scope("prototype")
-@VaadinView(MainView.NAME)
-public class MainView extends Panel implements View, Command {
+@SpringView(name = MainView.NAME)
+public class MainView extends CustomComponent implements View, Command {
 
     @Autowired
     private DBService service;
@@ -124,7 +122,7 @@ public class MainView extends Panel implements View, Command {
         layout.setExpandRatio(tabs, 40f);
         buildTabs();
 
-        setContent(layout);
+        setCompositionRoot(layout);
 
     }
 
@@ -172,6 +170,27 @@ public class MainView extends Panel implements View, Command {
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
+        setSizeFull();
+        this.setHeight(100f, Unit.PERCENTAGE);
+        Page.Styles styles = Page.getCurrent().getStyles();
+        styles.add(".v-label {\n"
+                + "    white-space: pre-line;\n"
+                + "    overflow: hidden;\n"
+                + "}"+
+                ".my-grid .v-grid-body .v-grid-cell { height: 100px; }");
+        VerticalLayout layout = new VerticalLayout();
+        layout.setHeight(100f, Unit.PERCENTAGE);
+        layout.setSpacing(true);
+        layout.setMargin(true);
+        layout.addComponent(headerLayout);
+        buildHeader();
+        layout.addComponent(mainMenu);
+        buildMenu();
+        layout.addComponent(tabs);
+        layout.setExpandRatio(tabs, 40f);
+        buildTabs();
+
+        setCompositionRoot(layout);
         User principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         loginLabel.setCaption(principal.getUsername());
     }

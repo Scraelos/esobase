@@ -5,7 +5,7 @@
  */
 package org.esn.esobase.service;
 
-import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.v7.data.util.HierarchicalContainer;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletConfig;

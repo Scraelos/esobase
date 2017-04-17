@@ -5,9 +5,9 @@
     <display-name>ESOBase</display-name>
 
     <!-- Spring -->
-    <listener>
+    <!--<listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-    </listener>
+    </listener>-->
     <listener>
         <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
     </listener>
@@ -17,23 +17,20 @@
     </context-param>
 
     <!-- Vaadin servlet -->
-    <servlet>
+    <!--<servlet>
         <servlet-name>ESOBase</servlet-name>
-        <servlet-class>ru.xpoft.vaadin.SpringVaadinServlet</servlet-class>
+        <servlet-class>com.vaadin.spring.server.SpringVaadinServlet</servlet-class>
         <init-param>
-            <param-name>beanName</param-name>
-            <param-value>esoBaseUI</param-value>
-        </init-param>
-        <init-param>
-            <param-name>systemMessagesBeanName</param-name>
-            <param-value>DEFAULT</param-value>
+            <param-name>application</param-name>
+            <param-value>org.esn.esobase.EsoBaseUI</param-value>
         </init-param>
     </servlet>
+    
     <servlet-mapping>
         <servlet-name>ESOBase</servlet-name>
         <url-pattern>/*</url-pattern>
         <url-pattern>/VAADIN/*</url-pattern>
-    </servlet-mapping>
+    </servlet-mapping>-->
 
     
 

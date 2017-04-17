@@ -14,8 +14,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>4.1.9.RELEASE</spring.version>
         <spring.security.version>3.2.5.RELEASE</spring.security.version>
-        <vaadin.version>7.7.8</vaadin.version>
-        <vaadin.plugin.version>7.7.8</vaadin.plugin.version>
+        <vaadin.version>8.0.5</vaadin.version>
+        <vaadin.plugin.version>8.0.5</vaadin.plugin.version>
         <spring.vaadin.version>3.2</spring.vaadin.version>
         <hibernate.version>4.3.11.Final</hibernate.version>
     </properties>
@@ -55,17 +55,17 @@
         <!-- Vaadin -->
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-server</artifactId>
+            <artifactId>vaadin-compatibility-server</artifactId>
             <version>${vaadin.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-client-compiled</artifactId>
+            <artifactId>vaadin-compatibility-client-compiled</artifactId>
             <version>${vaadin.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-client</artifactId>
+            <artifactId>vaadin-compatibility-client</artifactId>
             <version>${vaadin.version}</version>
         </dependency>
         <dependency>
@@ -81,9 +81,9 @@
 
         <!-- Spring Vaadin Integration -->
         <dependency>
-            <groupId>ru.xpoft.vaadin</groupId>
-            <artifactId>spring-vaadin-integration</artifactId>
-            <version>${spring.vaadin.version}</version>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring</artifactId>
+            <version>2.0.1</version>
         </dependency>
 
         <!-- Logging -->
@@ -266,11 +266,6 @@
             <version>v2-rev70-1.14.1-beta</version>
         </dependency>
         <dependency>
-            <groupId>com.vaadin.addon</groupId>
-            <artifactId>jpacontainer</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>3.13</version>
@@ -284,12 +279,12 @@
         <dependency>
             <groupId>de.datenhahn.vaadin</groupId>
             <artifactId>componentrenderer</artifactId>
-            <version>1.0.3</version>
+            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.vaadin</groupId>
             <artifactId>viritin</artifactId>
-            <version>1.61</version>
+            <version>2.0.beta1</version>
             <type>jar</type>
         </dependency>
     </dependencies>
@@ -344,7 +339,7 @@
                 <artifactId>vaadin-maven-plugin</artifactId>
                 <version>${vaadin.plugin.version}</version>
                 <configuration>
-                    <extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
+                    <extraJvmArgs>-Xmx1G -Xss1024k</extraJvmArgs>
                     <!-- <runTarget>mobilemail</runTarget> -->
                     <!-- We are doing "inplace" but into subdir VAADIN/widgetsets. This 
                     way compatible with Vaadin eclipse plugin. -->

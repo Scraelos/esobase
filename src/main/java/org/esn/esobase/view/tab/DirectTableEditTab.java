@@ -5,36 +5,34 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.addon.jpacontainer.EntityItem;
-import com.vaadin.addon.jpacontainer.JPAContainer;
-import com.vaadin.data.Item;
-import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.data.util.PropertyValueGenerator;
-import com.vaadin.event.FieldEvents;
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.data.util.PropertyValueGenerator;
+import com.vaadin.v7.event.FieldEvents;
+import com.vaadin.v7.event.ItemClickEvent;
+import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
-import com.vaadin.shared.ui.combobox.FilteringMode;
-import com.vaadin.shared.ui.grid.ScrollDestination;
-import com.vaadin.ui.AbstractTextField;
+import com.vaadin.v7.shared.ui.combobox.FilteringMode;
+import com.vaadin.v7.shared.ui.grid.ScrollDestination;
+import com.vaadin.v7.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
+import com.vaadin.v7.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnGenerator;
-import com.vaadin.ui.TextArea;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.ColumnGenerator;
+import com.vaadin.v7.ui.TextArea;
+import com.vaadin.v7.ui.TextField;
+import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -74,9 +72,9 @@ import org.esn.esobase.view.ui.GspreadSheetTable;
 import org.esn.esobase.view.ui.RefreshableGrid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.vaadin.viritin.SortableLazyList;
-import org.vaadin.viritin.grid.GeneratedPropertyListContainer;
-import org.vaadin.viritin.grid.MGrid;
+import org.vaadin.viritin.v7.SortableLazyList;
+import org.vaadin.viritin.v7.grid.GeneratedPropertyListContainer;
+import org.vaadin.viritin.v7.grid.MGrid;
 
 /**
  *
@@ -149,7 +147,6 @@ public class DirectTableEditTab extends VerticalLayout {
     private GspreadSheetTable loadscreenTable;
     private GeneratedPropertyListContainer<GSpreadSheetsLoadscreen> loadscreenContainer;
 
-    private LinkedItemColumnGenerator linkedItemColumnGenerator;
     private LinkedItemClickListener linkedItemClickListener;
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
@@ -166,7 +163,6 @@ public class DirectTableEditTab extends VerticalLayout {
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
         this.setSizeFull();
-        linkedItemColumnGenerator = new LinkedItemColumnGenerator();
         linkedItemClickListener = new LinkedItemClickListener();
         searchTabs = new TabSheet();
         searchTabs.setSizeFull();
@@ -691,26 +687,6 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public Class<Component> getType() {
             return Component.class;
-        }
-
-    }
-
-    private class LinkedItemColumnGenerator implements Table.ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            EntityItem item = (EntityItem) source.getContainerDataSource().getItem(itemId);
-            GSpreadSheetEntity entity = (GSpreadSheetEntity) item.getEntity();
-            GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(entity.getaId());
-            if (route != null) {
-                Button b = new Button();
-                b.setIcon(FontAwesome.LINK);
-                b.setDescription("Перейти к связанной записи");
-                b.setData(entity);
-                b.addClickListener(linkedItemClickListener);
-                return b;
-            }
-            return null;
         }
 
     }

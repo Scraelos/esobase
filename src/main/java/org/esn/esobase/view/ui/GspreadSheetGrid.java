@@ -5,28 +5,28 @@
  */
 package org.esn.esobase.view.ui;
 
-import com.vaadin.data.Item;
-import com.vaadin.data.util.PropertyValueGenerator;
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.shared.ui.grid.ColumnResizeMode;
-import com.vaadin.shared.ui.grid.GridClientRpc;
-import com.vaadin.shared.ui.grid.ScrollDestination;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.util.PropertyValueGenerator;
+import com.vaadin.v7.event.ItemClickEvent;
+import com.vaadin.v7.shared.ui.grid.ColumnResizeMode;
+import com.vaadin.v7.shared.ui.grid.GridClientRpc;
+import com.vaadin.v7.shared.ui.grid.ScrollDestination;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.DetailsGenerator;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.v7.ui.Grid;
+import com.vaadin.v7.ui.Grid.DetailsGenerator;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TextArea;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.renderers.HtmlRenderer;
+import com.vaadin.v7.ui.TextArea;
+import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.v7.ui.renderers.HtmlRenderer;
 import com.vaadin.ui.themes.ValoTheme;
 import de.datenhahn.vaadin.componentrenderer.ComponentRenderer;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.vaadin.viritin.SortableLazyList;
-import org.vaadin.viritin.grid.GeneratedPropertyListContainer;
+import org.vaadin.viritin.v7.SortableLazyList;
+import org.vaadin.viritin.v7.grid.GeneratedPropertyListContainer;
 import org.vaadin.viritin.grid.MGrid;
 
 /**
@@ -54,7 +54,6 @@ public class GspreadSheetGrid extends Grid implements RefreshableGrid, DetailsGe
         setContainerDataSource(container);
         setDetailsGenerator(this);
         addItemClickListener(this);
-        setImmediate(true);
         getColumn("rowNum").setWidth(100).setHeaderCaption("№").setExpandRatio(1).setSortable(false);
         getColumn("textEn").setMinimumWidth(100).setMaximumWidth(610).setExpandRatio(1).setHeaderCaption("Текст").setSortable(false);
         getColumn("textRu").setMinimumWidth(100).setMaximumWidth(610).setExpandRatio(1).setHeaderCaption("Перевод").setSortable(false);

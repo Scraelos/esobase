@@ -5,13 +5,13 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.data.Property;
-import com.vaadin.data.Validator;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.Validator;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.PasswordField;
+import com.vaadin.v7.ui.PasswordField;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.security.SpringSecurityHelper;
