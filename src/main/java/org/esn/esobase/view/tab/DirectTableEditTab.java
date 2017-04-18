@@ -261,6 +261,12 @@ public class DirectTableEditTab extends VerticalLayout {
         translateTypeBox.setItemCaption("spreadSheetsQuestDirection", "Цели квестов");
         translateTypeBox.addItem("spreadSheetsQuestName");
         translateTypeBox.setItemCaption("spreadSheetsQuestName", "Названия квестов");
+        translateTypeBox.addItem("sheetsCollectible");
+        translateTypeBox.setItemCaption("sheetsCollectible", "Названия коллекционных предметов");
+        translateTypeBox.addItem("sheetsCollectibleDescription");
+        translateTypeBox.setItemCaption("sheetsCollectibleDescription", "Описания коллекционных предметов");
+        translateTypeBox.addItem("sheetsLoadscreen");
+        translateTypeBox.setItemCaption("sheetsLoadscreen", "Загрузочные экраны");
         translateTypeBox.setFilteringMode(FilteringMode.CONTAINS);
         traslationsFilterslayout.addComponent(translateTypeBox);
         filterTranslationButton = new Button("Поиск");
@@ -578,6 +584,12 @@ public class DirectTableEditTab extends VerticalLayout {
                 tt.setSpreadSheetsQuestName((GSpreadSheetsQuestName) entity);
             } else if (entity instanceof GSpreadSheetsAbilityDescription) {
                 tt.setSheetsAbilityDescription((GSpreadSheetsAbilityDescription) entity);
+            }else if (entity instanceof GSpreadSheetsLoadscreen) {
+                tt.setSheetsLoadscreen((GSpreadSheetsLoadscreen) entity);
+            }else if (entity instanceof GSpreadSheetsCollectible) {
+                tt.setSheetsCollectible((GSpreadSheetsCollectible) entity);
+            }else if (entity instanceof GSpreadSheetsCollectibleDescription) {
+                tt.setSheetsCollectibleDescription((GSpreadSheetsCollectibleDescription) entity);
             } else if (entity instanceof EsoInterfaceVariable) {
                 tt.setEsoInterfaceVariable((EsoInterfaceVariable) entity);
             }
