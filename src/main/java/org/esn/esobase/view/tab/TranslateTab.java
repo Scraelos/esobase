@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
-import org.esn.esobase.model.Greeting;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Quest;
@@ -70,12 +69,9 @@ public class TranslateTab extends VerticalLayout {
     private TextField npcNameRu;
     private TabSheet.Tab npcTopicsTab;
     private TabSheet.Tab npcSubtitlesTab;
-    private TabSheet.Tab npcGreetingsTab;
     private Table npcTopicsTable;
     private Table npcSubtitlesTable;
-    private Table npcGreetingsTable;
     private BeanItemContainer<Topic> topicsContainer;
-    private BeanItemContainer<Greeting> greetingsContainer;
     private BeanItemContainer<Subtitle> subtitlesContainer;
     private Npc currentNpc;
     private ComboBox translateStatus;
@@ -88,7 +84,6 @@ public class TranslateTab extends VerticalLayout {
     public TranslateTab(DBService service) {
         TopicNpcColumnGenerator topicNpcColumnGenerator = new TopicNpcColumnGenerator();
         TopicPlayerColumnGenerator topicPlayerColumnGenerator = new TopicPlayerColumnGenerator();
-        GreetingColumnGenerator greetingColumnGenerator = new GreetingColumnGenerator();
         SubtitleColumnGenerator subtitleColumnGenerator = new SubtitleColumnGenerator();
         TranslationColumnGenerator translationColumnGenerator = new TranslationColumnGenerator();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
@@ -244,23 +239,9 @@ public class TranslateTab extends VerticalLayout {
         npcSubtitlesTable.setColumnExpandRatio("textG", 1f);
         npcSubtitlesTable.setColumnExpandRatio("translations", 1f);
         npcSubtitlesTable.setColumnWidth("actions", 150);
-        npcGreetingsTable = new Table();
-        npcGreetingsTable.addStyleName(ValoTheme.TABLE_COMPACT);
-        npcGreetingsTable.setSizeFull();
-        npcGreetingsTable.setPageLength(0);
-        greetingsContainer = new BeanItemContainer<>(Greeting.class);
-        npcGreetingsTable.setContainerDataSource(greetingsContainer);
-        npcGreetingsTable.addGeneratedColumn("textG", greetingColumnGenerator);
-        npcGreetingsTable.removeGeneratedColumn("translations");
-        npcGreetingsTable.addGeneratedColumn("translations", translationColumnGenerator);
-        npcGreetingsTable.setVisibleColumns(new Object[]{"textG", "translations"});
-        npcGreetingsTable.setColumnHeaders(new String[]{"Реплика", "Перевод"});
-        npcGreetingsTable.setColumnExpandRatio("textG", 1f);
-        npcGreetingsTable.setColumnExpandRatio("translations", 1f);
-        npcGreetingsTable.setColumnWidth("actions", 150);
+        
         npcTopicsTab = npcTabSheet.addTab(npcTopicsTable, "Диалоги");
         npcSubtitlesTab = npcTabSheet.addTab(npcSubtitlesTable, "Субтитры");
-        npcGreetingsTab = npcTabSheet.addTab(npcGreetingsTable, "Приветствие");
         npcContentLayout.addComponent(npcTabSheet);
         this.addComponent(npcListlayout);
         this.addComponent(npcContentLayout);
@@ -302,13 +283,8 @@ public class TranslateTab extends VerticalLayout {
             npcName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "name"));
             npcNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "nameRu"));
             topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
-            topicsContainer.sort(new Object[]{"id"}, new boolean[]{true});
             npcTabSheet.getTab(npcTopicsTable).setCaption("Диалоги(" + topicsContainer.size() + ")");
-            greetingsContainer = service.getNpcGreetings(currentNpc, greetingsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
-            greetingsContainer.sort(new Object[]{"id"}, new boolean[]{true});
-            npcTabSheet.getTab(npcGreetingsTable).setCaption("Приветствие(" + greetingsContainer.size() + ")");
             subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
-            //subtitlesContainer.sort(new Object[]{"id"}, new boolean[]{true});
             npcTabSheet.getTab(npcSubtitlesTable).setCaption("Субтитры(" + subtitlesContainer.size() + ")");
         }
     }
@@ -327,8 +303,6 @@ public class TranslateTab extends VerticalLayout {
                 service.assignTopicToPhrase((Topic) itemId);
             } else if (itemId instanceof Subtitle) {
                 service.assignSubtitleToPhrase((Subtitle) itemId);
-            } else if (itemId instanceof Greeting) {
-                service.assignGreetingToPhrase((Greeting) itemId);
             }
             LoadNpcContent();
         }
@@ -420,54 +394,6 @@ public class TranslateTab extends VerticalLayout {
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах" 
                 }
             } else if (topic.getPlayerText() != null && !topic.getPlayerText().isEmpty()) {
-                Button getRawButton = new Button("Искать RAW");
-                getRawButton.addClickListener(new AssignClickListener(itemId));
-                result.addComponent(getRawButton);
-            }
-
-            return result;
-        }
-
-    }
-
-    private class GreetingColumnGenerator implements ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            VerticalLayout result = new VerticalLayout();
-            Greeting topic = (Greeting) itemId;
-            if (topic.getText() != null && !topic.getText().isEmpty()) {
-                TextArea textEnArea = new TextArea("Текст в игре");
-                textEnArea.setValue(topic.getText());
-                textEnArea.setReadOnly(true);
-                textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.setNullRepresentation("");
-                result.addComponent(textEnArea);//, "Текст в игре"
-            }
-            if (topic.getTextRu() != null && !topic.getTextRu().isEmpty()) {
-                TextArea textRuArea = new TextArea("Перевод в игре");
-                textRuArea.setValue(topic.getTextRu());
-                textRuArea.setReadOnly(true);
-                textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.setNullRepresentation("");
-                result.addComponent(textRuArea);//, "Перевод в игре"
-            }
-            if (topic.getExtNpcPhrase() != null) {
-                TextArea textEnRawArea = new TextArea("Текст в таблицах");
-                textEnRawArea.setValue(topic.getExtNpcPhrase().getTextEn());
-                textEnRawArea.setReadOnly(true);
-                textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.setNullRepresentation("");
-                result.addComponent(textEnRawArea);//, "Текст в таблицах"
-                if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getExtNpcPhrase().getTranslator());
-                    textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
-                    textRuRawArea.setReadOnly(true);
-                    textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.setNullRepresentation("");
-                    result.addComponent(textRuRawArea);//, "Перевод в таблицах"
-                }
-            } else if (topic.getText() != null && !topic.getText().isEmpty()) {
                 Button getRawButton = new Button("Искать RAW");
                 getRawButton.addClickListener(new AssignClickListener(itemId));
                 result.addComponent(getRawButton);
@@ -611,9 +537,7 @@ public class TranslateTab extends VerticalLayout {
             }
 
             String text = null;
-            if (itemId instanceof Greeting) {
-                text = ((Greeting) itemId).getText();
-            } else if (itemId instanceof Subtitle) {
+            if (itemId instanceof Subtitle) {
                 text = ((Subtitle) itemId).getText();
             } else if (itemId instanceof Topic) {
                 if (columnId.equals("playerTranslations")) {
@@ -625,9 +549,7 @@ public class TranslateTab extends VerticalLayout {
             if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
-                if (itemId instanceof Greeting) {
-                    translatedText.setGreeting((Greeting) itemId);
-                } else if (itemId instanceof Subtitle) {
+                if (itemId instanceof Subtitle) {
                     translatedText.setSubtitle((Subtitle) itemId);
                 } else if (itemId instanceof Topic) {
                     if (columnId.equals("playerTranslations")) {

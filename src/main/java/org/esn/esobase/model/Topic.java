@@ -5,7 +5,6 @@
  */
 package org.esn.esobase.model;
 
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -14,9 +13,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import org.esn.esobase.model.lib.DAO;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -62,6 +61,10 @@ public class Topic extends DAO {
     @OneToMany(mappedBy = "npcTopic", fetch = FetchType.EAGER)
     private Set<TranslatedText> npcTranslations;
     private Integer weight;
+    @ManyToMany
+    private Set<Topic> previousTopics;
+    @ManyToMany(mappedBy = "previousTopics")
+    private Set<Topic> nextTopics;
 
     public Topic() {
     }
@@ -178,6 +181,22 @@ public class Topic extends DAO {
 
     public void setWeight(Integer weight) {
         this.weight = weight;
+    }
+
+    public Set<Topic> getPreviousTopics() {
+        return previousTopics;
+    }
+
+    public void setPreviousTopics(Set<Topic> previousTopics) {
+        this.previousTopics = previousTopics;
+    }
+
+    public Set<Topic> getNextTopics() {
+        return nextTopics;
+    }
+
+    public void setNextTopics(Set<Topic> nextTopics) {
+        this.nextTopics = nextTopics;
     }
 
 }

@@ -282,9 +282,9 @@ public class DirectTableEditTab extends VerticalLayout {
         newTranslationsContainer.sort(new Object[]{"id"}, new boolean[]{true});
         newTranslationsTable.setContainerDataSource(newTranslationsContainer);
         newTranslationsTable.setColumns("author", "createTime", "text");
-        newTranslationsTable.getColumn("author").setHeaderCaption("Автор");
-        newTranslationsTable.getColumn("createTime").setHeaderCaption("Дата");
-        newTranslationsTable.getColumn("text").setHeaderCaption("Перевод");
+        newTranslationsTable.getColumn("author").setHeaderCaption("Автор").setMaximumWidth(200);
+        newTranslationsTable.getColumn("createTime").setHeaderCaption("Дата").setWidth(140);
+        newTranslationsTable.getColumn("text").setHeaderCaption("Перевод").setMaximumWidth(800).setMinimumWidth(600);
         newTranslationsTable.addItemClickListener(new TranslationsTableRowClickListener());
         translationsLayout.addComponent(newTranslationsTable);
         translationsLayout.setExpandRatio(newTranslationsTable, 5f);

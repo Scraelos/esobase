@@ -5,6 +5,7 @@
  */
 package org.esn.esobase.data;
 
+import com.sun.javafx.scene.control.skin.VirtualFlow;
 import org.esn.esobase.data.diffs.ActivatorsDiff;
 import org.esn.esobase.data.diffs.NpcNameDiff;
 import org.esn.esobase.data.diffs.NpcPhraseDiff;
@@ -466,7 +467,7 @@ public class DBService {
                                     em.persist(subtitle);
                                 }
                             }
-                            for (Greeting greeting : npc.getGreetings()) {
+                            /*for (Greeting greeting : npc.getGreetings()) {
                                 Criteria greetingCriteria = session.createCriteria(Greeting.class);
                                 greetingCriteria.add(Restrictions.eq("npc", npc));
                                 greetingCriteria.setMaxResults(1);
@@ -482,7 +483,7 @@ public class DBService {
                                     }
                                     em.persist(greeting);
                                 }
-                            }
+                            }*/
                             for (Topic topic : npc.getTopics()) {
                                 Criteria topicCriteria = session.createCriteria(Topic.class);
                                 topicCriteria.add(Restrictions.eq("npc", npc));
@@ -3110,8 +3111,25 @@ public class DBService {
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         List<Topic> list = crit.list();
-        container.addAll(list);
+        List<Topic> orderedList = new ArrayList<>();
+        for (Topic t : list) {
+            if (t.getPreviousTopics() == null || t.getPreviousTopics().isEmpty()) {
+                addNextTopics(t, orderedList);
+            }
+
+        }
+        container.addAll(orderedList);
         return container;
+    }
+
+    public void addNextTopics(Topic t, List<Topic> topics) {
+        if (!topics.contains(t)) {
+            topics.add(t);
+            for (Topic nextTopic : t.getNextTopics()) {
+                addNextTopics(nextTopic, topics);
+            }
+        }
+
     }
 
     @Transactional
@@ -5231,7 +5249,7 @@ public class DBService {
         for (GSpreadSheetsCollectible item : collectibleList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{18173141L,70328405L,160914197L,245765621L,213229525L,204530069L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{18173141L, 70328405L, 160914197L, 245765621L, 213229525L, 204530069L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5246,7 +5264,7 @@ public class DBService {
         for (GSpreadSheetsCollectibleDescription item : collectibleDescriptionList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{211640654L,263796174L,86917166L,69169806L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{211640654L, 263796174L, 86917166L, 69169806L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5261,7 +5279,7 @@ public class DBService {
         for (GSpreadSheetsLoadscreen item : loadscreenList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{70901198L,153349653L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{70901198L, 153349653L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -6030,6 +6048,57 @@ public class DBService {
                         em.merge(currentNpc);
                     }
                     JSONObject npcContent = npcsObject.getJSONObject(npcKey);
+
+                    List<Topic> npcTopics = new ArrayList<>();
+                    JSONObject greetingsObject = null;
+                    try {
+                        greetingsObject = npcContent.getJSONObject("greetings");
+                    } catch (JSONException ex) {
+
+                    }
+                    if (greetingsObject != null) {
+                        Iterator greetingsKeys = greetingsObject.keys();
+                        while (greetingsKeys.hasNext()) {
+                            String greetingskey = (String) greetingsKeys.next();
+                            String greetingText = null;
+                            String greetingTextRu = null;
+                            if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
+                                greetingTextRu = greetingsObject.getString(greetingskey);
+                            } else {
+                                greetingText = greetingsObject.getString(greetingskey);
+                            }
+                            if (greetingText != null && !greetingText.isEmpty()) {
+                                Criteria greetingsCriteria = session.createCriteria(Topic.class);
+                                greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
+                                if (greetingText != null) {
+                                    greetingsCriteria.add(Restrictions.eq("npcText", greetingText));
+                                }
+                                if (greetingTextRu != null) {
+                                    greetingsCriteria.add(Restrictions.eq("npcTextRu", greetingTextRu));
+                                }
+                                List<Topic> greetingList = greetingsCriteria.list();
+                                if (greetingList == null || greetingList.isEmpty()) {
+                                    Topic greeting = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
+                                    LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
+                                    em.persist(greeting);
+                                    npcTopics.add(greeting);
+                                } else {
+                                    Topic greeting = greetingList.get(0);
+                                    if (greeting.getNpcText() == null && greetingText != null) {
+                                        greeting.setNpcText(greetingText);
+                                        em.merge(greeting);
+                                    }
+                                    if (greeting.getNpcTextRu() == null && greetingTextRu != null) {
+                                        greeting.setNpcTextRu(greetingTextRu);
+                                        em.merge(greeting);
+                                    }
+                                    npcTopics.add(greeting);
+                                }
+                            }
+
+                        }
+                    }
+
                     JSONObject topicsObject = null;
                     try {
                         topicsObject = npcContent.getJSONObject("topics");
@@ -6053,6 +6122,12 @@ public class DBService {
                                 npcTextRu = topicsObject.getString(topickey);
                             } else {
                                 npcText = topicsObject.getString(topickey);
+                            }
+                            if (npcText != null && npcText.isEmpty()) {
+                                npcText = null;
+                            }
+                            if (npcTextRu != null && npcTextRu.isEmpty()) {
+                                npcTextRu = null;
                             }
                             if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty())) {
                                 Criteria topicCriteria = session.createCriteria(Topic.class);
@@ -6082,10 +6157,62 @@ public class DBService {
                                         LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
                                         em.merge(topic);
                                     }
+                                    npcTopics.add(topic);
                                 } else if (playerText != null || npcText != null) {
                                     Topic topic = new Topic(playerText, npcText, playerTextRu, npcTextRu, currentNpc);
                                     LOG.log(Level.INFO, "new topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
                                     em.persist(topic);
+                                    npcTopics.add(topic);
+                                }
+                            }
+
+                        }
+                    }
+
+                    JSONObject topicLinkObject = null;
+
+                    try {
+                        topicLinkObject = npcContent.getJSONObject("links");
+                    } catch (JSONException ex) {
+
+                    }
+
+                    if (topicLinkObject != null) {
+                        Iterator linkKeys = topicLinkObject.keys();
+                        while (linkKeys.hasNext()) {
+                            String npcText = (String) linkKeys.next();
+                            Topic parentTopic = null;
+                            for (Topic npcTopic : npcTopics) {
+                                if ((npcTopic.getNpcText() != null && npcTopic.getNpcText().equals(npcText)) || (npcTopic.getNpcTextRu() != null && npcTopic.getNpcTextRu().equals(npcText))) {
+                                    parentTopic = npcTopic;
+                                    JSONObject nextTopicsObject = null;
+
+                                    try {
+                                        nextTopicsObject = topicLinkObject.getJSONObject(npcText);
+                                    } catch (JSONException ex) {
+
+                                    }
+
+                                    if (nextTopicsObject != null) {
+                                        Iterator nextTopicsIterator = nextTopicsObject.keys();
+                                        while (nextTopicsIterator.hasNext()) {
+                                            String playerText = (String) nextTopicsIterator.next();
+                                            Topic childTopic = null;
+                                            for (Topic npcTopic2 : npcTopics) {
+                                                if ((npcTopic2.getPlayerText() != null && npcTopic2.getPlayerText().equals(playerText)) || (npcTopic2.getPlayerTextRu() != null && npcTopic2.getPlayerTextRu().equals(playerText))) {
+                                                    childTopic = npcTopic2;
+                                                    if (childTopic.getPreviousTopics() == null) {
+                                                        childTopic.setPreviousTopics(new HashSet<Topic>());
+                                                    }
+                                                    childTopic.getPreviousTopics().add(parentTopic);
+                                                    LOG.info("adding previous topic to " + childTopic.getId());
+                                                    em.merge(childTopic);
+                                                }
+                                            }
+
+                                        }
+                                    }
+
                                 }
                             }
 
@@ -6123,43 +6250,6 @@ public class DBService {
                                     Subtitle subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
                                     LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
                                     em.persist(subtitle);
-                                }
-                            }
-
-                        }
-                    }
-
-                    JSONObject greetingsObject = null;
-                    try {
-                        greetingsObject = npcContent.getJSONObject("greetings");
-                    } catch (JSONException ex) {
-
-                    }
-                    if (greetingsObject != null) {
-                        Iterator greetingsKeys = greetingsObject.keys();
-                        while (greetingsKeys.hasNext()) {
-                            String greetingskey = (String) greetingsKeys.next();
-                            String greetingText = null;
-                            String greetingTextRu = null;
-                            if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
-                                greetingTextRu = greetingsObject.getString(greetingskey);
-                            } else {
-                                greetingText = greetingsObject.getString(greetingskey);
-                            }
-                            if (greetingText != null && !greetingText.isEmpty()) {
-                                Criteria greetingsCriteria = session.createCriteria(Greeting.class);
-                                greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
-                                if (greetingText != null) {
-                                    greetingsCriteria.add(Restrictions.eq("text", greetingText));
-                                }
-                                if (greetingTextRu != null) {
-                                    greetingsCriteria.add(Restrictions.eq("text", greetingTextRu));
-                                }
-                                List<Greeting> greetingList = greetingsCriteria.list();
-                                if (greetingList == null || greetingList.isEmpty()) {
-                                    Greeting greeting = new Greeting(greetingskey, greetingText, greetingTextRu, currentNpc);
-                                    LOG.log(Level.INFO, "new greeting: {0}|{1}", new String[]{greetingText, greetingTextRu});
-                                    em.persist(greeting);
                                 }
                             }
 
@@ -6361,6 +6451,57 @@ public class DBService {
                             em.merge(currentNpc);
                         }
                         JSONObject npcContent = npcsObject.getJSONObject(npcKey);
+
+                        List<Topic> npcTopics = new ArrayList<>();
+                        JSONObject greetingsObject = null;
+                        try {
+                            greetingsObject = npcContent.getJSONObject("greetings");
+                        } catch (JSONException ex) {
+
+                        }
+                        if (greetingsObject != null) {
+                            Iterator greetingsKeys = greetingsObject.keys();
+                            while (greetingsKeys.hasNext()) {
+                                String greetingskey = (String) greetingsKeys.next();
+                                String greetingText = null;
+                                String greetingTextRu = null;
+                                if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
+                                    greetingTextRu = greetingsObject.getString(greetingskey);
+                                } else {
+                                    greetingText = greetingsObject.getString(greetingskey);
+                                }
+                                if ((greetingText != null && !greetingText.isEmpty()) || (greetingTextRu != null && !greetingTextRu.isEmpty())) {
+                                    Criteria greetingsCriteria = session.createCriteria(Topic.class);
+                                    greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
+                                    if (greetingText != null) {
+                                        greetingsCriteria.add(Restrictions.eq("npcText", greetingText));
+                                    }
+                                    if (greetingTextRu != null) {
+                                        greetingsCriteria.add(Restrictions.eq("npcTextRu", greetingTextRu));
+                                    }
+                                    List<Topic> greetingList = greetingsCriteria.list();
+                                    if (greetingList == null || greetingList.isEmpty()) {
+                                        Topic greeting = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
+                                        LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
+                                        em.persist(greeting);
+                                        npcTopics.add(greeting);
+                                    } else {
+                                        Topic greeting = greetingList.get(0);
+                                        if (greeting.getNpcText() == null && greetingText != null) {
+                                            greeting.setNpcText(greetingText);
+                                            em.merge(greeting);
+                                        }
+                                        if (greeting.getNpcTextRu() == null && greetingTextRu != null) {
+                                            greeting.setNpcTextRu(greetingTextRu);
+                                            em.merge(greeting);
+                                        }
+                                        npcTopics.add(greeting);
+                                    }
+                                }
+
+                            }
+                        }
+
                         JSONObject topicsObject = null;
                         try {
                             topicsObject = npcContent.getJSONObject("topics");
@@ -6385,7 +6526,13 @@ public class DBService {
                                 } else {
                                     npcText = topicsObject.getString(topickey);
                                 }
-                                if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty())) {
+                                if (npcText != null && npcText.isEmpty()) {
+                                    npcText = null;
+                                }
+                                if (npcTextRu != null && npcTextRu.isEmpty()) {
+                                    npcTextRu = null;
+                                }
+                                if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty()) || (playerTextRu != null && !playerTextRu.isEmpty()) || (npcTextRu != null && !npcTextRu.isEmpty())) {
                                     Criteria topicCriteria = session.createCriteria(Topic.class);
                                     topicCriteria.add(Restrictions.eq("npc", currentNpc));
                                     if (playerText != null) {
@@ -6413,10 +6560,62 @@ public class DBService {
                                             LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
                                             em.merge(topic);
                                         }
-                                    } else if (playerText != null || npcText != null) {
+                                        npcTopics.add(topic);
+                                    } else if (playerText != null || npcText != null || playerTextRu != null || npcTextRu != null) {
                                         Topic topic = new Topic(playerText, npcText, playerTextRu, npcTextRu, currentNpc);
                                         LOG.log(Level.INFO, "new topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
                                         em.persist(topic);
+                                        npcTopics.add(topic);
+                                    }
+                                }
+
+                            }
+                        }
+
+                        JSONObject topicLinkObject = null;
+
+                        try {
+                            topicLinkObject = npcContent.getJSONObject("links");
+                        } catch (JSONException ex) {
+
+                        }
+
+                        if (topicLinkObject != null) {
+                            Iterator linkKeys = topicLinkObject.keys();
+                            while (linkKeys.hasNext()) {
+                                String npcText = (String) linkKeys.next();
+                                Topic parentTopic = null;
+                                for (Topic npcTopic : npcTopics) {
+                                    if ((npcTopic.getNpcText() != null && npcTopic.getNpcText().equals(npcText)) || (npcTopic.getNpcTextRu() != null && npcTopic.getNpcTextRu().equals(npcText))) {
+                                        parentTopic = npcTopic;
+                                        JSONObject nextTopicsObject = null;
+
+                                        try {
+                                            nextTopicsObject = topicLinkObject.getJSONObject(npcText);
+                                        } catch (JSONException ex) {
+
+                                        }
+
+                                        if (nextTopicsObject != null) {
+                                            Iterator nextTopicsIterator = nextTopicsObject.keys();
+                                            while (nextTopicsIterator.hasNext()) {
+                                                String playerText = (String) nextTopicsIterator.next();
+                                                Topic childTopic = null;
+                                                for (Topic npcTopic2 : npcTopics) {
+                                                    if ((npcTopic2.getPlayerText() != null && npcTopic2.getPlayerText().equals(playerText)) || (npcTopic2.getPlayerTextRu() != null && npcTopic2.getPlayerTextRu().equals(playerText))) {
+                                                        childTopic = npcTopic2;
+                                                        if (childTopic.getPreviousTopics() == null) {
+                                                            childTopic.setPreviousTopics(new HashSet<Topic>());
+                                                        }
+                                                        childTopic.getPreviousTopics().add(parentTopic);
+                                                        LOG.info("adding previous topic to " + childTopic.getId());
+                                                        em.merge(childTopic);
+                                                    }
+                                                }
+
+                                            }
+                                        }
+
                                     }
                                 }
 
@@ -6454,43 +6653,6 @@ public class DBService {
                                         Subtitle subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
                                         LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
                                         em.persist(subtitle);
-                                    }
-                                }
-
-                            }
-                        }
-
-                        JSONObject greetingsObject = null;
-                        try {
-                            greetingsObject = npcContent.getJSONObject("greetings");
-                        } catch (JSONException ex) {
-
-                        }
-                        if (greetingsObject != null) {
-                            Iterator greetingsKeys = greetingsObject.keys();
-                            while (greetingsKeys.hasNext()) {
-                                String greetingskey = (String) greetingsKeys.next();
-                                String greetingText = null;
-                                String greetingTextRu = null;
-                                if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
-                                    greetingTextRu = greetingsObject.getString(greetingskey);
-                                } else {
-                                    greetingText = greetingsObject.getString(greetingskey);
-                                }
-                                if (greetingText != null && !greetingText.isEmpty()) {
-                                    Criteria greetingsCriteria = session.createCriteria(Greeting.class);
-                                    greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
-                                    if (greetingText != null) {
-                                        greetingsCriteria.add(Restrictions.eq("text", greetingText));
-                                    }
-                                    if (greetingTextRu != null) {
-                                        greetingsCriteria.add(Restrictions.eq("text", greetingTextRu));
-                                    }
-                                    List<Greeting> greetingList = greetingsCriteria.list();
-                                    if (greetingList == null || greetingList.isEmpty()) {
-                                        Greeting greeting = new Greeting(greetingskey, greetingText, greetingTextRu, currentNpc);
-                                        LOG.log(Level.INFO, "new greeting: {0}|{1}", new String[]{greetingText, greetingTextRu});
-                                        em.persist(greeting);
                                     }
                                 }
 
@@ -6736,6 +6898,47 @@ public class DBService {
             }
         } catch (JSONException ex) {
 
+        }
+    }
+
+    @Transactional
+    public void transferGreetingsToTopics() {
+        int counter = 0;
+        Session session = (Session) em.getDelegate();
+        Criteria greetingCrit = session.createCriteria(Greeting.class);
+        greetingCrit.setMaxResults(1000);
+        List<Greeting> greetings = greetingCrit.list();
+        for (Greeting g : greetings) {
+            counter++;
+            LOG.log(Level.INFO, "greeting {0}", Integer.toString(counter));
+            Topic t = null;
+            Criteria topicCrit = session.createCriteria(Topic.class);
+            topicCrit.add(Restrictions.eq("npc", g.getNpc()));
+            if (g.getText() != null) {
+                topicCrit.add(Restrictions.eq("npcText", g.getText()));
+            } else if (g.getTextRu() != null) {
+                topicCrit.add(Restrictions.eq("npcTextRu", g.getTextRu()));
+            }
+            List<Topic> topics = topicCrit.list();
+            if (topics != null && !topics.isEmpty()) {
+                t = topics.get(0);
+                if (t.getExtNpcPhrase() == null) {
+                    t.setExtNpcPhrase(g.getExtNpcPhrase());
+                }
+                em.merge(t);
+            } else {
+                t = new Topic(null, g.getText(), null, g.getTextRu(), g.getNpc());
+                t.setExtNpcPhrase(g.getExtNpcPhrase());
+                em.persist(t);
+            }
+            if (t != null) {
+                for (TranslatedText tt : g.getTranslations()) {
+                    tt.setNpcTopic(t);
+                    tt.setGreeting(null);
+                    em.merge(tt);
+                }
+                em.remove(g);
+            }
         }
     }
 

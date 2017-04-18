@@ -97,6 +97,7 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadRuInterfaceLua;
     private Button updateGspreadSheetsWithRawText;
     private Button assignActivatorsWithItems;
+    private Button transferGreetingsToTopicsButton;
 
     public ImportTab(DBService service_) {
         this.service = service_;
@@ -438,6 +439,14 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(assignActivatorsWithItems);
+            transferGreetingsToTopicsButton=new Button("Перенос приветствий в диалоги");
+            transferGreetingsToTopicsButton.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    service.transferGreetingsToTopics();
+                }
+            });
+            this.addComponent(transferGreetingsToTopicsButton);
 
         }
     }
@@ -674,10 +683,10 @@ public class ImportTab extends VerticalLayout {
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
-            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")) {
+            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")||LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
                 service.newFormatImportNpcsWithSublocations(jsonFromLua);
                 service.newFormatImportSubtitlesWithSublocations(jsonFromLua);
-            } else {
+            } else if(LuaDecoder.getFileheader(text).equals("ConversationsQ_SavedVariables =")||LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables =")) {
                 service.newFormatImportNpcs(jsonFromLua);
                 service.newFormatImportSubtitles(jsonFromLua);
             }
