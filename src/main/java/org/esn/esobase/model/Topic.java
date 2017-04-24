@@ -65,6 +65,8 @@ public class Topic extends DAO {
     private Set<Topic> previousTopics;
     @ManyToMany(mappedBy = "previousTopics")
     private Set<Topic> nextTopics;
+    private Boolean extPlayerPhraseFailed;
+    private Boolean extNpcPhraseFailed;
 
     public Topic() {
     }
@@ -197,6 +199,22 @@ public class Topic extends DAO {
 
     public void setNextTopics(Set<Topic> nextTopics) {
         this.nextTopics = nextTopics;
+    }
+
+    public Boolean getExtPlayerPhraseFailed() {
+        return extPlayerPhraseFailed;
+    }
+
+    public void setExtPlayerPhraseFailed(Boolean extPlayerPhraseFailed) {
+        this.extPlayerPhraseFailed = extPlayerPhraseFailed;
+    }
+
+    public Boolean getExtNpcPhraseFailed() {
+        return extNpcPhraseFailed;
+    }
+
+    public void setExtNpcPhraseFailed(Boolean extNpcPhraseFailed) {
+        this.extNpcPhraseFailed = extNpcPhraseFailed;
     }
 
 }

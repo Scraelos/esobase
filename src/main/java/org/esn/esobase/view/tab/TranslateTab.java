@@ -30,6 +30,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
@@ -239,7 +240,7 @@ public class TranslateTab extends VerticalLayout {
         npcSubtitlesTable.setColumnExpandRatio("textG", 1f);
         npcSubtitlesTable.setColumnExpandRatio("translations", 1f);
         npcSubtitlesTable.setColumnWidth("actions", 150);
-        
+
         npcTopicsTab = npcTabSheet.addTab(npcTopicsTable, "Диалоги");
         npcSubtitlesTab = npcTabSheet.addTab(npcSubtitlesTable, "Субтитры");
         npcContentLayout.addComponent(npcTabSheet);
@@ -255,7 +256,7 @@ public class TranslateTab extends VerticalLayout {
         npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
         List<Location> locations = new ArrayList<>();
         for (Npc npc : npcContainer.getItemIds()) {
-            if (npc.getLocation().getParentLocation() == null) {
+            if (npc.getLocation()!=null&&npc.getLocation().getParentLocation() == null) {
                 locations.add(npc.getLocation());
             }
         }
@@ -264,7 +265,8 @@ public class TranslateTab extends VerticalLayout {
         locationContainer.sort(new Object[]{"name"}, new boolean[]{true});
         List<Location> subLocations = new ArrayList<>();
         for (Npc npc : npcContainer.getItemIds()) {
-            if (npc.getLocation().getParentLocation() != null) {
+            if (npc.getLocation()!=null&&npc.getLocation().getParentLocation() != null) {
+                subLocations.add(npc.getLocation().getParentLocation());
                 subLocations.add(npc.getLocation());
             }
         }
@@ -502,7 +504,11 @@ public class TranslateTab extends VerticalLayout {
             }
             if (locationTable.getValue() != null) {
                 subLocationContainer.removeAllContainerFilters();
-                subLocationContainer.addContainerFilter(new Compare.Equal("parentLocation", locationTable.getValue()));
+                subLocationContainer.addContainerFilter(new Or(
+                        new Compare.Equal("parentLocation", locationTable.getValue()),
+                        new Compare.Equal("id", ((Location) locationTable.getValue()).getId())
+                )
+                );
             }
             if (questTable.getValue() != null) {
                 List<Filter> equals = new ArrayList<>();
@@ -527,35 +533,63 @@ public class TranslateTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
             final VerticalLayout vl = new VerticalLayout();
             vl.setSizeFull();
-            Set<TranslatedText> list = (Set<TranslatedText>) source.getItem(itemId).getItemProperty(columnId).getValue();
+            Set<TranslatedText> list = new HashSet<>();
+            Set<TranslatedText> list1 = (Set<TranslatedText>) source.getItem(itemId).getItemProperty(columnId).getValue();
+            list.addAll(list1);
             List<SysAccount> accounts = new ArrayList<>();
+            
+
+            String text = null;
+            if (itemId instanceof Subtitle) {
+                text = ((Subtitle) itemId).getText();
+                Subtitle s = (Subtitle) itemId;
+                if (s.getExtNpcPhrase() != null && s.getExtNpcPhrase().getTranslatedTexts() != null) {
+                    list.addAll(s.getExtNpcPhrase().getTranslatedTexts());
+                }
+            } else if (itemId instanceof Topic) {
+                if (columnId.equals("playerTranslations")) {
+                    text = ((Topic) itemId).getPlayerText();
+                    Topic t = (Topic) itemId;
+                    if (t.getExtPlayerPhrase() != null && t.getExtPlayerPhrase().getTranslatedTexts() != null) {
+                        list.addAll(t.getExtPlayerPhrase().getTranslatedTexts());
+                    }
+                } else if (columnId.equals("npcTranslations")) {
+                    text = ((Topic) itemId).getNpcText();
+                    Topic t = (Topic) itemId;
+                    if (t.getExtNpcPhrase() != null && t.getExtNpcPhrase().getTranslatedTexts() != null) {
+                        list.addAll(t.getExtNpcPhrase().getTranslatedTexts());
+                    }
+                }
+            }
+            
             if (list != null) {
                 for (TranslatedText t : list) {
                     vl.addComponent(new TranslationCell(t));
                     accounts.add(t.getAuthor());
                 }
             }
-
-            String text = null;
-            if (itemId instanceof Subtitle) {
-                text = ((Subtitle) itemId).getText();
-            } else if (itemId instanceof Topic) {
-                if (columnId.equals("playerTranslations")) {
-                    text = ((Topic) itemId).getPlayerText();
-                } else if (columnId.equals("npcTranslations")) {
-                    text = ((Topic) itemId).getNpcText();
-                }
-            }
             if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Subtitle) {
+                    Subtitle s = (Subtitle) itemId;
                     translatedText.setSubtitle((Subtitle) itemId);
+                    if (s.getExtNpcPhrase() != null) {
+                        translatedText.setSpreadSheetsNpcPhrase(s.getExtNpcPhrase());
+                    }
                 } else if (itemId instanceof Topic) {
                     if (columnId.equals("playerTranslations")) {
+                        Topic t = (Topic) itemId;
                         translatedText.setPlayerTopic((Topic) itemId);
+                        if (t.getExtPlayerPhrase() != null) {
+                            translatedText.setSpreadSheetsPlayerPhrase(t.getExtPlayerPhrase());
+                        }
                     } else if (columnId.equals("npcTranslations")) {
+                        Topic t = (Topic) itemId;
                         translatedText.setNpcTopic((Topic) itemId);
+                        if (t.getExtNpcPhrase() != null) {
+                            translatedText.setSpreadSheetsNpcPhrase(t.getExtNpcPhrase());
+                        }
                     }
                 }
                 Button addTranslation = new Button("Добавить перевод");

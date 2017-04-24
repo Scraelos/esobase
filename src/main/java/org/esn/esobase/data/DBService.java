@@ -2810,6 +2810,7 @@ public class DBService {
         }
 
         Criteria npcTopicCrit = session.createCriteria(Topic.class);
+        npcTopicCrit.add(Restrictions.or(Restrictions.ne("extNpcPhraseFailed", Boolean.TRUE), Restrictions.isNull("extNpcPhraseFailed")));
         npcTopicCrit.add(Restrictions.isNull("extNpcPhrase"));
         //npcTopicCrit.setFirstResult(0);
         //npcTopicCrit.setMaxResults(100);
@@ -2846,6 +2847,10 @@ public class DBService {
                         assignTopicToPhrase(t);
                     }
                 }
+                if (t.getExtNpcPhrase() == null) {
+                    t.setExtNpcPhraseFailed(Boolean.TRUE);
+                    em.merge(t);
+                }
             }
         }
 
@@ -2853,7 +2858,31 @@ public class DBService {
         playerTopicCrit.add(Restrictions.isNull("extPlayerPhrase"));
         //playerTopicCrit.setFirstResult(0);
         //playerTopicCrit.setMaxResults(100);
+        playerTopicCrit.add(Restrictions.or(Restrictions.ne("extPlayerPhraseFailed", Boolean.TRUE), Restrictions.isNull("extPlayerPhraseFailed")));
         playerTopicCrit.add(Restrictions.isNotNull("playerText"));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%Here's % gold. Clear my bounty.")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%Here's % gold and everything I've stolen. Clear my bounty.")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "View Stable")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Store")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Store (%)")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Store (%), Smuggler's Fee %")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Guild Store")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Guild Store (%)")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%I have powerful friends. My bounty has already been covered.")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Bank")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Buy Backpack Upgrade")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%I won''t pay the bounty.")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Guild Bank")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Bid on Guild Trader")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Hire Guild Trader")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Soul Healing")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Have any poisons or potions today?")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Have anything that can help make me less noticeable?")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Have any equipment today?")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Торговать (%)")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Магазин (%), процент контрабандиста %")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Гильдейский магазин (%)")));
+        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Магазин (%)")));
         List<Topic> playerTopicList = playerTopicCrit.list();
         total = playerTopicList.size();
         counter = 0;
@@ -2887,6 +2916,10 @@ public class DBService {
                     if (phrase == null) {
                         assignTopicToPhrase(t);
                     }
+                }
+                if (t.getExtPlayerPhrase() == null) {
+                    t.setExtPlayerPhraseFailed(Boolean.TRUE);
+                    em.merge(t);
                 }
             }
         }
@@ -3118,6 +3151,9 @@ public class DBService {
             }
 
         }
+        for (Topic t : list) {
+            addNextTopics(t, orderedList);
+        }
         container.addAll(orderedList);
         return container;
     }
@@ -3129,8 +3165,9 @@ public class DBService {
                 addNextTopics(nextTopic, topics);
             }
         }
-
     }
+    
+    
 
     @Transactional
     public BeanItemContainer<Greeting> getNpcGreetings(Npc npc, BeanItemContainer<Greeting> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
@@ -3172,7 +3209,7 @@ public class DBService {
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("translations", FetchMode.SELECT);
         if (noTranslations) {
-            crit.createAlias("extNpcPhrase", "extNpcPhrase");
+             crit.createAlias("extNpcPhrase", "extNpcPhrase");
             crit.add(
                     Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
             );
@@ -4187,6 +4224,9 @@ public class DBService {
         for (GSpreadSheetsNpcName npc : npcList) {
             Item item = hc.addItem(npc);
             item.getItemProperty("textEn").setValue(npc.getTextEn());
+            if(npc.getSex()!=null) {
+                item.getItemProperty("textEn").setValue(npc.getTextEn()+"("+npc.getSex().toString().substring(0,1)+")");
+            }
             item.getItemProperty("textRu").setValue(npc.getTextRu());
             item.getItemProperty("weight").setValue(npc.getWeight());
             item.getItemProperty("translator").setValue(npc.getTranslator());
@@ -5793,10 +5833,13 @@ public class DBService {
                     Iterator locationSubtitlesObjectIterator = locationSubtitlesObject.keys();
                     while (locationSubtitlesObjectIterator.hasNext()) {
                         JSONObject subtitleSet = locationSubtitlesObject.getJSONObject((String) locationSubtitlesObjectIterator.next());
-                        Subtitle previoutSubttile = null;
+                        int subtitleCount = subtitleSet.length();
+                        Subtitle[] subtilteArray = new Subtitle[subtitleCount];
                         Iterator subtitleSetIterator = subtitleSet.keys();
                         while (subtitleSetIterator.hasNext()) {
-                            JSONObject subtitleObject = subtitleSet.getJSONObject((String) subtitleSetIterator.next());
+                            String currentKey = (String) subtitleSetIterator.next();
+                            Integer currentIndex = Integer.valueOf(currentKey);
+                            JSONObject subtitleObject = subtitleSet.getJSONObject(currentKey);
                             String npcNameString = subtitleObject.getString("name");
                             String subtitleTextString = subtitleObject.getString("text");
                             String npcName = null;
@@ -5876,7 +5919,7 @@ public class DBService {
                             } else {
                                 subtitleText = subtitleTextString;
                             }
-                            if (subtitleText != null && !subtitleText.isEmpty()) {
+                            if ((subtitleText != null && !subtitleText.isEmpty())||(subtitleTextRu != null && !subtitleTextRu.isEmpty())) {
                                 Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
                                 subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
                                 if (subtitleText != null) {
@@ -5902,15 +5945,18 @@ public class DBService {
                                     }
                                     em.merge(subtitle);
                                 }
-                                if (previoutSubttile != null && subtitle.getPreviousSubtitle() == null) {
-                                    previoutSubttile.setNextSubtitle(subtitle);
-                                    subtitle.setPreviousSubtitle(previoutSubttile);
-                                    em.merge(previoutSubttile);
-                                    em.merge(subtitle);
-                                }
-                                previoutSubttile = subtitle;
+                                subtilteArray[currentIndex - 1] = subtitle;
                             }
-
+                            for (int i = 1; i < subtilteArray.length ; i++) {
+                                Subtitle s = subtilteArray[i];
+                                if (s.getPreviousSubtitle() == null) {
+                                    Subtitle preS=subtilteArray[i-1];
+                                    preS.setNextSubtitle(s);
+                                    em.merge(preS);
+                                    s.setPreviousSubtitle(preS);
+                                    em.merge(s);
+                                }
+                            }
                         }
                     }
                 }
@@ -6772,10 +6818,13 @@ public class DBService {
                         Iterator locationSubtitlesObjectIterator = locationSubtitlesObject.keys();
                         while (locationSubtitlesObjectIterator.hasNext()) {
                             JSONObject subtitleSet = locationSubtitlesObject.getJSONObject((String) locationSubtitlesObjectIterator.next());
-                            Subtitle previoutSubttile = null;
+                            int subtitleCount = subtitleSet.length();
+                            Subtitle[] subtilteArray = new Subtitle[subtitleCount];
                             Iterator subtitleSetIterator = subtitleSet.keys();
                             while (subtitleSetIterator.hasNext()) {
-                                JSONObject subtitleObject = subtitleSet.getJSONObject((String) subtitleSetIterator.next());
+                                String currentKey = (String) subtitleSetIterator.next();
+                                Integer currentIndex = Integer.valueOf(currentKey);
+                                JSONObject subtitleObject = subtitleSet.getJSONObject(currentKey);
                                 String npcNameString = subtitleObject.getString("name");
                                 String subtitleTextString = subtitleObject.getString("text");
                                 String npcName = null;
@@ -6855,7 +6904,7 @@ public class DBService {
                                 } else {
                                     subtitleText = subtitleTextString;
                                 }
-                                if (subtitleText != null && !subtitleText.isEmpty()) {
+                                if ((subtitleText != null && !subtitleText.isEmpty())||(subtitleTextRu != null && !subtitleTextRu.isEmpty())) {
                                     Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
                                     subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
                                     if (subtitleText != null) {
@@ -6881,15 +6930,21 @@ public class DBService {
                                         }
                                         em.merge(subtitle);
                                     }
-                                    if (previoutSubttile != null && subtitle.getPreviousSubtitle() == null) {
-                                        previoutSubttile.setNextSubtitle(subtitle);
-                                        subtitle.setPreviousSubtitle(previoutSubttile);
-                                        em.merge(previoutSubttile);
-                                        em.merge(subtitle);
-                                    }
-                                    previoutSubttile = subtitle;
+
+                                    subtilteArray[currentIndex - 1] = subtitle;
+
                                 }
 
+                            }
+                            for (int i = 1; i < subtilteArray.length ; i++) {
+                                Subtitle s = subtilteArray[i];
+                                if (s.getPreviousSubtitle() == null) {
+                                    Subtitle preS=subtilteArray[i-1];
+                                    preS.setNextSubtitle(s);
+                                    em.merge(preS);
+                                    s.setPreviousSubtitle(preS);
+                                    em.merge(s);
+                                }
                             }
                         }
                     }

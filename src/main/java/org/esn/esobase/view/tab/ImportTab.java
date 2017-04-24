@@ -690,6 +690,7 @@ public class ImportTab extends VerticalLayout {
                 service.newFormatImportNpcs(jsonFromLua);
                 service.newFormatImportSubtitles(jsonFromLua);
             }
+            service.assignToSpreadSheetPhrases();
 
         }
 
