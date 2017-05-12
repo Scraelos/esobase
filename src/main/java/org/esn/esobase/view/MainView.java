@@ -22,6 +22,7 @@ import org.esn.esobase.view.tab.ChangePasswordTab;
 import org.esn.esobase.view.tab.DirectTableEditTab;
 import org.esn.esobase.view.tab.ImportTab;
 import org.esn.esobase.view.tab.PortalInfoTab;
+import org.esn.esobase.view.tab.QuestTranslateTab;
 import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
 import org.esn.esobase.view.tab.SearchInRawStringsTab;
@@ -58,6 +59,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem importMenuItem;
     private MenuBar.MenuItem syncMenuItem;
     private MenuBar.MenuItem translateMenuItem;
+    private MenuBar.MenuItem questTranslateMenuItem;
     private MenuBar.MenuItem usersMenuItem;
     private MenuBar.MenuItem changePasswordMenuItem;
     private MenuBar.MenuItem questsMenuItem;
@@ -80,6 +82,7 @@ public class MainView extends Panel implements View, Command {
     private SystemSettingsTab systemSettingsTabContent;
     private SearchInRawStringsTab searchInRawStringsTabContent;
     private SpellerTestTab spellerTestTabContent;
+    private QuestTranslateTab questTranslateTabContent;
 
     //protected final ShortcutListener shiftTwoListener;
     //protected final ShortcutListener shiftThreeListener;
@@ -110,8 +113,8 @@ public class MainView extends Panel implements View, Command {
         styles.add(".v-label {\n"
                 + "    white-space: pre-line;\n"
                 + "    overflow: hidden;\n"
-                + "}"+
-                ".my-grid .v-grid-body .v-grid-cell { height: 100px; }");
+                + "}"
+                + ".my-grid .v-grid-body .v-grid-cell { height: 100px; }");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);
         layout.setSpacing(true);
@@ -130,7 +133,8 @@ public class MainView extends Panel implements View, Command {
 
     private void buildMenu() {
         mainMenu.setWidth(100f, Unit.PERCENTAGE);
-        translateMenuItem = mainMenu.addItem("Перевод", this);
+        translateMenuItem = mainMenu.addItem("Перевод диалогов", this);
+        questTranslateMenuItem = mainMenu.addItem("Перевод квестов", this);
         directTableEditMenuItem = mainMenu.addItem("Таблицы", this);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
             questsMenuItem = mainMenu.addItem("Квесты", this);
@@ -225,6 +229,18 @@ public class MainView extends Panel implements View, Command {
                 translateTabContent = new TranslateTab(service);
             }
             TabSheet.Tab tab = tabs.addTab(translateTabContent, selectedItem.getText());
+            tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        } else if (selectedItem == questTranslateMenuItem) {
+            if (questTranslateTabContent != null) {
+                TabSheet.Tab tab = tabs.getTab(questTranslateTabContent);
+                if (tab == null) {
+                    questTranslateTabContent = new QuestTranslateTab(service);
+                }
+            } else {
+                questTranslateTabContent = new QuestTranslateTab(service);
+            }
+            TabSheet.Tab tab = tabs.addTab(questTranslateTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == directTableEditMenuItem) {

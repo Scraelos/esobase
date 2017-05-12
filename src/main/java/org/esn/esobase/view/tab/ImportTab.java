@@ -280,7 +280,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importAbilityDescriptionsFromG);
-            
+
             importCollectiblesFromG = new Button("Импорт коллекционных предметов из гугл-таблиц");
             importCollectiblesFromG.addClickListener(new Button.ClickListener() {
 
@@ -292,7 +292,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importCollectiblesFromG);
-            
+
             importCollectibleDescriptionsFromG = new Button("Импорт описаний коллекционных предметов из гугл-таблиц");
             importCollectibleDescriptionsFromG.addClickListener(new Button.ClickListener() {
 
@@ -304,7 +304,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importCollectibleDescriptionsFromG);
-            
+
             importLoadscreensFromG = new Button("Импорт загрузочных экранов из гугл-таблиц");
             importLoadscreensFromG.addClickListener(new Button.ClickListener() {
 
@@ -375,7 +375,9 @@ public class ImportTab extends VerticalLayout {
                 public void buttonClick(Button.ClickEvent event) {
                     List<Location> locs = service.getLocations();
                     for (Location l : locs) {
-                        service.calculateLocationProgress(l);
+                        if (l.getNpcs() != null && !l.getNpcs().isEmpty()) {
+                            service.calculateLocationProgress(l);
+                        }
                     }
                 }
             });
@@ -439,7 +441,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(assignActivatorsWithItems);
-            transferGreetingsToTopicsButton=new Button("Перенос приветствий в диалоги");
+            transferGreetingsToTopicsButton = new Button("Перенос приветствий в диалоги");
             transferGreetingsToTopicsButton.addClickListener(new Button.ClickListener() {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
@@ -683,10 +685,16 @@ public class ImportTab extends VerticalLayout {
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
-            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")||LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
+            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
                 service.newFormatImportNpcsWithSublocations(jsonFromLua);
                 service.newFormatImportSubtitlesWithSublocations(jsonFromLua);
-            } else if(LuaDecoder.getFileheader(text).equals("ConversationsQ_SavedVariables =")||LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables =")) {
+                if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")) {
+                    service.newFormatImportQuestsWithSublocations(jsonFromLua);
+                }
+                if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
+                    service.newFormatImportQuestsWithSteps(jsonFromLua);
+                }
+            } else if (LuaDecoder.getFileheader(text).equals("ConversationsQ_SavedVariables =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables =")) {
                 service.newFormatImportNpcs(jsonFromLua);
                 service.newFormatImportSubtitles(jsonFromLua);
             }

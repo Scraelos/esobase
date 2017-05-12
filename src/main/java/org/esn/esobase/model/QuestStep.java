@@ -5,15 +5,15 @@
  */
 package org.esn.esobase.model;
 
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -21,7 +21,7 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
-public class QuestDirection extends DAO {
+public class QuestStep extends DAO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,15 +30,12 @@ public class QuestDirection extends DAO {
     private Long id;
     private String textEn;
     private String textRu;
-    @ManyToOne
-    private GSpreadSheetsQuestDirection sheetsQuestDirection;
+    @OneToMany(mappedBy = "step")
+    private Set<QuestDirection> directions;
     @ManyToOne
     private Quest quest;
     @ManyToOne
-    private QuestStep step;
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(255)")
-    private DIRECTION_TYPE directionType;
+    private GSpreadSheetsJournalEntry sheetsJournalEntry;
 
     @Override
     public Long getId() {
@@ -66,12 +63,12 @@ public class QuestDirection extends DAO {
         this.textRu = textRu;
     }
 
-    public GSpreadSheetsQuestDirection getSheetsQuestDirection() {
-        return sheetsQuestDirection;
+    public Set<QuestDirection> getDirections() {
+        return directions;
     }
 
-    public void setSheetsQuestDirection(GSpreadSheetsQuestDirection sheetsQuestDirection) {
-        this.sheetsQuestDirection = sheetsQuestDirection;
+    public void setDirections(Set<QuestDirection> directions) {
+        this.directions = directions;
     }
 
     public Quest getQuest() {
@@ -82,28 +79,12 @@ public class QuestDirection extends DAO {
         this.quest = quest;
     }
 
-    public QuestStep getStep() {
-        return step;
+    public GSpreadSheetsJournalEntry getSheetsJournalEntry() {
+        return sheetsJournalEntry;
     }
 
-    public void setStep(QuestStep step) {
-        this.step = step;
-    }
-
-    public DIRECTION_TYPE getDirectionType() {
-        return directionType;
-    }
-
-    public void setDirectionType(DIRECTION_TYPE directionType) {
-        this.directionType = directionType;
-    }
-
-    public enum DIRECTION_TYPE {
-        main,
-        hints,
-        hidden,
-        optional
-
+    public void setSheetsJournalEntry(GSpreadSheetsJournalEntry sheetsJournalEntry) {
+        this.sheetsJournalEntry = sheetsJournalEntry;
     }
 
 }

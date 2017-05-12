@@ -17,19 +17,25 @@ public enum NPC_SEX {
     f,
     N,
     n,
-    U;
+    U,
+    p,
+    P;
 
     @Override
     public String toString() {
         switch (this) {
             case M:
-                return "Мужской";
-            case F:
-                return "Женский";
             case m:
                 return "Мужской";
+            case F:
             case f:
                 return "Женский";
+            case n:
+            case N:
+                return "Средний";
+            case p:
+            case P:
+                return "множественное число";
         }
         return "?";
     }

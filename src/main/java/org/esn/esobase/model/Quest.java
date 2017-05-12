@@ -7,7 +7,6 @@ package org.esn.esobase.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -43,13 +42,15 @@ public class Quest extends DAO {
     @ManyToOne
     private Location location;
     @OneToMany(mappedBy = "quest")
-    private List<QuestJournalEntry> questJournalEntrys;
+    private Set<QuestJournalEntry> questJournalEntrys;
     @OneToMany(mappedBy = "quest")
-    private List<QuestDirection> questDirections;
+    private Set<QuestDirection> questDirections;
     @ManyToOne
     private GSpreadSheetsQuestName sheetsQuestName;
     @ManyToOne
     private GSpreadSheetsQuestDescription sheetsQuestDescription;
+    @OneToMany(mappedBy = "quest")
+    private Set<QuestStep> steps;
 
     @Override
     public Long getId() {
@@ -101,11 +102,11 @@ public class Quest extends DAO {
         this.progress = progress;
     }
 
-    public List<QuestJournalEntry> getQuestJournalEntrys() {
+    public Set<QuestJournalEntry> getQuestJournalEntrys() {
         return questJournalEntrys;
     }
 
-    public void setQuestJournalEntrys(List<QuestJournalEntry> questJournalEntrys) {
+    public void setQuestJournalEntrys(Set<QuestJournalEntry> questJournalEntrys) {
         this.questJournalEntrys = questJournalEntrys;
     }
 
@@ -125,11 +126,11 @@ public class Quest extends DAO {
         this.descriptionRu = descriptionRu;
     }
 
-    public List<QuestDirection> getQuestDirections() {
+    public Set<QuestDirection> getQuestDirections() {
         return questDirections;
     }
 
-    public void setQuestDirections(List<QuestDirection> questDirections) {
+    public void setQuestDirections(Set<QuestDirection> questDirections) {
         this.questDirections = questDirections;
     }
 
@@ -147,6 +148,14 @@ public class Quest extends DAO {
 
     public void setSheetsQuestDescription(GSpreadSheetsQuestDescription sheetsQuestDescription) {
         this.sheetsQuestDescription = sheetsQuestDescription;
+    }
+
+    public Set<QuestStep> getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Set<QuestStep> steps) {
+        this.steps = steps;
     }
 
     @Override
