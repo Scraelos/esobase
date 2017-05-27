@@ -5,7 +5,6 @@
  */
 package org.esn.esobase.data;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow;
 import org.esn.esobase.data.diffs.ActivatorsDiff;
 import org.esn.esobase.data.diffs.NpcNameDiff;
 import org.esn.esobase.data.diffs.NpcPhraseDiff;
@@ -50,6 +49,7 @@ import org.esn.esobase.data.diffs.CollectibleDescriptionsDiff;
 import org.esn.esobase.data.diffs.CollectiblesDiff;
 import org.esn.esobase.data.diffs.LoadscreensDiff;
 import org.esn.esobase.data.diffs.NotesDiff;
+import org.esn.esobase.data.repository.BookRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsAbilityDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsAchievementDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsAchievementRepository;
@@ -69,6 +69,8 @@ import org.esn.esobase.data.repository.GSpreadSheetsQuestDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestDirectionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestNameRepository;
 import org.esn.esobase.data.repository.TranslatedTextRepository;
+import org.esn.esobase.model.Book;
+import org.esn.esobase.model.BookText;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetEntity;
@@ -169,6 +171,12 @@ public class DBService {
     private GSpreadSheetsCollectibleRepository gSpreadSheetsCollectibleRepository;
     @Autowired
     private GSpreadSheetsCollectibleDescriptionRepository gSpreadSheetsCollectibleDescriptionRepository;
+    @Autowired
+    private BookRepository bookRepository;
+
+    public BookRepository getBookRepository() {
+        return bookRepository;
+    }
 
     public GSpreadSheetsNpcNameRepository getgSpreadSheetsNpcNameRepository() {
         return gSpreadSheetsNpcNameRepository;
@@ -3750,7 +3758,9 @@ public class DBService {
     @Transactional
     public void acceptTranslatedText(TranslatedText entity) {
         Session session = (Session) em.getDelegate();
-        entity.setText(entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n", "$"));
+        if (entity.getBook() == null) {
+            entity.setText(entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n", "$"));
+        }
         Npc npc = null;
         boolean isSucceeded = false;
         if (entity.getGreeting() != null) {
@@ -3859,6 +3869,40 @@ public class DBService {
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getBook() != null) {
+            BookText gs = em.find(BookText.class, entity.getBook().getId());
+            gs.setTextRu(entity.getText());
+            gs.getBook().setTranslator(entity.getAuthor().getLogin());
+            gs.getBook().setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getBookName() != null) {
+            Book gs = em.find(Book.class, entity.getBookName().getId());
+            gs.setNameRu(entity.getText());
+            em.merge(gs);
+            Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class);
+            activatorCrit.add(Restrictions.eq("textEn", gs.getNameEn()));
+            List<GSpreadSheetsActivator> activatorList = activatorCrit.list();
+            if (activatorList != null) {
+                for (GSpreadSheetsActivator ac : activatorList) {
+                    ac.setTextRu(entity.getText());
+                    ac.setTranslator(entity.getAuthor().getLogin());
+                    ac.setChangeTime(new Date());
+                    em.merge(ac);
+                }
+            }
+            Criteria itemCrit = session.createCriteria(GSpreadSheetsItemName.class);
+            itemCrit.add(Restrictions.eq("textEn", gs.getNameEn()));
+            List<GSpreadSheetsItemName> itemList = itemCrit.list();
+            if (itemList != null) {
+                for (GSpreadSheetsItemName it : itemList) {
+                    it.setTextRu(entity.getText());
+                    it.setTranslator(entity.getAuthor().getLogin());
+                    it.setChangeTime(new Date());
+                    em.merge(it);
+                }
+            }
             isSucceeded = true;
         } else if (entity.getSpreadSheetsItemDescription() != null) {
             GSpreadSheetsItemDescription gs = em.find(GSpreadSheetsItemDescription.class, entity.getSpreadSheetsItemDescription().getId());
@@ -4160,16 +4204,7 @@ public class DBService {
                 }
             }
         }
-        for (Greeting g : npc.getGreetings()) {
-            GSpreadSheetsNpcPhrase extNpcPhrase = g.getExtNpcPhrase();
-            if (extNpcPhrase != null) {
-                totalPhases++;
-                if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                    translatedPhrases++;
-                }
-            }
-
-        }
+        
         float r = 0;
         if (totalPhases > 0) {
             r = (float) translatedPhrases / totalPhases;
@@ -4975,6 +5010,19 @@ public class DBService {
     }
 
     @Transactional
+    public void cleanupRawWithWrongVer(String ver) {
+        Query updateQ = em.createNativeQuery("delete from esorawstring where ver!=:ver");
+        updateQ.setParameter("ver", ver);
+        updateQ.executeUpdate();
+    }
+
+    @Transactional
+    public void cleanupRawWithNullVer() {
+        Query updateQ = em.createNativeQuery("delete from esorawstring where ver is null");
+        updateQ.executeUpdate();
+    }
+
+    @Transactional
     public void updateFrRawStrings(List<Object[]> rows) {
         for (Object[] row : rows) {
             Query q = em.createNativeQuery("update esorawstring set textfr=:textfr where aid=:aid and bid=:bid and cid=:cid");
@@ -4994,6 +5042,19 @@ public class DBService {
             q.setParameter("bid", row[1]);
             q.setParameter("cid", row[2]);
             q.setParameter("textde", row[3]);
+            q.executeUpdate();
+        }
+    }
+
+    @Transactional
+    public void updateRuRawStrings(List<Object[]> rows, String ver) {
+        for (Object[] row : rows) {
+            Query q = em.createNativeQuery("update esorawstring set textru=:textru,ver=:ver where aid=:aid and bid=:bid and cid=:cid");
+            q.setParameter("aid", row[0]);
+            q.setParameter("bid", row[1]);
+            q.setParameter("cid", row[2]);
+            q.setParameter("textru", row[3]);
+            q.setParameter("ver", ver);
             q.executeUpdate();
         }
     }
@@ -6520,8 +6581,8 @@ public class DBService {
                                 String greetingskey = (String) greetingsKeys.next();
                                 String greetingText = null;
                                 String greetingTextRu = null;
-                                Integer weight=Integer.valueOf(greetingskey);
-                                weight=weight*1000;
+                                Integer weight = Integer.valueOf(greetingskey);
+                                weight = weight * 1000;
                                 if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
                                     greetingTextRu = greetingsObject.getString(greetingskey);
                                 } else {
@@ -6553,7 +6614,7 @@ public class DBService {
                                             greeting.setNpcTextRu(greetingTextRu);
                                             em.merge(greeting);
                                         }
-                                        if(greeting.getWeight()==null||greeting.getWeight()<weight) {
+                                        if (greeting.getWeight() == null || greeting.getWeight() < weight) {
                                             greeting.setWeight(weight);
                                             em.merge(greeting);
                                         }
@@ -6669,8 +6730,8 @@ public class DBService {
                                                         if (childTopic.getPreviousTopics() == null) {
                                                             childTopic.setPreviousTopics(new HashSet<Topic>());
                                                         }
-                                                        if(parentTopic.getWeight()!=null&&childTopic.getWeight()==null) {
-                                                            childTopic.setWeight(parentTopic.getWeight()+1);
+                                                        if (parentTopic.getWeight() != null && childTopic.getWeight() == null) {
+                                                            childTopic.setWeight(parentTopic.getWeight() + 1);
                                                         }
                                                         childTopic.getPreviousTopics().add(parentTopic);
                                                         LOG.info("adding previous topic to " + childTopic.getId());
@@ -7403,7 +7464,7 @@ public class DBService {
                                 try {
                                     JSONObject questDescription = questInfoObject.getJSONObject("description");
                                     if (questDescription != null) {
-                                        String descriptionString=questDescription.getString("1");
+                                        String descriptionString = questDescription.getString("1");
 
                                     }
                                 } catch (JSONException ex) {
@@ -7661,8 +7722,242 @@ public class DBService {
     }
 
     @Transactional
+    public void importBooksWithSublocations(JSONObject source) {
+        Pattern nameCasesPattern = Pattern.compile("(.*)\\((.*)\\)");
+        Session session = (Session) em.getDelegate();
+        JSONObject npcLocationObject = null;
+        try {
+            npcLocationObject = source.getJSONObject("books");
+            Iterator locationsKeys = npcLocationObject.keys();
+            while (locationsKeys.hasNext()) {
+                String locationName = (String) locationsKeys.next();
+                Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+                sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
+                List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
+                if (list != null && !list.isEmpty()) {
+                    GSpreadSheetsLocationName sheetsLocationName = list.get(0);
+                    Criteria locationCrit = session.createCriteria(Location.class);
+                    locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                    List<Location> locations = locationCrit.list();
+                    Location location = null;
+                    if (locations != null && !locations.isEmpty()) {
+                        location = locations.get(0);
+                        if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                            location.setNameRu(sheetsLocationName.getTextRu());
+                        }
+                    } else {
+                        location = new Location();
+                        location.setProgress(BigDecimal.ZERO);
+
+                    }
+                    if (sheetsLocationName != null) {
+                        location.setSheetsLocationName(sheetsLocationName);
+                        location.setName(sheetsLocationName.getTextEn());
+                    }
+                    if (location.getId() == null) {
+                        LOG.log(Level.INFO, "new location: {0}", location.toString());
+                        em.persist(location);
+                    } else {
+                        LOG.log(Level.INFO, "update location: {0}", location.toString());
+                        em.merge(location);
+                    }
+                    JSONObject subLocationObject = npcLocationObject.getJSONObject(locationName);
+                    Iterator subLocationKeys = subLocationObject.keys();
+                    while (subLocationKeys.hasNext()) {
+                        String subLocationKey = (String) subLocationKeys.next();
+                        String subLocationName = null;
+                        Location subLocation = null;
+                        if (subLocationKey.equals(locationName)) {
+                            subLocation = location;
+                        } else {
+                            Matcher subLocationWithCasesMatcher = nameCasesPattern.matcher(subLocationKey);
+                            if (subLocationWithCasesMatcher.matches()) {
+                                String group1 = subLocationWithCasesMatcher.group(1);
+                                String group2 = subLocationWithCasesMatcher.group(2);
+                                if (!EsnDecoder.IsRu(group1)) {
+                                    subLocationName = group1.trim();
+                                } else {
+                                    subLocationName = group2.trim();
+                                }
+                            } else {
+                                subLocationName = subLocationKey;
+                            }
+
+                            Criteria sheetSubLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+                            sheetSubLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", subLocationName), Restrictions.ilike("textRu", subLocationName)));
+                            List<GSpreadSheetsLocationName> sulLocationList = sheetSubLocationCrit.list();
+                            if (sulLocationList != null && !sulLocationList.isEmpty()) {
+                                GSpreadSheetsLocationName sheetsSubLocationName = sulLocationList.get(0);
+                                Criteria subLocationCrit = session.createCriteria(Location.class);
+                                subLocationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsSubLocationName.getTextRu())));
+                                List<Location> subLocations = subLocationCrit.list();
+
+                                if (subLocations != null && !subLocations.isEmpty()) {
+                                    subLocation = subLocations.get(0);
+                                    if (EsnDecoder.IsRu(sheetsSubLocationName.getTextRu())) {
+                                        subLocation.setNameRu(sheetsSubLocationName.getTextRu());
+                                    }
+                                } else {
+                                    subLocation = new Location();
+                                    subLocation.setProgress(BigDecimal.ZERO);
+
+                                }
+                                subLocation.setParentLocation(location);
+                                if (sheetsSubLocationName != null) {
+                                    subLocation.setSheetsLocationName(sheetsSubLocationName);
+                                    subLocation.setName(sheetsSubLocationName.getTextEn());
+                                    if (!sheetsSubLocationName.getTextEn().equals(sheetsSubLocationName.getTextRu())) {
+                                        subLocation.setNameRu(sheetsSubLocationName.getTextRu());
+                                    }
+                                }
+                                if (subLocation.getId() == null) {
+                                    LOG.log(Level.INFO, "new sublocation: " + subLocation.toString() + "/" + location.toString());
+                                    em.persist(subLocation);
+                                } else {
+                                    LOG.log(Level.INFO, "update sublocation: " + subLocation.toString() + "/" + location.toString());
+                                    em.merge(subLocation);
+                                }
+                            }
+                        }
+
+                        JSONObject locationBooksObject = subLocationObject.getJSONObject(subLocationKey);
+                        Iterator locationBooksObjectIterator = locationBooksObject.keys();
+                        while (locationBooksObjectIterator.hasNext()) {
+                            String bookKeyString = (String) locationBooksObjectIterator.next();
+                            Long bookKey = Long.valueOf(bookKeyString);
+                            Book book = null;
+                            Criteria bookCriteria = session.createCriteria(Book.class);
+                            bookCriteria.add(Restrictions.eq("cId", bookKey));
+                            List<Book> bookList = bookCriteria.list();
+                            if (bookList != null && !bookList.isEmpty()) {
+                                book = bookList.get(0);
+                            } else {
+                                book = new Book();
+                                book.setaId(21337012L);
+                                book.setbId(0L);
+                                book.setcId(bookKey);
+                                BookText bookText = new BookText();
+                                bookText.setaId(21337012L);
+                                bookText.setbId(0L);
+                                bookText.setcId(bookKey);
+
+                                Criteria rawBookCrit = session.createCriteria(EsoRawString.class);
+                                rawBookCrit.add(Restrictions.eq("aId", book.getaId()));
+                                rawBookCrit.add(Restrictions.eq("bId", book.getbId()));
+                                rawBookCrit.add(Restrictions.eq("cId", book.getcId()));
+                                List<EsoRawString> rawBookList = rawBookCrit.list();
+                                if (rawBookList != null && !rawBookList.isEmpty()) {
+                                    EsoRawString rawBook = rawBookList.get(0);
+                                    bookText.setTextEn(rawBook.getTextEn());
+                                    if (rawBook.getTextRu() != null && !rawBook.getTextEn().equals(rawBook.getTextRu())) {
+                                        bookText.setTextRu(rawBook.getTextRu());
+                                    }
+                                }
+                                em.persist(bookText);
+                                book.setBookText(bookText);
+                                Criteria rawBookNameCrit = session.createCriteria(EsoRawString.class);
+                                rawBookNameCrit.add(Restrictions.eq("aId", 51188213L));
+                                rawBookNameCrit.add(Restrictions.eq("bId", book.getbId()));
+                                rawBookNameCrit.add(Restrictions.eq("cId", book.getcId()));
+                                List<EsoRawString> rawBookNameList = rawBookNameCrit.list();
+                                if (rawBookNameList != null && !rawBookNameList.isEmpty()) {
+                                    EsoRawString rawBook = rawBookNameList.get(0);
+                                    book.setNameEn(rawBook.getTextEn());
+                                    if (rawBook.getTextRu() != null && !rawBook.getTextEn().equals(rawBook.getTextRu())) {
+                                        book.setNameRu(rawBook.getTextRu());
+                                    }
+                                } else {
+                                    book.setNameEn("-no name-");
+                                }
+                                em.persist(book);
+                                bookText.setBook(book);
+                            }
+                            if (book.getLocations() == null) {
+                                book.setLocations(new HashSet<>());
+                            }
+                            if (!book.getLocations().contains(subLocation)) {
+                                book.getLocations().add(subLocation);
+                            }
+
+                            em.merge(book);
+
+                        }
+                    }
+
+                }
+            }
+        } catch (JSONException ex) {
+
+        }
+    }
+
+    @Transactional
     public Quest getQuest(Quest q) {
         return em.find(Quest.class, q.getId());
+    }
+
+    @Transactional
+    public Book getBook(Long bookId) {
+        return em.find(Book.class, bookId);
+    }
+
+    @Transactional
+    public List<Book> getBooksFromDate(Date fromDate) {
+        List<Book> result = null;
+        Session s = (Session) em.getDelegate();
+        Criteria c = s.createCriteria(Book.class);
+        c.add(Restrictions.ge("changeTime", fromDate));
+        c.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        result = c.list();
+        return result;
+    }
+
+    @Transactional
+    public void loadBooks() {
+        Session session = (Session) em.getDelegate();
+        Criteria rawBookCrit = session.createCriteria(EsoRawString.class);
+        rawBookCrit.add(Restrictions.eq("aId", 21337012L));
+        rawBookCrit.add(Restrictions.eq("bId", 0L));
+        rawBookCrit.list();
+        List<EsoRawString> rawBookList = rawBookCrit.list();
+        for (EsoRawString r : rawBookList) {
+            Criteria bookCriteria = session.createCriteria(Book.class);
+            bookCriteria.add(Restrictions.eq("cId", r.getcId()));
+            List<Book> bookList = bookCriteria.list();
+            if (bookList != null && !bookList.isEmpty()) {
+            } else {
+                Book book = new Book();
+                book.setaId(21337012L);
+                book.setbId(0L);
+                book.setcId(r.getcId());
+
+                BookText bookText = new BookText();
+                bookText.setaId(21337012L);
+                bookText.setbId(0L);
+                bookText.setcId(r.getcId());
+                bookText.setTextEn(r.getTextEn());
+                if (r.getTextRu() != null && !r.getTextEn().equals(r.getTextRu())) {
+                    bookText.setTextRu(r.getTextRu());
+                }
+                em.persist(bookText);
+                book.setBookText(bookText);
+                Criteria rawBookNameCrit = session.createCriteria(EsoRawString.class);
+                rawBookNameCrit.add(Restrictions.eq("aId", 51188213L));
+                rawBookNameCrit.add(Restrictions.eq("bId", book.getbId()));
+                rawBookNameCrit.add(Restrictions.eq("cId", book.getcId()));
+                List<EsoRawString> rawBookNameList = rawBookNameCrit.list();
+                if (rawBookNameList != null && !rawBookNameList.isEmpty()) {
+                    EsoRawString rawBook = rawBookNameList.get(0);
+                    book.setNameEn(rawBook.getTextEn());
+                    if (rawBook.getTextRu() != null && !rawBook.getTextEn().equals(rawBook.getTextRu())) {
+                        book.setNameRu(rawBook.getTextRu());
+                    }
+                } else {
+                    book.setNameEn("-no name-");
+                }
+                em.persist(book);
+            }
+        }
     }
 
 }

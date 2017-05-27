@@ -6,6 +6,7 @@
 package org.esn.esobase.view.tab;
 
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.server.StreamResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.Receiver;
@@ -15,10 +16,13 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -93,11 +97,13 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadXlsEn;
     private Upload uploadXlsFr;
     private Upload uploadXlsDe;
+    private Upload uploadXlsRu;
     private Upload uploadInterfaceLua;
     private Upload uploadRuInterfaceLua;
     private Button updateGspreadSheetsWithRawText;
     private Button assignActivatorsWithItems;
     private Button transferGreetingsToTopicsButton;
+    private Button loadAllBooks;
 
     public ImportTab(DBService service_) {
         this.service = service_;
@@ -397,6 +403,11 @@ public class ImportTab extends VerticalLayout {
             uploadXlsDe.addSucceededListener(raswStringReceiverDe);
             uploadXlsDe.setImmediate(true);
             this.addComponent(uploadXlsDe);
+            RaswStringReceiverRu raswStringReceiverRu = new RaswStringReceiverRu(service);
+            uploadXlsRu = new Upload("Загрузите ru-файл xlsx", raswStringReceiverRu);
+            uploadXlsRu.addSucceededListener(raswStringReceiverRu);
+            uploadXlsRu.setImmediate(true);
+            this.addComponent(uploadXlsRu);
             assignTablesToRaw = new Button("Привязать строки таблиц к строкам raw");
             assignTablesToRaw.addClickListener(new Button.ClickListener() {
 
@@ -449,6 +460,14 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(transferGreetingsToTopicsButton);
+            loadAllBooks = new Button("Импорт книг из сырых строк");
+            loadAllBooks.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    service.loadBooks();
+                }
+            });
+            this.addComponent(loadAllBooks);
 
         }
     }
@@ -498,6 +517,7 @@ public class ImportTab extends VerticalLayout {
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
             try {
+
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                 XSSFWorkbook wb = new XSSFWorkbook(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
@@ -524,6 +544,7 @@ public class ImportTab extends VerticalLayout {
                     service.insertEnRawStrings(rows);
                     rows.clear();
                 }
+
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -633,6 +654,63 @@ public class ImportTab extends VerticalLayout {
         }
     }
 
+    private class RaswStringReceiverRu implements Receiver, SucceededListener {
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        public RaswStringReceiverRu(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                SimpleDateFormat versdf = new SimpleDateFormat("yyyyMMddHHmm");
+                String ver = versdf.format(new Date());
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Long aId = Long.valueOf(s.getSheetName());
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell bIdCell = r.getCell(1);
+                        Cell cIdCell = r.getCell(2);
+                        Cell textCell = r.getCell(3);
+                        Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
+                        rows.add(row);
+                        if (rows.size() > 5000) {
+                            service.updateRuRawStrings(rows, ver);
+                            rows.clear();
+                        }
+
+                    }
+                }
+                if (rows.size() > 0) {
+                    service.updateRuRawStrings(rows, ver);
+                    rows.clear();
+                }
+                Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with null ver");
+                service.cleanupRawWithNullVer();
+                Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with wrong ver");
+                service.cleanupRawWithWrongVer(ver);
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     private class ConversationsReceiver implements Receiver, SucceededListener {
 
         public ConversationsReceiver(DBService service) {
@@ -693,6 +771,7 @@ public class ImportTab extends VerticalLayout {
                 }
                 if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
                     service.newFormatImportQuestsWithSteps(jsonFromLua);
+                    service.importBooksWithSublocations(jsonFromLua);
                 }
             } else if (LuaDecoder.getFileheader(text).equals("ConversationsQ_SavedVariables =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables =")) {
                 service.newFormatImportNpcs(jsonFromLua);

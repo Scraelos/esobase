@@ -5,14 +5,16 @@
  */
 package org.esn.esobase.model;
 
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -20,9 +22,7 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
-@Table(indexes = {
-    @Index(columnList = "aId,bId,cId", unique = true)})
-public class EsoRawString extends DAO {
+public class BookText extends DAO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -35,13 +35,11 @@ public class EsoRawString extends DAO {
     @Column(columnDefinition = "TEXT")
     private String textEn;
     @Column(columnDefinition = "TEXT")
-    private String textDe;
-    @Column(columnDefinition = "TEXT")
-    private String textFr;
-    @Column(columnDefinition = "TEXT")
     private String textRu;
-    @Column(length = 12)
-    private String ver;
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
+    private Set<TranslatedText> translations;
+    @OneToOne(mappedBy = "bookText")
+    private Book book;
 
     @Override
     public Long getId() {
@@ -49,8 +47,8 @@ public class EsoRawString extends DAO {
     }
 
     @Override
-    public void setId(Long paramObject) {
-        this.id = paramObject;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Long getaId() {
@@ -85,22 +83,6 @@ public class EsoRawString extends DAO {
         this.textEn = textEn;
     }
 
-    public String getTextDe() {
-        return textDe;
-    }
-
-    public void setTextDe(String textDe) {
-        this.textDe = textDe;
-    }
-
-    public String getTextFr() {
-        return textFr;
-    }
-
-    public void setTextFr(String textFr) {
-        this.textFr = textFr;
-    }
-
     public String getTextRu() {
         return textRu;
     }
@@ -109,12 +91,20 @@ public class EsoRawString extends DAO {
         this.textRu = textRu;
     }
 
-    public String getVer() {
-        return ver;
+    public Set<TranslatedText> getTranslations() {
+        return translations;
     }
 
-    public void setVer(String ver) {
-        this.ver = ver;
+    public void setTranslations(Set<TranslatedText> translations) {
+        this.translations = translations;
+    }
+
+    public Book getBook() {
+        return book;
+    }
+
+    public void setBook(Book book) {
+        this.book = book;
     }
 
 }

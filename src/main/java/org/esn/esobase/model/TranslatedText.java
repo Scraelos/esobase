@@ -92,6 +92,10 @@ public class TranslatedText extends DAO {
     private GSpreadSheetsCollectibleDescription sheetsCollectibleDescription;
     @ManyToOne
     private GSpreadSheetsLoadscreen sheetsLoadscreen;
+    @ManyToOne
+    private BookText book;
+    @ManyToOne
+    private Book bookName;
 
     @Override
     public Long getId() {
@@ -341,6 +345,22 @@ public class TranslatedText extends DAO {
 
     public void setSheetsLoadscreen(GSpreadSheetsLoadscreen sheetsLoadscreen) {
         this.sheetsLoadscreen = sheetsLoadscreen;
+    }
+
+    public BookText getBook() {
+        return book;
+    }
+
+    public void setBook(BookText book) {
+        this.book = book;
+    }
+
+    public Book getBookName() {
+        return bookName;
+    }
+
+    public void setBookName(Book bookName) {
+        this.bookName = bookName;
     }
 
 }

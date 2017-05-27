@@ -18,6 +18,7 @@ import ru.xpoft.vaadin.VaadinView;
 import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.security.SpringSecurityHelper;
+import org.esn.esobase.view.tab.BookTranslateTab;
 import org.esn.esobase.view.tab.ChangePasswordTab;
 import org.esn.esobase.view.tab.DirectTableEditTab;
 import org.esn.esobase.view.tab.ImportTab;
@@ -69,6 +70,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem portalInfoMenuItem;
     private MenuBar.MenuItem systemSettingsMenuItem;
     private MenuBar.MenuItem spellerTestMenuItem;
+    private MenuBar.MenuItem bookTanslateMenuItem;
 
     private ImportTab importTabContent;
     private TranslateTab translateTabContent;
@@ -83,6 +85,7 @@ public class MainView extends Panel implements View, Command {
     private SearchInRawStringsTab searchInRawStringsTabContent;
     private SpellerTestTab spellerTestTabContent;
     private QuestTranslateTab questTranslateTabContent;
+    private BookTranslateTab bookTranslateTabContent;
 
     //protected final ShortcutListener shiftTwoListener;
     //protected final ShortcutListener shiftThreeListener;
@@ -135,6 +138,7 @@ public class MainView extends Panel implements View, Command {
         mainMenu.setWidth(100f, Unit.PERCENTAGE);
         translateMenuItem = mainMenu.addItem("Перевод диалогов", this);
         questTranslateMenuItem = mainMenu.addItem("Перевод квестов", this);
+        bookTanslateMenuItem = mainMenu.addItem("Перевод книг", this);
         directTableEditMenuItem = mainMenu.addItem("Таблицы", this);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
             questsMenuItem = mainMenu.addItem("Квесты", this);
@@ -241,6 +245,18 @@ public class MainView extends Panel implements View, Command {
                 questTranslateTabContent = new QuestTranslateTab(service);
             }
             TabSheet.Tab tab = tabs.addTab(questTranslateTabContent, selectedItem.getText());
+            tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        }else if (selectedItem == bookTanslateMenuItem) {
+            if (bookTranslateTabContent != null) {
+                TabSheet.Tab tab = tabs.getTab(bookTranslateTabContent);
+                if (tab == null) {
+                    bookTranslateTabContent = new BookTranslateTab(service);
+                }
+            } else {
+                bookTranslateTabContent = new BookTranslateTab(service);
+            }
+            TabSheet.Tab tab = tabs.addTab(bookTranslateTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == directTableEditMenuItem) {
