@@ -101,17 +101,17 @@ public class ImportTab extends VerticalLayout {
 
     public ImportTab(DBService service_) {
         this.service = service_;
-        ConversationsReceiver receiver = new ConversationsReceiver(service);
+        /*ConversationsReceiver receiver = new ConversationsReceiver(service);
 
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
             upload = new Upload("Загрузите файл Conversations.lua", receiver);
             upload.addSucceededListener(receiver);
             upload.setImmediate(true);
             this.addComponent(upload);
-        }
+        }*/
 
         NewConversationsReceiver newReceiver = new NewConversationsReceiver(service);
-        uploadNewFormat = new Upload("Загрузите файл ConversationsQ.lua", newReceiver);
+        uploadNewFormat = new Upload("Загрузите файл ConversationsQQ.lua", newReceiver);
         uploadNewFormat.addSucceededListener(newReceiver);
         uploadNewFormat.setImmediate(true);
         this.addComponent(uploadNewFormat);

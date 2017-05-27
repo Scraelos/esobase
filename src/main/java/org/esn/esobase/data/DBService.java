@@ -3118,34 +3118,41 @@ public class DBService {
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
         crit.setFetchMode("playerTranslations", FetchMode.SELECT);
         crit.setFetchMode("npcTranslations", FetchMode.SELECT);
+        if (translateStatus != null || (translator != null) || noTranslations) {
+            crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("extPlayerPhrase", "extPlayerPhrase", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("extNpcPhrase", "extNpcPhrase", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("extPlayerPhrase.translatedTexts", "extPlayerPhraseTranslated", JoinType.LEFT_OUTER_JOIN);
+            crit.createAlias("extNpcPhrase.translatedTexts", "extNpcPhraseTranslated", JoinType.LEFT_OUTER_JOIN);
+        }
         if (noTranslations) {
-            crit.createAlias("extPlayerPhrase", "extPlayerPhrase",JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("extNpcPhrase", "extNpcPhrase",JoinType.LEFT_OUTER_JOIN);
             crit.add(Restrictions.or(
                     Restrictions.eqProperty("extPlayerPhrase.textEn", "extPlayerPhrase.textRu"),
                     Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
             )
             );
         }
-        if (translateStatus != null || (translator != null)) {
-            crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
-        }
         if (translateStatus != null) {
             crit.add(Restrictions.or(
                     Restrictions.eq("playerTranslations.status", translateStatus),
-                    Restrictions.eq("npcTranslations.status", translateStatus)
+                    Restrictions.eq("npcTranslations.status", translateStatus),
+                    Restrictions.eq("extPlayerPhraseTranslated.status", translateStatus),
+                    Restrictions.eq("extNpcPhraseTranslated.status", translateStatus)
             )
             );
         }
         if (translator != null) {
             crit.add(Restrictions.or(
                     Restrictions.eq("playerTranslations.author", translator),
-                    Restrictions.eq("npcTranslations.author", translator)
+                    Restrictions.eq("npcTranslations.author", translator),
+                    Restrictions.eq("extPlayerPhraseTranslated.author", translator),
+                    Restrictions.eq("extNpcPhraseTranslated.author", translator)
             )
             );
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        crit.addOrder(Order.asc("weight"));
         crit.addOrder(Order.asc("id"));
         List<Topic> list = crit.list();
         List<Topic> orderedList = new ArrayList<>();
@@ -3242,8 +3249,8 @@ public class DBService {
 
     private void addAllPreviousSubtitles(List<Subtitle> list, Subtitle s) {
         if (s.getPreviousSubtitle() != null && !list.contains(s.getPreviousSubtitle())) {
-            list.add(0,s.getPreviousSubtitle());
-            addAllPreviousSubtitles(list, s.getPreviousSubtitle());            
+            list.add(0, s.getPreviousSubtitle());
+            addAllPreviousSubtitles(list, s.getPreviousSubtitle());
         }
     }
 
@@ -5024,7 +5031,7 @@ public class DBService {
         for (GSpreadSheetsActivator item : activatorList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L, 14464837L, 207758933L,77659573L,124318053L,219936053L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L, 14464837L, 207758933L, 77659573L, 124318053L, 219936053L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5040,7 +5047,7 @@ public class DBService {
         for (GSpreadSheetsItemDescription item : itemDescriptionList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{139139780L, 228378404L,249673710L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{139139780L, 228378404L, 249673710L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5056,7 +5063,7 @@ public class DBService {
         for (GSpreadSheetsItemName item : itemNameList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{242841733L, 267697733L,124362421L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{242841733L, 267697733L, 124362421L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5088,7 +5095,7 @@ public class DBService {
         for (GSpreadSheetsLocationName item : locationNameList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L, 268015829L, 111863941L,157886597L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L, 268015829L, 111863941L, 157886597L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5174,7 +5181,7 @@ public class DBService {
         for (GSpreadSheetsPlayerPhrase item : PlayerPhraseList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId and textDe is not null order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{204987124L, 20958740L, 249936564L, 228103012L, 232026500L, 150525940L, 99155012L,109216308L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{204987124L, 20958740L, 249936564L, 228103012L, 232026500L, 150525940L, 99155012L, 109216308L}));
             rawQ.setParameter("bId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5202,7 +5209,7 @@ public class DBService {
         for (GSpreadSheetsQuestDirection item : QuestDirectionList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{7949764L, 256430276L, 121487972L,168415844L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{7949764L, 256430276L, 121487972L, 168415844L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -6513,6 +6520,8 @@ public class DBService {
                                 String greetingskey = (String) greetingsKeys.next();
                                 String greetingText = null;
                                 String greetingTextRu = null;
+                                Integer weight=Integer.valueOf(greetingskey);
+                                weight=weight*1000;
                                 if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
                                     greetingTextRu = greetingsObject.getString(greetingskey);
                                 } else {
@@ -6531,6 +6540,7 @@ public class DBService {
                                     if (greetingList == null || greetingList.isEmpty()) {
                                         Topic greeting = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
                                         LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
+                                        greeting.setWeight(weight);
                                         em.persist(greeting);
                                         npcTopics.add(greeting);
                                     } else {
@@ -6541,6 +6551,10 @@ public class DBService {
                                         }
                                         if (greeting.getNpcTextRu() == null && greetingTextRu != null) {
                                             greeting.setNpcTextRu(greetingTextRu);
+                                            em.merge(greeting);
+                                        }
+                                        if(greeting.getWeight()==null||greeting.getWeight()<weight) {
+                                            greeting.setWeight(weight);
                                             em.merge(greeting);
                                         }
                                         npcTopics.add(greeting);
@@ -6654,6 +6668,9 @@ public class DBService {
                                                         childTopic = npcTopic2;
                                                         if (childTopic.getPreviousTopics() == null) {
                                                             childTopic.setPreviousTopics(new HashSet<Topic>());
+                                                        }
+                                                        if(parentTopic.getWeight()!=null&&childTopic.getWeight()==null) {
+                                                            childTopic.setWeight(parentTopic.getWeight()+1);
                                                         }
                                                         childTopic.getPreviousTopics().add(parentTopic);
                                                         LOG.info("adding previous topic to " + childTopic.getId());
@@ -7373,6 +7390,221 @@ public class DBService {
                                         }
 
                                     }
+
+                                }
+                            }
+                            JSONObject questInfoObject = null;
+                            try {
+                                questInfoObject = questObject.getJSONObject("info");
+                            } catch (JSONException ex) {
+
+                            }
+                            if (questInfoObject != null) {
+                                try {
+                                    JSONObject questDescription = questInfoObject.getJSONObject("description");
+                                    if (questDescription != null) {
+                                        String descriptionString=questDescription.getString("1");
+
+                                    }
+                                } catch (JSONException ex) {
+
+                                }
+                                try {
+                                    JSONObject questStarter = questInfoObject.getJSONObject("starter");
+                                    if (questStarter != null) {
+                                        String npcNameString = questStarter.getString("1");
+                                        String npcName = null;
+                                        String npcNameRu = null;
+                                        Matcher npcWithCasesMatcher = nameCasesPattern.matcher(npcNameString);
+                                        if (npcWithCasesMatcher.matches()) {
+                                            String group1 = npcWithCasesMatcher.group(1);
+                                            String group2 = npcWithCasesMatcher.group(2);
+                                            if (!EsnDecoder.IsRu(group1)) {
+                                                npcName = group1.trim();
+                                            } else {
+                                                npcNameRu = group2.trim();
+                                            }
+                                        } else {
+                                            if (EsnDecoder.IsRu(npcNameString)) {
+                                                npcNameRu = npcNameString;
+                                            } else {
+                                                npcName = npcNameString;
+                                            }
+                                        }
+                                        GSpreadSheetsNpcName sheetNpc = null;
+                                        if (npcName == null) {
+                                            Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+                                            sheetNpcCrit.add(Restrictions.ilike("textRu", npcNameRu));
+                                            List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
+                                            if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
+                                                sheetNpc = sheetNpcList.get(0);
+                                                npcName = sheetNpc.getTextEn();
+                                            }
+                                        } else {
+                                            Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+                                            sheetNpcCrit.add(Restrictions.ilike("textEn", npcName));
+                                            List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
+                                            if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
+                                                sheetNpc = sheetNpcList.get(0);
+                                                if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                                    npcNameRu = sheetNpc.getTextRu();
+                                                }
+                                            }
+                                        }
+                                        Criteria npcCriteria = session.createCriteria(Npc.class);
+                                        npcCriteria.add(Restrictions.eq("location", location));
+                                        if (npcName != null) {
+                                            npcCriteria.add(Restrictions.ilike("name", npcName));
+                                        } else if (npcNameRu != null) {
+                                            npcCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
+                                        }
+                                        Npc currentNpc = null;
+                                        List<Npc> npcList = npcCriteria.list();
+                                        if (npcList != null && !npcList.isEmpty()) {
+                                            currentNpc = npcList.get(0);
+                                        } else {
+                                            Criteria npcParentLocCriteria = session.createCriteria(Npc.class);
+                                            npcParentLocCriteria.createAlias("location", "location");
+                                            npcParentLocCriteria.add(Restrictions.eq("location.parentLocation", location));
+                                            if (npcName != null) {
+                                                npcParentLocCriteria.add(Restrictions.ilike("name", npcName));
+                                            } else if (npcNameRu != null) {
+                                                npcParentLocCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
+                                            }
+                                            npcList = npcParentLocCriteria.list();
+                                            if (npcList != null && !npcList.isEmpty()) {
+                                                currentNpc = npcList.get(0);
+                                            }
+                                        }
+                                        if (currentNpc == null) {
+                                            currentNpc = new Npc();
+                                            currentNpc.setLocation(location);
+                                            if (npcName != null) {
+                                                currentNpc.setName(npcName);
+                                            }
+                                            if (npcNameRu != null) {
+                                                currentNpc.setNameRu(npcNameRu);
+                                            }
+                                        }
+                                        if (sheetNpc != null) {
+                                            currentNpc.setSheetsNpcName(sheetNpc);
+                                            currentNpc.setSex(sheetNpc.getSex());
+                                        }
+                                        if (currentNpc.getId() == null) {
+                                            LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
+                                            em.persist(currentNpc);
+                                        } else {
+                                            LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
+                                            em.merge(currentNpc);
+                                        }
+                                        if (quest.getNpcs() == null) {
+                                            quest.setNpcs(new HashSet<Npc>());
+                                        }
+                                        if (!quest.getNpcs().contains(currentNpc)) {
+                                            quest.getNpcs().add(currentNpc);
+                                            em.merge(quest);
+                                        }
+                                    }
+                                } catch (JSONException ex) {
+
+                                }
+                                try {
+                                    JSONObject questFinisher = questInfoObject.getJSONObject("finisher");
+                                    if (questFinisher != null) {
+                                        String npcNameString = questFinisher.getString("1");
+                                        String npcName = null;
+                                        String npcNameRu = null;
+                                        Matcher npcWithCasesMatcher = nameCasesPattern.matcher(npcNameString);
+                                        if (npcWithCasesMatcher.matches()) {
+                                            String group1 = npcWithCasesMatcher.group(1);
+                                            String group2 = npcWithCasesMatcher.group(2);
+                                            if (!EsnDecoder.IsRu(group1)) {
+                                                npcName = group1.trim();
+                                            } else {
+                                                npcNameRu = group2.trim();
+                                            }
+                                        } else {
+                                            if (EsnDecoder.IsRu(npcNameString)) {
+                                                npcNameRu = npcNameString;
+                                            } else {
+                                                npcName = npcNameString;
+                                            }
+                                        }
+                                        GSpreadSheetsNpcName sheetNpc = null;
+                                        if (npcName == null) {
+                                            Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+                                            sheetNpcCrit.add(Restrictions.ilike("textRu", npcNameRu));
+                                            List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
+                                            if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
+                                                sheetNpc = sheetNpcList.get(0);
+                                                npcName = sheetNpc.getTextEn();
+                                            }
+                                        } else {
+                                            Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+                                            sheetNpcCrit.add(Restrictions.ilike("textEn", npcName));
+                                            List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
+                                            if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
+                                                sheetNpc = sheetNpcList.get(0);
+                                                if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                                    npcNameRu = sheetNpc.getTextRu();
+                                                }
+                                            }
+                                        }
+                                        Criteria npcCriteria = session.createCriteria(Npc.class);
+                                        npcCriteria.add(Restrictions.eq("location", location));
+                                        if (npcName != null) {
+                                            npcCriteria.add(Restrictions.ilike("name", npcName));
+                                        } else if (npcNameRu != null) {
+                                            npcCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
+                                        }
+                                        Npc currentNpc = null;
+                                        List<Npc> npcList = npcCriteria.list();
+                                        if (npcList != null && !npcList.isEmpty()) {
+                                            currentNpc = npcList.get(0);
+                                        } else {
+                                            Criteria npcParentLocCriteria = session.createCriteria(Npc.class);
+                                            npcParentLocCriteria.createAlias("location", "location");
+                                            npcParentLocCriteria.add(Restrictions.eq("location.parentLocation", location));
+                                            if (npcName != null) {
+                                                npcParentLocCriteria.add(Restrictions.ilike("name", npcName));
+                                            } else if (npcNameRu != null) {
+                                                npcParentLocCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
+                                            }
+                                            npcList = npcParentLocCriteria.list();
+                                            if (npcList != null && !npcList.isEmpty()) {
+                                                currentNpc = npcList.get(0);
+                                            }
+                                        }
+                                        if (currentNpc == null) {
+                                            currentNpc = new Npc();
+                                            currentNpc.setLocation(location);
+                                            if (npcName != null) {
+                                                currentNpc.setName(npcName);
+                                            }
+                                            if (npcNameRu != null) {
+                                                currentNpc.setNameRu(npcNameRu);
+                                            }
+                                        }
+                                        if (sheetNpc != null) {
+                                            currentNpc.setSheetsNpcName(sheetNpc);
+                                            currentNpc.setSex(sheetNpc.getSex());
+                                        }
+                                        if (currentNpc.getId() == null) {
+                                            LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
+                                            em.persist(currentNpc);
+                                        } else {
+                                            LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
+                                            em.merge(currentNpc);
+                                        }
+                                        if (quest.getNpcs() == null) {
+                                            quest.setNpcs(new HashSet<Npc>());
+                                        }
+                                        if (!quest.getNpcs().contains(currentNpc)) {
+                                            quest.getNpcs().add(currentNpc);
+                                            em.merge(quest);
+                                        }
+                                    }
+                                } catch (JSONException ex) {
 
                                 }
                             }
