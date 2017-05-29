@@ -15,7 +15,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import org.esn.esobase.model.lib.DAO;
 
@@ -24,6 +26,9 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
+@Table(indexes = {
+    @Index(columnList = "spreadSheetsNpcPhrase_id", unique = false)
+    ,@Index(columnList = "spreadSheetsPlayerPhrase_id", unique = false)})
 public class TranslatedText extends DAO {
 
     @Id

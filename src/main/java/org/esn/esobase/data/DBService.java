@@ -68,7 +68,13 @@ import org.esn.esobase.data.repository.GSpreadSheetsPlayerPhraseRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestDirectionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestNameRepository;
+import org.esn.esobase.data.repository.LocationRepository;
+import org.esn.esobase.data.repository.NpcRepository;
+import org.esn.esobase.data.repository.SubtitleRepository;
+import org.esn.esobase.data.repository.TopicRepository;
 import org.esn.esobase.data.repository.TranslatedTextRepository;
+import org.esn.esobase.data.specification.SubtitleSpecification;
+import org.esn.esobase.data.specification.TopicSpecification;
 import org.esn.esobase.model.Book;
 import org.esn.esobase.model.BookText;
 import org.esn.esobase.model.EsoInterfaceVariable;
@@ -173,6 +179,22 @@ public class DBService {
     private GSpreadSheetsCollectibleDescriptionRepository gSpreadSheetsCollectibleDescriptionRepository;
     @Autowired
     private BookRepository bookRepository;
+    @Autowired
+    private NpcRepository npcRepository;
+    @Autowired
+    private LocationRepository locationRepository;
+    @Autowired
+    private TopicRepository topicRepository;
+    @Autowired
+    private SubtitleRepository subtitleRepository;
+
+    public NpcRepository getNpcRepository() {
+        return npcRepository;
+    }
+
+    public LocationRepository getLocationRepository() {
+        return locationRepository;
+    }
 
     public BookRepository getBookRepository() {
         return bookRepository;
@@ -3117,9 +3139,9 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
+    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations) {
         container.removeAllItems();
-        Session session = (Session) em.getDelegate();
+        /*Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Topic.class);
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extPlayerPhrase", FetchMode.JOIN);
@@ -3162,7 +3184,8 @@ public class DBService {
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         crit.addOrder(Order.asc("weight"));
         crit.addOrder(Order.asc("id"));
-        List<Topic> list = crit.list();
+        List<Topic> list = crit.list();*/
+        List<Topic> list = topicRepository.findAll(new TopicSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations));
         List<Topic> orderedList = new ArrayList<>();
         for (Topic t : list) {
             if (t.getPreviousTopics() == null || t.getPreviousTopics().isEmpty()) {
@@ -3218,9 +3241,9 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
+    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations) {
         container.removeAllItems();
-        Session session = (Session) em.getDelegate();
+        /*Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(Subtitle.class);
         crit.add(Restrictions.eq("npc", npc));
         crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
@@ -3242,7 +3265,8 @@ public class DBService {
             crit.add(Restrictions.eq("translations.author", translator));
         }
         crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        List<Subtitle> list = crit.list();
+        List<Subtitle> list = crit.list();*/
+        List<Subtitle> list = subtitleRepository.findAll(new SubtitleSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations));
         List<Subtitle> orderedSubtitles = new ArrayList<>();
         for (Subtitle s : list) {
             if (!orderedSubtitles.contains(s)) {
@@ -4204,7 +4228,7 @@ public class DBService {
                 }
             }
         }
-        
+
         float r = 0;
         if (totalPhases > 0) {
             r = (float) translatedPhrases / totalPhases;

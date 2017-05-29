@@ -52,7 +52,7 @@ public class Npc extends DAO {
     @ManyToMany(mappedBy = "npcs")
     private Set<Quest> quests;
     private BigDecimal progress;
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsNpcName sheetsNpcName;
 
     public Npc() {

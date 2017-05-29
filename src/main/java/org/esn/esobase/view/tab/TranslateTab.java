@@ -34,6 +34,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.specification.LocationSpecification;
+import org.esn.esobase.data.specification.NpcSpecification;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Quest;
@@ -77,10 +79,13 @@ public class TranslateTab extends VerticalLayout {
     private Npc currentNpc;
     private ComboBox translateStatus;
     private CheckBox noTranslations;
+    private CheckBox emptyTranslations;
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+    private final NpcSpecification npcSpecification = new NpcSpecification();
+    private final LocationSpecification locationSpecification = new LocationSpecification();
 
     public TranslateTab(DBService service) {
         TopicNpcColumnGenerator topicNpcColumnGenerator = new TopicNpcColumnGenerator();
@@ -142,7 +147,6 @@ public class TranslateTab extends VerticalLayout {
 
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
-                locationTable.setValue(null);
                 LoadFilters();
                 LoadNpcContent();
             }
@@ -153,12 +157,21 @@ public class TranslateTab extends VerticalLayout {
 
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
-                locationTable.setValue(null);
                 LoadFilters();
                 LoadNpcContent();
             }
         });
-        HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations);
+        emptyTranslations = new CheckBox("Не добавлен перевод");
+        emptyTranslations.setValue(Boolean.FALSE);
+        emptyTranslations.addValueChangeListener(new Property.ValueChangeListener() {
+
+            @Override
+            public void valueChange(Property.ValueChangeEvent event) {
+                LoadFilters();
+                LoadNpcContent();
+            }
+        });
+        HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
         sysAccountContainer = service.loadBeanItems(sysAccountContainer);
@@ -168,7 +181,6 @@ public class TranslateTab extends VerticalLayout {
 
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
-                locationTable.setValue(null);
                 LoadFilters();
                 LoadNpcContent();
             }
@@ -178,6 +190,7 @@ public class TranslateTab extends VerticalLayout {
 
             @Override
             public void buttonClick(Button.ClickEvent event) {
+                LoadFilters();
                 LoadNpcContent();
             }
         });
@@ -252,22 +265,43 @@ public class TranslateTab extends VerticalLayout {
     }
 
     private void LoadFilters() {
-        npcContainer = service.getNpcs(npcContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
+        npcContainer.removeAllItems();
+        npcSpecification.setNoTranslations(noTranslations.getValue());
+        npcSpecification.setTranslateStatus((TRANSLATE_STATUS) translateStatus.getValue());
+        npcSpecification.setTranslator((SysAccount) translatorBox.getValue());
+        npcSpecification.setQuest((Quest) questTable.getValue());
+        npcSpecification.setLocation((Location) locationTable.getValue());
+        npcSpecification.setSubLocation((Location) subLocationTable.getValue());
+        npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
+        if (subLocationTable.getValue() != null) {
+            npcSpecification.setLocation((Location) subLocationTable.getValue());
+        } else {
+            npcSpecification.setLocation((Location) locationTable.getValue());
+        }
+        npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
         npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
+        locationSpecification.setNoTranslations(noTranslations.getValue());
+        locationSpecification.setEmptyTranslations(emptyTranslations.getValue());
+        locationSpecification.setTranslateStatus((TRANSLATE_STATUS) translateStatus.getValue());
+        locationSpecification.setTranslator((SysAccount) translatorBox.getValue());
+        List<Location> allLocations = service.getLocationRepository().findAll(locationSpecification);
         List<Location> locations = new ArrayList<>();
-        for (Npc npc : npcContainer.getItemIds()) {
-            if (npc.getLocation()!=null&&npc.getLocation().getParentLocation() == null) {
-                locations.add(npc.getLocation());
+        List<Location> subLocations = new ArrayList<>();
+        for (Location l : allLocations) {
+            if (l.getParentLocation() == null) {
+                locations.add(l);
+                subLocations.add(l);
             }
         }
+
         locationContainer.removeAllItems();
         locationContainer.addAll(locations);
         locationContainer.sort(new Object[]{"name"}, new boolean[]{true});
-        List<Location> subLocations = new ArrayList<>();
-        for (Npc npc : npcContainer.getItemIds()) {
-            if (npc.getLocation()!=null&&npc.getLocation().getParentLocation() != null) {
-                subLocations.add(npc.getLocation().getParentLocation());
-                subLocations.add(npc.getLocation());
+
+        for (Location l : allLocations) {
+            if (l.getParentLocation() != null) {
+                subLocations.add(l);
+
             }
         }
         subLocationContainer.removeAllItems();
@@ -284,9 +318,9 @@ public class TranslateTab extends VerticalLayout {
             locationNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "location.nameRu"));
             npcName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "name"));
             npcNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "nameRu"));
-            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
+            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue());
             npcTabSheet.getTab(npcTopicsTable).setCaption("Диалоги(" + topicsContainer.size() + ")");
-            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue());
+            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue());
             npcTabSheet.getTab(npcSubtitlesTable).setCaption("Субтитры(" + subtitlesContainer.size() + ")");
         }
     }
@@ -495,13 +529,6 @@ public class TranslateTab extends VerticalLayout {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
-
-            npcContainer.removeAllContainerFilters();
-            if (subLocationTable.getValue() != null) {
-                npcContainer.addContainerFilter(new Compare.Equal("location", subLocationTable.getValue()));
-            } else if (locationTable.getValue() != null) {
-                npcContainer.addContainerFilter(new Or(new Compare.Equal("location", locationTable.getValue()), new Compare.Equal("location.parentLocation", locationTable.getValue())));
-            }
             if (locationTable.getValue() != null) {
                 subLocationContainer.removeAllContainerFilters();
                 subLocationContainer.addContainerFilter(new Or(
@@ -510,19 +537,15 @@ public class TranslateTab extends VerticalLayout {
                 )
                 );
             }
-            if (questTable.getValue() != null) {
-                List<Filter> equals = new ArrayList<>();
-                for (Npc npc : ((Quest) questTable.getValue()).getNpcs()) {
-                    equals.add(new Compare.Equal("id", npc.getId()));
-                }
-                Filter[] equalsArray = new Filter[equals.size()];
-                for (int i = 0; i < equals.size(); i++) {
-                    equalsArray[i] = equals.get(i);
-                }
-                Or orFilter = new Or(equalsArray);
-                npcContainer.addContainerFilter(orFilter);
-            }
-
+            npcContainer.removeAllItems();
+            npcSpecification.setNoTranslations(noTranslations.getValue());
+            npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
+            npcSpecification.setTranslateStatus((TRANSLATE_STATUS) translateStatus.getValue());
+            npcSpecification.setTranslator((SysAccount) translatorBox.getValue());
+            npcSpecification.setQuest((Quest) questTable.getValue());
+            npcSpecification.setLocation((Location) locationTable.getValue());
+            npcSpecification.setSubLocation((Location) subLocationTable.getValue());
+            npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
         }
 
     }
@@ -537,7 +560,6 @@ public class TranslateTab extends VerticalLayout {
             Set<TranslatedText> list1 = (Set<TranslatedText>) source.getItem(itemId).getItemProperty(columnId).getValue();
             list.addAll(list1);
             List<SysAccount> accounts = new ArrayList<>();
-            
 
             String text = null;
             if (itemId instanceof Subtitle) {
@@ -561,7 +583,7 @@ public class TranslateTab extends VerticalLayout {
                     }
                 }
             }
-            
+
             if (list != null) {
                 for (TranslatedText t : list) {
                     vl.addComponent(new TranslationCell(t));
