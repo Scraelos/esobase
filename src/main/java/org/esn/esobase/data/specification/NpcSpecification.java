@@ -34,6 +34,7 @@ public class NpcSpecification implements Specification<Npc> {
     private Quest quest;
     private Location location;
     private Location subLocation;
+    private String searchString;
 
     public void setTranslateStatus(TRANSLATE_STATUS translateStatus) {
         this.translateStatus = translateStatus;
@@ -67,20 +68,16 @@ public class NpcSpecification implements Specification<Npc> {
         this.subLocation = subLocation;
     }
 
+    public void setSearchString(String searchString) {
+        this.searchString = searchString;
+    }
+
     @Override
     public Predicate toPredicate(Root<Npc> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
 
         Predicate result = null;
         List<Predicate> predicates = new ArrayList<>();
         root.fetch("location", JoinType.LEFT).fetch("parentLocation", JoinType.LEFT);
-        if (noTranslations) {
-            predicates.add(cb.lt(root.get("progress"), BigDecimal.ONE));
-        }
-
-        if (quest != null) {
-            predicates.add(cb.equal(root.join("quests").get("id"), quest.getId()));
-        }
-
         if (subLocation != null) {
             predicates.add(
                     cb.equal(root.get("location"), subLocation)
@@ -91,92 +88,115 @@ public class NpcSpecification implements Specification<Npc> {
                     cb.equal(root.get("location").get("parentLocation"), location)
             ));
         }
-
-        if (emptyTranslations || translateStatus != null || translator != null) {
+        if (searchString != null && (searchString.length() > 2)) {
             Join<Object, Object> topicsJoin = root.joinSet("topics", JoinType.LEFT);
             Join<Object, Object> subtitlesJoin = root.joinSet("subtitles", JoinType.LEFT);
+            Join<Object, Object> join = topicsJoin.join("extNpcPhrase", JoinType.LEFT);
+            Join<Object, Object> join1 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT);
+            Join<Object, Object> join2 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT);
+            String searchPattern = "%" + searchString.toLowerCase() + "%";
+            predicates.add(cb.or(
+                    cb.like(cb.lower(join.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join1.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join2.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join.get("textRu")), searchPattern),
+                    cb.like(cb.lower(join1.get("textRu")), searchPattern),
+                    cb.like(cb.lower(join2.get("textRu")), searchPattern)
+            ));
+        } else {
+            if (noTranslations) {
+                predicates.add(cb.lt(root.get("progress"), BigDecimal.ONE));
+            }
+            if (quest != null) {
+                predicates.add(cb.equal(root.join("quests").get("id"), quest.getId()));
+            }
+            if (emptyTranslations || translateStatus != null || translator != null) {
+                Join<Object, Object> topicsJoin = root.joinSet("topics", JoinType.LEFT);
+                Join<Object, Object> subtitlesJoin = root.joinSet("subtitles", JoinType.LEFT);
 
-            if (emptyTranslations) {
-                Join<Object, Object> join = topicsJoin.join("extNpcPhrase", JoinType.LEFT);
-                Join<Object, Object> join1 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT);
-                Join<Object, Object> join2 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT);
-
-                predicates.add(cb.or(
-                        cb.and(
-                                cb.isNotNull(topicsJoin.get("extNpcPhrase")),
-                                cb.isEmpty(join.get("translatedTexts")),
-                                cb.isNull(join.get("translator"))
-                        ),
-                        cb.and(
-                                cb.isNotNull(topicsJoin.get("extPlayerPhrase")),
-                                cb.isEmpty(join1.get("translatedTexts")),
-                                cb.isNull(join1.get("translator"))
-                        ),
-                        cb.and(
-                                cb.isNotNull(subtitlesJoin.get("extNpcPhrase")),
-                                cb.isEmpty(join2.get("translatedTexts")),
-                                cb.isNull(join2.get("translator"))
-                        )
-                ));
-            } else if (translateStatus != null || translator != null) {
-                Join<Object, Object> join = topicsJoin.join("npcTranslations", JoinType.LEFT);
-                Join<Object, Object> join1 = topicsJoin.join("playerTranslations", JoinType.LEFT);
-                Join<Object, Object> join2 = topicsJoin.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                Join<Object, Object> join3 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                Join<Object, Object> join4 = subtitlesJoin.join("translations", JoinType.LEFT);
-                Join<Object, Object> join5 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                if (translateStatus != null && translator != null) {
+                if (emptyTranslations) {
+                    Join<Object, Object> join = topicsJoin.join("extNpcPhrase", JoinType.LEFT);
+                    Join<Object, Object> join1 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT);
+                    Join<Object, Object> join2 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT);
 
                     predicates.add(cb.or(
                             cb.and(
-                                    cb.equal(join.get("status"), translateStatus),
-                                    cb.equal(join.get("author"), translator)
+                                    cb.isNotNull(topicsJoin.get("extNpcPhrase")),
+                                    cb.isEmpty(join.get("translatedTexts")),
+                                    cb.isNull(join.get("translator"))
                             ),
                             cb.and(
-                                    cb.equal(join1.get("status"), translateStatus),
-                                    cb.equal(join1.get("author"), translator)
+                                    cb.isNotNull(topicsJoin.get("extPlayerPhrase")),
+                                    cb.isEmpty(join1.get("translatedTexts")),
+                                    cb.isNull(join1.get("translator"))
                             ),
                             cb.and(
-                                    cb.equal(join2.get("status"), translateStatus),
-                                    cb.equal(join2.get("author"), translator)
-                            ),
-                            cb.and(
-                                    cb.equal(join3.get("status"), translateStatus),
-                                    cb.equal(join3.get("author"), translator)
-                            ),
-                            cb.and(
-                                    cb.equal(join4.get("status"), translateStatus),
-                                    cb.equal(join4.get("author"), translator)
-                            ),
-                            cb.and(
-                                    cb.equal(join5.get("status"), translateStatus),
-                                    cb.equal(join5.get("author"), translator)
+                                    cb.isNotNull(subtitlesJoin.get("extNpcPhrase")),
+                                    cb.isEmpty(join2.get("translatedTexts")),
+                                    cb.isNull(join2.get("translator"))
                             )
                     ));
-                } else if (translator != null) {
-                    predicates.add(cb.or(
-                            cb.equal(join.get("author"), translator),
-                            cb.equal(join1.get("author"), translator),
-                            cb.equal(join2.get("author"), translator),
-                            cb.equal(join3.get("author"), translator),
-                            cb.equal(join4.get("author"), translator),
-                            cb.equal(join5.get("author"), translator)
-                    ));
-                } else if (translateStatus != null) {
-                    predicates.add(cb.or(
-                            cb.equal(join.get("status"), translateStatus),
-                            cb.equal(join1.get("status"), translateStatus),
-                            cb.equal(join2.get("status"), translateStatus),
-                            cb.equal(join3.get("status"), translateStatus),
-                            cb.equal(join4.get("status"), translateStatus),
-                            cb.equal(join5.get("status"), translateStatus)
-                    ));
-                }
-            }
+                } else if (translateStatus != null || translator != null) {
+                    Join<Object, Object> join = topicsJoin.join("npcTranslations", JoinType.LEFT);
+                    Join<Object, Object> join1 = topicsJoin.join("playerTranslations", JoinType.LEFT);
+                    Join<Object, Object> join2 = topicsJoin.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join3 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join4 = subtitlesJoin.join("translations", JoinType.LEFT);
+                    Join<Object, Object> join5 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
+                    if (translateStatus != null && translator != null) {
 
+                        predicates.add(cb.or(
+                                cb.and(
+                                        cb.equal(join.get("status"), translateStatus),
+                                        cb.equal(join.get("author"), translator)
+                                ),
+                                cb.and(
+                                        cb.equal(join1.get("status"), translateStatus),
+                                        cb.equal(join1.get("author"), translator)
+                                ),
+                                cb.and(
+                                        cb.equal(join2.get("status"), translateStatus),
+                                        cb.equal(join2.get("author"), translator)
+                                ),
+                                cb.and(
+                                        cb.equal(join3.get("status"), translateStatus),
+                                        cb.equal(join3.get("author"), translator)
+                                ),
+                                cb.and(
+                                        cb.equal(join4.get("status"), translateStatus),
+                                        cb.equal(join4.get("author"), translator)
+                                ),
+                                cb.and(
+                                        cb.equal(join5.get("status"), translateStatus),
+                                        cb.equal(join5.get("author"), translator)
+                                )
+                        ));
+                    } else if (translator != null) {
+                        predicates.add(cb.or(
+                                cb.equal(join.get("author"), translator),
+                                cb.equal(join1.get("author"), translator),
+                                cb.equal(join2.get("author"), translator),
+                                cb.equal(join3.get("author"), translator),
+                                cb.equal(join4.get("author"), translator),
+                                cb.equal(join5.get("author"), translator)
+                        ));
+                    } else if (translateStatus != null) {
+                        predicates.add(cb.or(
+                                cb.equal(join.get("status"), translateStatus),
+                                cb.equal(join1.get("status"), translateStatus),
+                                cb.equal(join2.get("status"), translateStatus),
+                                cb.equal(join3.get("status"), translateStatus),
+                                cb.equal(join4.get("status"), translateStatus),
+                                cb.equal(join5.get("status"), translateStatus)
+                        ));
+                    }
+                }
+
+            }
         }
 
         query.distinct(true);
+        query.orderBy(cb.asc(root.get("name")));
         if (!predicates.isEmpty() && predicates.size() > 1) {
             result = cb.and(predicates.toArray(new Predicate[predicates.size()]));
         } else if (!predicates.isEmpty()) {

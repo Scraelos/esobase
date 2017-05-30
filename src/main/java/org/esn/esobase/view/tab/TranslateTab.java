@@ -80,6 +80,7 @@ public class TranslateTab extends VerticalLayout {
     private ComboBox translateStatus;
     private CheckBox noTranslations;
     private CheckBox emptyTranslations;
+    private TextField searchField;
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
@@ -194,7 +195,19 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
-        FormLayout questAndWithNewTranslations = new FormLayout(translateStatus, translatorBox, checkBoxlayout);
+        searchField = new TextField("Искомая строка");
+        searchField.setWidth(200f, Unit.PIXELS);
+        searchField.setNullRepresentation("");
+        searchField.addValueChangeListener(new Property.ValueChangeListener() {
+
+            @Override
+            public void valueChange(Property.ValueChangeEvent event) {
+                LoadFilters();
+                LoadNpcContent();
+            }
+        });
+
+        FormLayout questAndWithNewTranslations = new FormLayout(translateStatus, translatorBox, checkBoxlayout, searchField);
         questAndWithNewTranslations.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
         questAndWithNewTranslations.setSizeFull();
         npcListlayout.addComponent(questAndWithNewTranslations);
@@ -273,17 +286,18 @@ public class TranslateTab extends VerticalLayout {
         npcSpecification.setLocation((Location) locationTable.getValue());
         npcSpecification.setSubLocation((Location) subLocationTable.getValue());
         npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
+        npcSpecification.setSearchString(searchField.getValue());
         if (subLocationTable.getValue() != null) {
             npcSpecification.setLocation((Location) subLocationTable.getValue());
         } else {
             npcSpecification.setLocation((Location) locationTable.getValue());
         }
         npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
-        npcContainer.sort(new Object[]{"name"}, new boolean[]{true});
         locationSpecification.setNoTranslations(noTranslations.getValue());
         locationSpecification.setEmptyTranslations(emptyTranslations.getValue());
         locationSpecification.setTranslateStatus((TRANSLATE_STATUS) translateStatus.getValue());
         locationSpecification.setTranslator((SysAccount) translatorBox.getValue());
+        locationSpecification.setSearchString(searchField.getValue());
         List<Location> allLocations = service.getLocationRepository().findAll(locationSpecification);
         List<Location> locations = new ArrayList<>();
         List<Location> subLocations = new ArrayList<>();
@@ -293,23 +307,20 @@ public class TranslateTab extends VerticalLayout {
                 subLocations.add(l);
             }
         }
-
+        for (Location l : allLocations) {
+            if (l.getParentLocation() != null) {
+                locations.add(l.getParentLocation());
+                subLocations.add(l);
+            }
+        }
         locationContainer.removeAllItems();
         locationContainer.addAll(locations);
         locationContainer.sort(new Object[]{"name"}, new boolean[]{true});
-
-        for (Location l : allLocations) {
-            if (l.getParentLocation() != null) {
-                subLocations.add(l);
-
-            }
-        }
         subLocationContainer.removeAllItems();
         subLocationContainer.addAll(subLocations);
         subLocationContainer.sort(new Object[]{"name"}, new boolean[]{true});
         questContainer = service.loadBeanItems(questContainer);
         questContainer.sort(new Object[]{"name"}, new boolean[]{true});
-
     }
 
     private void LoadNpcContent() {
@@ -318,9 +329,9 @@ public class TranslateTab extends VerticalLayout {
             locationNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "location.nameRu"));
             npcName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "name"));
             npcNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "nameRu"));
-            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue());
+            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
             npcTabSheet.getTab(npcTopicsTable).setCaption("Диалоги(" + topicsContainer.size() + ")");
-            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue());
+            subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
             npcTabSheet.getTab(npcSubtitlesTable).setCaption("Субтитры(" + subtitlesContainer.size() + ")");
         }
     }
@@ -529,8 +540,8 @@ public class TranslateTab extends VerticalLayout {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
+            subLocationContainer.removeAllContainerFilters();
             if (locationTable.getValue() != null) {
-                subLocationContainer.removeAllContainerFilters();
                 subLocationContainer.addContainerFilter(new Or(
                         new Compare.Equal("parentLocation", locationTable.getValue()),
                         new Compare.Equal("id", ((Location) locationTable.getValue()).getId())
@@ -545,6 +556,7 @@ public class TranslateTab extends VerticalLayout {
             npcSpecification.setQuest((Quest) questTable.getValue());
             npcSpecification.setLocation((Location) locationTable.getValue());
             npcSpecification.setSubLocation((Location) subLocationTable.getValue());
+            npcSpecification.setSearchString(searchField.getValue());
             npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
         }
 
@@ -715,6 +727,7 @@ public class TranslateTab extends VerticalLayout {
                     translatedText.setText(translation.getValue());
                     service.saveTranslatedText(translatedText);
                     LoadNpcContent();
+                    LoadFilters();
                 }
             });
 

@@ -3139,64 +3139,24 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations) {
+    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
         container.removeAllItems();
-        /*Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(Topic.class);
-        crit.add(Restrictions.eq("npc", npc));
-        crit.setFetchMode("extPlayerPhrase", FetchMode.JOIN);
-        crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
-        crit.setFetchMode("playerTranslations", FetchMode.SELECT);
-        crit.setFetchMode("npcTranslations", FetchMode.SELECT);
-        if (translateStatus != null || (translator != null) || noTranslations) {
-            crit.createAlias("playerTranslations", "playerTranslations", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("npcTranslations", "npcTranslations", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("extPlayerPhrase", "extPlayerPhrase", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("extNpcPhrase", "extNpcPhrase", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("extPlayerPhrase.translatedTexts", "extPlayerPhraseTranslated", JoinType.LEFT_OUTER_JOIN);
-            crit.createAlias("extNpcPhrase.translatedTexts", "extNpcPhraseTranslated", JoinType.LEFT_OUTER_JOIN);
-        }
-        if (noTranslations) {
-            crit.add(Restrictions.or(
-                    Restrictions.eqProperty("extPlayerPhrase.textEn", "extPlayerPhrase.textRu"),
-                    Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
-            )
-            );
-        }
-        if (translateStatus != null) {
-            crit.add(Restrictions.or(
-                    Restrictions.eq("playerTranslations.status", translateStatus),
-                    Restrictions.eq("npcTranslations.status", translateStatus),
-                    Restrictions.eq("extPlayerPhraseTranslated.status", translateStatus),
-                    Restrictions.eq("extNpcPhraseTranslated.status", translateStatus)
-            )
-            );
-        }
-        if (translator != null) {
-            crit.add(Restrictions.or(
-                    Restrictions.eq("playerTranslations.author", translator),
-                    Restrictions.eq("npcTranslations.author", translator),
-                    Restrictions.eq("extPlayerPhraseTranslated.author", translator),
-                    Restrictions.eq("extNpcPhraseTranslated.author", translator)
-            )
-            );
-        }
-        crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        crit.addOrder(Order.asc("weight"));
-        crit.addOrder(Order.asc("id"));
-        List<Topic> list = crit.list();*/
-        List<Topic> list = topicRepository.findAll(new TopicSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations));
-        List<Topic> orderedList = new ArrayList<>();
-        for (Topic t : list) {
-            if (t.getPreviousTopics() == null || t.getPreviousTopics().isEmpty()) {
+        List<Topic> list = topicRepository.findAll(new TopicSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations, searchString));
+        if (searchString != null && searchString.length() > 2) {
+            container.addAll(list);
+        } else {
+            List<Topic> orderedList = new ArrayList<>();
+            for (Topic t : list) {
+                if (t.getPreviousTopics() == null || t.getPreviousTopics().isEmpty()) {
+                    addNextTopics(t, orderedList);
+                }
+
+            }
+            for (Topic t : list) {
                 addNextTopics(t, orderedList);
             }
-
+            container.addAll(orderedList);
         }
-        for (Topic t : list) {
-            addNextTopics(t, orderedList);
-        }
-        container.addAll(orderedList);
         return container;
     }
 
@@ -3210,72 +3170,22 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Greeting> getNpcGreetings(Npc npc, BeanItemContainer<Greeting> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
+    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
         container.removeAllItems();
-        Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(Greeting.class);
-        crit.add(Restrictions.eq("npc", npc));
-        crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
-        crit.setFetchMode("translations", FetchMode.SELECT);
-        if (noTranslations) {
-            crit.createAlias("extNpcPhrase", "extNpcPhrase");
-            crit.add(
-                    Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
-            );
-        }
-        if (translateStatus != null || (translator != null)) {
-            crit.createAlias("translations", "translations");
-        }
-        if (translateStatus != null) {
-            crit.add(Restrictions.sizeGt("translations", 0));
-            crit.add(Restrictions.eq("translations.status", translateStatus));
-        }
-        if (translator != null) {
-            crit.add(Restrictions.eq("translations.author", translator));
-        }
-        crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        List<Greeting> list = crit.list();
-
-        container.addAll(list);
-        return container;
-    }
-
-    @Transactional
-    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations) {
-        container.removeAllItems();
-        /*Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(Subtitle.class);
-        crit.add(Restrictions.eq("npc", npc));
-        crit.setFetchMode("extNpcPhrase", FetchMode.JOIN);
-        crit.setFetchMode("translations", FetchMode.SELECT);
-        if (noTranslations) {
-            crit.createAlias("extNpcPhrase", "extNpcPhrase");
-            crit.add(
-                    Restrictions.eqProperty("extNpcPhrase.textEn", "extNpcPhrase.textRu")
-            );
-        }
-        if (translateStatus != null || (translator != null)) {
-            crit.createAlias("translations", "translations");
-        }
-        if (translateStatus != null) {
-            crit.add(Restrictions.sizeGt("translations", 0));
-            crit.add(Restrictions.eq("translations.status", translateStatus));
-        }
-        if (translator != null) {
-            crit.add(Restrictions.eq("translations.author", translator));
-        }
-        crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        List<Subtitle> list = crit.list();*/
-        List<Subtitle> list = subtitleRepository.findAll(new SubtitleSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations));
-        List<Subtitle> orderedSubtitles = new ArrayList<>();
-        for (Subtitle s : list) {
-            if (!orderedSubtitles.contains(s)) {
-                addAllPreviousSubtitles(orderedSubtitles, s);
-                orderedSubtitles.add(s);
-                addAllNextSubtitles(orderedSubtitles, s);
+        List<Subtitle> list = subtitleRepository.findAll(new SubtitleSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations, searchString));
+        if (searchString != null && searchString.length() > 2) {
+            container.addAll(list);
+        } else {
+            List<Subtitle> orderedSubtitles = new ArrayList<>();
+            for (Subtitle s : list) {
+                if (!orderedSubtitles.contains(s)) {
+                    addAllPreviousSubtitles(orderedSubtitles, s);
+                    orderedSubtitles.add(s);
+                    addAllNextSubtitles(orderedSubtitles, s);
+                }
             }
+            container.addAll(orderedSubtitles);
         }
-        container.addAll(orderedSubtitles);
         return container;
     }
 
@@ -5196,12 +5106,12 @@ public class DBService {
         List<GSpreadSheetsNpcName> npcNameList = npcNameQuery.getResultList();
         for (GSpreadSheetsNpcName item : npcNameList) {
             String textEn = item.getTextEn().replace("$", "\n");
-            String textEn2 = item.getTextEn().replace("$", "\n");;
+            String textEn2 = item.getTextEn().replace("$", "\n");
             if (item.getSex() != null) {
                 switch (item.getSex()) {
                     case U:
-                        textEn = item.getTextEn();
-                        textEn2 = item.getTextEn();
+                        textEn = item.getTextEn().replace("$", "\n");
+                        textEn2 = item.getTextEn().replace("$", "\n");
                         break;
                     case F:
                         textEn = item.getTextEn() + "^F";
@@ -5413,7 +5323,7 @@ public class DBService {
         for (GSpreadSheetsLoadscreen item : loadscreenList) {
             TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
-            rawQ.setParameter("aId", Arrays.asList(new Long[]{70901198L, 153349653L}));
+            rawQ.setParameter("aId", Arrays.asList(new Long[]{70901198L, 153349653L, 4922190L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
             List<EsoRawString> rList = rawQ.getResultList();
             if (rList != null && !rList.isEmpty()) {
@@ -5811,6 +5721,24 @@ public class DBService {
                 updateQ.setParameter("textRu", eTextEn);
                 updateQ.executeUpdate();
             }
+        }
+        Query bookttextQ = em.createNativeQuery("select g.id ,g.texten as gtexten,e.texten as etexten, g.textru as textru,e.textru as etextru from booktext g join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid");
+        resultList = bookttextQ.getResultList();
+        for (Object[] row : resultList) {
+            BigInteger id = (BigInteger) row[0];
+            String gTextEn = ((String) row[1]);
+            String eTextEn = ((String) row[2]);
+            String gTextRu = ((String) row[3]);
+            String eTextRu = ((String) row[4]);
+            if (gTextEn.equals(eTextEn) || gTextRu.equals(eTextRu)) {
+                LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
+                Query updateQ = em.createNativeQuery("update booktext set textEn=:textEn,textRu=:textRu where id=:id");
+                updateQ.setParameter("id", id);
+                updateQ.setParameter("textEn", eTextEn);
+                updateQ.setParameter("textRu", eTextRu);
+                updateQ.executeUpdate();
+            }
+
         }
     }
 
