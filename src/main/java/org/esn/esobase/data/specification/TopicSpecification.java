@@ -57,71 +57,64 @@ public class TopicSpecification implements Specification<Topic> {
                     cb.like(cb.lower(join1.get("textRu")), searchPattern)
             ));
         } else {
-            if (noTranslations) {
-                predicates.add(cb.or(
-                        cb.isNull(root.get("extNpcPhrase").get("translator")),
-                        cb.isNull(root.get("extPlayerPhrase").get("translator"))
-                ));
-            }
-            if (emptyTranslations) {
-
+            if (noTranslations || emptyTranslations || translateStatus != null || translator != null) {
                 Join<Object, Object> join = root.join("extNpcPhrase", JoinType.LEFT);
                 Join<Object, Object> join1 = root.join("extPlayerPhrase", JoinType.LEFT);
-
-                predicates.add(cb.or(
-                        cb.and(
-                                cb.isNotNull(root.get("extNpcPhrase")),
-                                cb.isEmpty(join.get("translatedTexts")),
-                                cb.isNull(join.get("translator"))
-                        ),
-                        cb.and(
-                                cb.isNotNull(root.get("extPlayerPhrase")),
-                                cb.isEmpty(join1.get("translatedTexts")),
-                                cb.isNull(join1.get("translator"))
-                        )
-                ));
-
-            } else if (translateStatus != null || translator != null) {
-                Join<Object, Object> join = root.join("npcTranslations", JoinType.LEFT);
-                Join<Object, Object> join1 = root.join("playerTranslations", JoinType.LEFT);
-                Join<Object, Object> join2 = root.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                Join<Object, Object> join3 = root.join("extPlayerPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                if (translateStatus != null && translator != null) {
-
+                if (noTranslations) {
                     predicates.add(cb.or(
                             cb.and(
-                                    cb.equal(join.get("status"), translateStatus),
-                                    cb.equal(join.get("author"), translator)
+                                    cb.isNull(join.get("translator")),
+                                    cb.isNotNull(root.get("extNpcPhrase"))
                             ),
                             cb.and(
-                                    cb.equal(join1.get("status"), translateStatus),
-                                    cb.equal(join1.get("author"), translator)
-                            ),
-                            cb.and(
-                                    cb.equal(join2.get("status"), translateStatus),
-                                    cb.equal(join2.get("author"), translator)
-                            ),
-                            cb.and(
-                                    cb.equal(join3.get("status"), translateStatus),
-                                    cb.equal(join3.get("author"), translator)
+                                    cb.isNull(join1.get("translator")),
+                                    cb.isNotNull(root.get("extPlayerPhrase"))
                             )
                     ));
-                } else if (translator != null) {
+                }
+                if (emptyTranslations) {
                     predicates.add(cb.or(
-                            cb.equal(join.get("author"), translator),
-                            cb.equal(join1.get("author"), translator),
-                            cb.equal(join2.get("author"), translator),
-                            cb.equal(join3.get("author"), translator)
+                            cb.and(
+                                    cb.isNotNull(root.get("extNpcPhrase")),
+                                    cb.isEmpty(join.get("translatedTexts")),
+                                    cb.isNull(join.get("translator"))
+                            ),
+                            cb.and(
+                                    cb.isNotNull(root.get("extPlayerPhrase")),
+                                    cb.isEmpty(join1.get("translatedTexts")),
+                                    cb.isNull(join1.get("translator"))
+                            )
                     ));
-                } else if (translateStatus != null) {
-                    predicates.add(cb.or(
-                            cb.equal(join.get("status"), translateStatus),
-                            cb.equal(join1.get("status"), translateStatus),
-                            cb.equal(join2.get("status"), translateStatus),
-                            cb.equal(join3.get("status"), translateStatus)
-                    ));
+
+                } else if (translateStatus != null || translator != null) {
+                    Join<Object, Object> join2 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join3 = join1.join("translatedTexts", JoinType.LEFT);
+                    if (translateStatus != null && translator != null) {
+
+                        predicates.add(cb.or(
+                                cb.and(
+                                        cb.equal(join2.get("status"), translateStatus),
+                                        cb.equal(join2.get("author"), translator)
+                                ),
+                                cb.and(
+                                        cb.equal(join3.get("status"), translateStatus),
+                                        cb.equal(join3.get("author"), translator)
+                                )
+                        ));
+                    } else if (translator != null) {
+                        predicates.add(cb.or(
+                                cb.equal(join2.get("author"), translator),
+                                cb.equal(join3.get("author"), translator)
+                        ));
+                    } else if (translateStatus != null) {
+                        predicates.add(cb.or(
+                                cb.equal(join2.get("status"), translateStatus),
+                                cb.equal(join3.get("status"), translateStatus)
+                        ));
+                    }
                 }
             }
+
         }
         query.distinct(true);
         if (!predicates.isEmpty() && predicates.size() > 1) {

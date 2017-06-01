@@ -58,16 +58,16 @@ public class Topic extends DAO {
     private GSpreadSheetsNpcPhrase extNpcPhrase;
     @Fetch(value = FetchMode.SELECT)
     @LazyCollection(LazyCollectionOption.FALSE)
-    @OneToMany(mappedBy = "playerTopic", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "playerTopic", fetch = FetchType.LAZY)
     private Set<TranslatedText> playerTranslations;
     @Fetch(value = FetchMode.SELECT)
     @LazyCollection(LazyCollectionOption.FALSE)
-    @OneToMany(mappedBy = "npcTopic", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "npcTopic", fetch = FetchType.LAZY)
     private Set<TranslatedText> npcTranslations;
     private Integer weight;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<Topic> previousTopics;
-    @ManyToMany(mappedBy = "previousTopics")
+    @ManyToMany(mappedBy = "previousTopics",fetch = FetchType.LAZY)
     private Set<Topic> nextTopics;
     private Boolean extPlayerPhraseFailed;
     private Boolean extNpcPhraseFailed;

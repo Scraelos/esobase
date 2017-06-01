@@ -45,13 +45,13 @@ public class Subtitle extends DAO {
     @ManyToOne
     private GSpreadSheetsNpcPhrase extNpcPhrase;
     @Fetch(value = FetchMode.SELECT)
-    @OneToMany(mappedBy = "subtitle", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "subtitle", fetch = FetchType.LAZY)
     private Set<TranslatedText> translations;
     private Integer weight;
     @OneToOne
     @JoinColumn(unique = true)
     private Subtitle nextSubtitle;
-    @OneToOne(mappedBy = "nextSubtitle")
+    @OneToOne(mappedBy = "nextSubtitle",fetch = FetchType.LAZY)
     private Subtitle previousSubtitle;
 
     public Subtitle() {

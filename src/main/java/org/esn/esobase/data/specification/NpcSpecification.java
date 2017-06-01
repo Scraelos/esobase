@@ -104,21 +104,32 @@ public class NpcSpecification implements Specification<Npc> {
                     cb.like(cb.lower(join2.get("textRu")), searchPattern)
             ));
         } else {
-            if (noTranslations) {
-                predicates.add(cb.lt(root.get("progress"), BigDecimal.ONE));
-            }
             if (quest != null) {
                 predicates.add(cb.equal(root.join("quests").get("id"), quest.getId()));
             }
-            if (emptyTranslations || translateStatus != null || translator != null) {
+            if (noTranslations || emptyTranslations || translateStatus != null || translator != null) {
                 Join<Object, Object> topicsJoin = root.joinSet("topics", JoinType.LEFT);
                 Join<Object, Object> subtitlesJoin = root.joinSet("subtitles", JoinType.LEFT);
-
+                Join<Object, Object> join = topicsJoin.join("extNpcPhrase", JoinType.LEFT);
+                Join<Object, Object> join1 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT);
+                Join<Object, Object> join2 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT);
+                if (noTranslations) {
+                    predicates.add(cb.or(
+                            cb.and(
+                                    cb.isNull(join.get("translator")),
+                                    cb.isNotNull(topicsJoin.get("extNpcPhrase"))
+                            ),
+                            cb.and(
+                                    cb.isNull(join1.get("translator")),
+                                    cb.isNotNull(topicsJoin.get("extPlayerPhrase"))
+                            ),
+                            cb.and(
+                                    cb.isNull(join2.get("translator")),
+                                    cb.isNotNull(subtitlesJoin.get("extNpcPhrase"))
+                            )
+                    ));
+                }
                 if (emptyTranslations) {
-                    Join<Object, Object> join = topicsJoin.join("extNpcPhrase", JoinType.LEFT);
-                    Join<Object, Object> join1 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT);
-                    Join<Object, Object> join2 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT);
-
                     predicates.add(cb.or(
                             cb.and(
                                     cb.isNotNull(topicsJoin.get("extNpcPhrase")),
@@ -137,27 +148,12 @@ public class NpcSpecification implements Specification<Npc> {
                             )
                     ));
                 } else if (translateStatus != null || translator != null) {
-                    Join<Object, Object> join = topicsJoin.join("npcTranslations", JoinType.LEFT);
-                    Join<Object, Object> join1 = topicsJoin.join("playerTranslations", JoinType.LEFT);
-                    Join<Object, Object> join2 = topicsJoin.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                    Join<Object, Object> join3 = topicsJoin.join("extPlayerPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
-                    Join<Object, Object> join4 = subtitlesJoin.join("translations", JoinType.LEFT);
-                    Join<Object, Object> join5 = subtitlesJoin.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join3 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join4 = join1.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join5 = join2.join("translatedTexts", JoinType.LEFT);
                     if (translateStatus != null && translator != null) {
 
                         predicates.add(cb.or(
-                                cb.and(
-                                        cb.equal(join.get("status"), translateStatus),
-                                        cb.equal(join.get("author"), translator)
-                                ),
-                                cb.and(
-                                        cb.equal(join1.get("status"), translateStatus),
-                                        cb.equal(join1.get("author"), translator)
-                                ),
-                                cb.and(
-                                        cb.equal(join2.get("status"), translateStatus),
-                                        cb.equal(join2.get("author"), translator)
-                                ),
                                 cb.and(
                                         cb.equal(join3.get("status"), translateStatus),
                                         cb.equal(join3.get("author"), translator)
@@ -173,18 +169,12 @@ public class NpcSpecification implements Specification<Npc> {
                         ));
                     } else if (translator != null) {
                         predicates.add(cb.or(
-                                cb.equal(join.get("author"), translator),
-                                cb.equal(join1.get("author"), translator),
-                                cb.equal(join2.get("author"), translator),
                                 cb.equal(join3.get("author"), translator),
                                 cb.equal(join4.get("author"), translator),
                                 cb.equal(join5.get("author"), translator)
                         ));
                     } else if (translateStatus != null) {
                         predicates.add(cb.or(
-                                cb.equal(join.get("status"), translateStatus),
-                                cb.equal(join1.get("status"), translateStatus),
-                                cb.equal(join2.get("status"), translateStatus),
                                 cb.equal(join3.get("status"), translateStatus),
                                 cb.equal(join4.get("status"), translateStatus),
                                 cb.equal(join5.get("status"), translateStatus)

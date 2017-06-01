@@ -42,6 +42,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import org.esn.esobase.data.diffs.AbilityDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementsDiff;
@@ -656,19 +661,20 @@ public class DBService {
         Map<String, GSpreadSheetsPlayerPhrase> phrasesMap = new HashMap<>();
         List<GSpreadSheetsPlayerPhrase> allPhrases = crit.list();
         for (GSpreadSheetsPlayerPhrase phrase : allPhrases) {
-            phrasesMap.put(phrase.getTextEn(), phrase);
+            phrasesMap.put(phrase.getTextEn().toLowerCase(), phrase);
         }
         int total = phrases.size();
         int count = 0;
         for (GSpreadSheetsPlayerPhrase phrase : phrases) {
             count++;
             Logger.getLogger(DBService.class.getName()).log(Level.INFO, "phrase {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
-            GSpreadSheetsPlayerPhrase result = phrasesMap.get(phrase.getTextEn());
+            GSpreadSheetsPlayerPhrase result = phrasesMap.get(phrase.getTextEn().toLowerCase());
             if (result != null) {
                 boolean isMerge = false;
                 if (phrase.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(phrase.getWeight()))) {
                     isMerge = true;
                     result.setWeight(phrase.getWeight());
+
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for phrase: {0}", phrase.getTextEn());
                 }
                 if (!result.getRowNum().equals(phrase.getRowNum())) {
@@ -676,13 +682,21 @@ public class DBService {
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for phrase: {0}", phrase.getTextEn());
                     result.setRowNum(phrase.getRowNum());
                 }
+                if (!phrase.getTextEn().equals(result.getTextEn())) {
+                    result.setTextEn(phrase.getTextEn());
+                    result.setaId(null);
+                    result.setbId(null);
+                    result.setcId(null);
+                    isMerge = true;
+                }
                 if (isMerge) {
+
                     em.merge(result);
                 }
             }
         }
         for (GSpreadSheetsPlayerPhrase phrase : phrases) {
-            GSpreadSheetsPlayerPhrase result = phrasesMap.get(phrase.getTextEn());
+            GSpreadSheetsPlayerPhrase result = phrasesMap.get(phrase.getTextEn().toLowerCase());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting phrase for rowNum {0}", phrase.getRowNum());
                 em.persist(phrase);
@@ -691,10 +705,10 @@ public class DBService {
 
         Map<String, GSpreadSheetsPlayerPhrase> spreadSheetPhrasesMap = new HashMap<>();
         for (GSpreadSheetsPlayerPhrase phrase : phrases) {
-            spreadSheetPhrasesMap.put(phrase.getTextEn(), phrase);
+            spreadSheetPhrasesMap.put(phrase.getTextEn().toLowerCase(), phrase);
         }
         for (GSpreadSheetsPlayerPhrase phrase : allPhrases) {
-            GSpreadSheetsPlayerPhrase result = spreadSheetPhrasesMap.get(phrase.getTextEn());
+            GSpreadSheetsPlayerPhrase result = spreadSheetPhrasesMap.get(phrase.getTextEn().toLowerCase());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing phrase rownum={0} :{1}", new Object[]{phrase.getRowNum(), phrase.getTextEn()});
                 Criteria playerTopicCrit = session.createCriteria(Topic.class);
@@ -1663,14 +1677,14 @@ public class DBService {
         Map<String, GSpreadSheetsNpcPhrase> phrasesMap = new HashMap<>();
         List<GSpreadSheetsNpcPhrase> allPhrases = crit.list();
         for (GSpreadSheetsNpcPhrase phrase : allPhrases) {
-            phrasesMap.put(phrase.getTextEn(), phrase);
+            phrasesMap.put(phrase.getTextEn().toLowerCase(), phrase);
         }
         int total = phrases.size();
         int count = 0;
         for (GSpreadSheetsNpcPhrase phrase : phrases) {
             count++;
             Logger.getLogger(DBService.class.getName()).log(Level.INFO, "phrase {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
-            GSpreadSheetsNpcPhrase result = phrasesMap.get(phrase.getTextEn());
+            GSpreadSheetsNpcPhrase result = phrasesMap.get(phrase.getTextEn().toLowerCase());
             if (result != null) {
                 boolean isMerge = false;
                 if (phrase.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(phrase.getWeight()))) {
@@ -1683,6 +1697,13 @@ public class DBService {
                     Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for phrase: {0}", phrase.getTextEn());
                     result.setRowNum(phrase.getRowNum());
                 }
+                if (!phrase.getTextEn().equals(result.getTextEn())) {
+                    result.setTextEn(phrase.getTextEn());
+                    result.setaId(null);
+                    result.setbId(null);
+                    result.setcId(null);
+                    isMerge = true;
+                }
                 if (isMerge) {
                     em.merge(result);
                 }
@@ -1690,7 +1711,7 @@ public class DBService {
         }
 
         for (GSpreadSheetsNpcPhrase phrase : phrases) {
-            GSpreadSheetsNpcPhrase result = phrasesMap.get(phrase.getTextEn());
+            GSpreadSheetsNpcPhrase result = phrasesMap.get(phrase.getTextEn().toLowerCase());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).info("inserting phrase for rowNum " + phrase.getRowNum());
                 em.persist(phrase);
@@ -1698,10 +1719,10 @@ public class DBService {
         }
         Map<String, GSpreadSheetsNpcPhrase> spreadSheetPhrasesMap = new HashMap<>();
         for (GSpreadSheetsNpcPhrase phrase : phrases) {
-            spreadSheetPhrasesMap.put(phrase.getTextEn(), phrase);
+            spreadSheetPhrasesMap.put(phrase.getTextEn().toLowerCase(), phrase);
         }
         for (GSpreadSheetsNpcPhrase phrase : allPhrases) {
-            GSpreadSheetsNpcPhrase result = spreadSheetPhrasesMap.get(phrase.getTextEn());
+            GSpreadSheetsNpcPhrase result = spreadSheetPhrasesMap.get(phrase.getTextEn().toLowerCase());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing phrase rownum={0} :{1}", new Object[]{phrase.getRowNum(), phrase.getTextEn()});
                 Criteria npcTopicCrit = session.createCriteria(Topic.class);
@@ -3201,6 +3222,182 @@ public class DBService {
             list.add(s.getNextSubtitle());
             addAllNextSubtitles(list, s.getNextSubtitle());
         }
+    }
+
+    @Transactional
+    public Long countTranslatedTextFilterResult(Location location, Location subLocation, Quest quest, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq1 = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq2 = cb.createQuery(Long.class);
+        Root<Npc> root = cq.from(Npc.class);
+        Root<Npc> root1 = cq1.from(Npc.class);
+        Root<Npc> root2 = cq2.from(Npc.class);
+        Predicate result = null;
+        Predicate result1 = null;
+        Predicate result2 = null;
+        List<Predicate> predicates = new ArrayList<>();
+        List<Predicate> predicates1 = new ArrayList<>();
+        List<Predicate> predicates2 = new ArrayList<>();
+        Join<Object, Object> topicsJoin = root.joinSet("topics", javax.persistence.criteria.JoinType.LEFT);
+        Join<Object, Object> topicsJoin1 = root1.joinSet("topics", javax.persistence.criteria.JoinType.LEFT);
+        Join<Object, Object> subtitlesJoin = root2.joinSet("subtitles", javax.persistence.criteria.JoinType.LEFT);
+        Join<Object, Object> join = topicsJoin.join("extNpcPhrase", javax.persistence.criteria.JoinType.LEFT);
+        Join<Object, Object> join1 = topicsJoin1.join("extPlayerPhrase", javax.persistence.criteria.JoinType.LEFT);
+        Join<Object, Object> join2 = subtitlesJoin.join("extNpcPhrase", javax.persistence.criteria.JoinType.LEFT);
+        cq.groupBy(join.get("id"));
+        cq1.groupBy(join1.get("id"));
+        cq2.groupBy(join2.get("id"));
+        if (subLocation != null) {
+            predicates.add(
+                    cb.equal(root.get("location"), subLocation)
+            );
+            predicates1.add(
+                    cb.equal(root1.get("location"), subLocation)
+            );
+            predicates2.add(
+                    cb.equal(root2.get("location"), subLocation)
+            );
+        } else if (location != null) {
+            predicates.add(cb.or(
+                    cb.equal(root.get("location"), location),
+                    cb.equal(root.get("location").get("parentLocation"), location)
+            ));
+            predicates1.add(cb.or(
+                    cb.equal(root1.get("location"), location),
+                    cb.equal(root1.get("location").get("parentLocation"), location)
+            ));
+            predicates2.add(cb.or(
+                    cb.equal(root2.get("location"), location),
+                    cb.equal(root2.get("location").get("parentLocation"), location)
+            ));
+        }
+        if (searchString != null && (searchString.length() > 2)) {
+
+            String searchPattern = "%" + searchString.toLowerCase() + "%";
+            predicates.add(cb.or(
+                    cb.like(cb.lower(join.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join.get("textRu")), searchPattern)
+            ));
+            predicates1.add(cb.or(
+                    cb.like(cb.lower(join1.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join1.get("textRu")), searchPattern)
+            ));
+            predicates2.add(cb.or(
+                    cb.like(cb.lower(join2.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join2.get("textRu")), searchPattern)
+            ));
+        } else {
+            if (noTranslations) {
+                predicates.add(cb.isNull(join.get("translator")));
+                predicates1.add(cb.isNull(join1.get("translator")));
+                predicates2.add(cb.isNull(join2.get("translator")));
+
+            }
+            if (quest != null) {
+                predicates.add(cb.equal(root.join("quests").get("id"), quest.getId()));
+                predicates1.add(cb.equal(root1.join("quests").get("id"), quest.getId()));
+                predicates2.add(cb.equal(root2.join("quests").get("id"), quest.getId()));
+            }
+            if (emptyTranslations || translateStatus != null || translator != null) {
+
+                if (emptyTranslations) {
+
+                    predicates.add(cb.and(
+                            cb.isNotNull(topicsJoin.get("extNpcPhrase")),
+                            cb.isEmpty(join.get("translatedTexts")),
+                            cb.isNull(join.get("translator"))
+                    ));
+                    predicates1.add(cb.and(
+                            cb.isNotNull(topicsJoin1.get("extNpcPhrase")),
+                            cb.isEmpty(join1.get("translatedTexts")),
+                            cb.isNull(join1.get("translator"))
+                    ));
+                    predicates2.add(cb.and(
+                            cb.isNotNull(subtitlesJoin.get("extNpcPhrase")),
+                            cb.isEmpty(join2.get("translatedTexts")),
+                            cb.isNull(join2.get("translator"))
+                    ));
+                } else if (translateStatus != null || translator != null) {
+                    Join<Object, Object> join3 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join4 = join1.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join5 = join2.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    if (translateStatus != null && translator != null) {
+
+                        predicates.add(cb.and(
+                                cb.equal(join3.get("status"), translateStatus),
+                                cb.equal(join3.get("author"), translator)
+                        ));
+                        predicates1.add(cb.and(
+                                cb.equal(join4.get("status"), translateStatus),
+                                cb.equal(join4.get("author"), translator)
+                        ));
+                        predicates2.add(cb.and(
+                                cb.equal(join5.get("status"), translateStatus),
+                                cb.equal(join5.get("author"), translator)
+                        ));
+                    } else if (translator != null) {
+                        predicates.add(cb.equal(join3.get("author"), translator));
+                        predicates1.add(cb.equal(join4.get("author"), translator));
+                        predicates2.add(cb.equal(join5.get("author"), translator));
+                    } else if (translateStatus != null) {
+                        predicates.add(cb.equal(join3.get("status"), translateStatus));
+                        predicates1.add(cb.equal(join4.get("status"), translateStatus));
+                        predicates2.add(cb.equal(join5.get("status"), translateStatus));
+                    }
+                }
+
+            }
+        }
+
+        if (!predicates.isEmpty() && predicates.size() > 1) {
+            result = cb.and(predicates.toArray(new Predicate[predicates.size()]));
+        } else if (!predicates.isEmpty()) {
+            result = predicates.get(0);
+        }
+        if (!predicates1.isEmpty() && predicates1.size() > 1) {
+            result1 = cb.and(predicates1.toArray(new Predicate[predicates1.size()]));
+        } else if (!predicates1.isEmpty()) {
+            result1 = predicates1.get(0);
+        }
+        if (!predicates2.isEmpty() && predicates2.size() > 1) {
+            result2 = cb.and(predicates2.toArray(new Predicate[predicates2.size()]));
+        } else if (!predicates2.isEmpty()) {
+            result2 = predicates2.get(0);
+        }
+
+        cq.select(cb.count(root));
+        cq1.select(cb.count(root1));
+        cq2.select(cb.count(root2));
+        if (result != null) {
+            cq.where(result);
+        }
+        if (result1 != null) {
+            cq1.where(result1);
+        }
+        if (result2 != null) {
+            cq2.where(result2);
+        }
+        Long count = 0L;
+        List<Long> countList = em.createQuery(cq).getResultList();
+        List<Long> countList1 = em.createQuery(cq1).getResultList();
+        List<Long> countList2 = em.createQuery(cq2).getResultList();
+        for (Long c : countList) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList1) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList2) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        return count;
     }
 
     @Transactional

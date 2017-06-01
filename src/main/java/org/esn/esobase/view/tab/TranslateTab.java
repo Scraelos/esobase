@@ -84,6 +84,7 @@ public class TranslateTab extends VerticalLayout {
     private ComboBox translatorBox;
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
+    private Label countLabel;
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     private final NpcSpecification npcSpecification = new NpcSpecification();
     private final LocationSpecification locationSpecification = new LocationSpecification();
@@ -195,6 +196,7 @@ public class TranslateTab extends VerticalLayout {
                 LoadNpcContent();
             }
         });
+        countLabel = new Label();
         searchField = new TextField("Искомая строка");
         searchField.setWidth(200f, Unit.PIXELS);
         searchField.setNullRepresentation("");
@@ -212,9 +214,11 @@ public class TranslateTab extends VerticalLayout {
         questAndWithNewTranslations.setSizeFull();
         npcListlayout.addComponent(questAndWithNewTranslations);
         npcListlayout.addComponent(refreshButton);
+        npcListlayout.addComponent(countLabel);
         npcListlayout.setExpandRatio(locationAndNpc, 0.4f);
         npcListlayout.setExpandRatio(questAndWithNewTranslations, 0.4f);
         npcListlayout.setExpandRatio(refreshButton, 0.1f);
+        npcListlayout.setExpandRatio(countLabel, 0.1f);
         npcContentLayout = new VerticalLayout();
         npcContentLayout.setSizeFull();
         npcTabSheet = new TabSheet();
@@ -321,6 +325,8 @@ public class TranslateTab extends VerticalLayout {
         subLocationContainer.sort(new Object[]{"name"}, new boolean[]{true});
         questContainer = service.loadBeanItems(questContainer);
         questContainer.sort(new Object[]{"name"}, new boolean[]{true});
+        Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
+        countLabel.setCaption(countTranslatedTextFilterResult.toString());
     }
 
     private void LoadNpcContent() {
@@ -558,6 +564,8 @@ public class TranslateTab extends VerticalLayout {
             npcSpecification.setSubLocation((Location) subLocationTable.getValue());
             npcSpecification.setSearchString(searchField.getValue());
             npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
+            Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (TRANSLATE_STATUS) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
+            countLabel.setCaption(countTranslatedTextFilterResult.toString());
         }
 
     }
