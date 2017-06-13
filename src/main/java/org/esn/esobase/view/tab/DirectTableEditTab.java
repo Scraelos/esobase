@@ -556,42 +556,61 @@ public class DirectTableEditTab extends VerticalLayout {
             tt.setAuthor(SpringSecurityHelper.getSysAccount());
             if (entity instanceof GSpreadSheetsActivator) {
                 tt.setSpreadSheetsActivator((GSpreadSheetsActivator) entity);
+                tt.getSpreadSheetsActivator().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsAchievement) {
                 tt.setSpreadSheetsAchievement((GSpreadSheetsAchievement) entity);
+                tt.getSpreadSheetsAchievement().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsAchievementDescription) {
                 tt.setSpreadSheetsAchievementDescription((GSpreadSheetsAchievementDescription) entity);
+                tt.getSpreadSheetsAchievementDescription().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsNote) {
                 tt.setSpreadSheetsNote((GSpreadSheetsNote) entity);
+                tt.getSpreadSheetsNote().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsItemDescription) {
                 tt.setSpreadSheetsItemDescription((GSpreadSheetsItemDescription) entity);
+                tt.getSpreadSheetsItemDescription().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsItemName) {
                 tt.setSpreadSheetsItemName((GSpreadSheetsItemName) entity);
+                tt.getSpreadSheetsItemName().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsJournalEntry) {
                 tt.setSpreadSheetsJournalEntry((GSpreadSheetsJournalEntry) entity);
+                tt.getSpreadSheetsJournalEntry().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsLocationName) {
                 tt.setSpreadSheetsLocationName((GSpreadSheetsLocationName) entity);
+                tt.getSpreadSheetsLocationName().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsNpcName) {
                 tt.setSpreadSheetsNpcName((GSpreadSheetsNpcName) entity);
+                tt.getSpreadSheetsNpcName().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsNpcPhrase) {
                 tt.setSpreadSheetsNpcPhrase((GSpreadSheetsNpcPhrase) entity);
+                tt.getSpreadSheetsNpcPhrase().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsPlayerPhrase) {
                 tt.setSpreadSheetsPlayerPhrase((GSpreadSheetsPlayerPhrase) entity);
+                tt.getSpreadSheetsPlayerPhrase().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsQuestDescription) {
                 tt.setSpreadSheetsQuestDescription((GSpreadSheetsQuestDescription) entity);
+                tt.getSpreadSheetsQuestDescription().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsQuestDirection) {
                 tt.setSpreadSheetsQuestDirection((GSpreadSheetsQuestDirection) entity);
+                tt.getSpreadSheetsQuestDirection().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsQuestName) {
                 tt.setSpreadSheetsQuestName((GSpreadSheetsQuestName) entity);
+                tt.getSpreadSheetsQuestName().getTranslatedTexts().add(tt);
             } else if (entity instanceof GSpreadSheetsAbilityDescription) {
                 tt.setSheetsAbilityDescription((GSpreadSheetsAbilityDescription) entity);
-            }else if (entity instanceof GSpreadSheetsLoadscreen) {
+                tt.getSheetsAbilityDescription().getTranslatedTexts().add(tt);
+            } else if (entity instanceof GSpreadSheetsLoadscreen) {
                 tt.setSheetsLoadscreen((GSpreadSheetsLoadscreen) entity);
-            }else if (entity instanceof GSpreadSheetsCollectible) {
+                tt.getSheetsLoadscreen().getTranslatedTexts().add(tt);
+            } else if (entity instanceof GSpreadSheetsCollectible) {
                 tt.setSheetsCollectible((GSpreadSheetsCollectible) entity);
-            }else if (entity instanceof GSpreadSheetsCollectibleDescription) {
+                tt.getSheetsCollectible().getTranslatedTexts().add(tt);
+            } else if (entity instanceof GSpreadSheetsCollectibleDescription) {
                 tt.setSheetsCollectibleDescription((GSpreadSheetsCollectibleDescription) entity);
+                tt.getSheetsCollectibleDescription().getTranslatedTexts().add(tt);
             } else if (entity instanceof EsoInterfaceVariable) {
                 tt.setEsoInterfaceVariable((EsoInterfaceVariable) entity);
+                tt.getEsoInterfaceVariable().getTranslatedTexts().add(tt);
             }
             vl.addComponent(new GridTranslationCell(tt, grid, entity));
             event.getButton().setVisible(false);
@@ -1157,7 +1176,11 @@ public class DirectTableEditTab extends VerticalLayout {
             });
 
             actionLayout.addComponent(save);
-            save.setVisible(false);
+            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+                save.setVisible(true);
+            } else {
+                save.setVisible(false);
+            }
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
                 if (translatedText.getId() != null && translatedText.getStatus() == TRANSLATE_STATUS.NEW) {
                     accept = new Button();

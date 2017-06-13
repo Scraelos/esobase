@@ -51,8 +51,9 @@ public class Subtitle extends DAO {
     @OneToOne
     @JoinColumn(unique = true)
     private Subtitle nextSubtitle;
-    @OneToOne(mappedBy = "nextSubtitle",fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "nextSubtitle", fetch = FetchType.LAZY)
     private Subtitle previousSubtitle;
+    private Boolean extNpcPhraseFailed;
 
     public Subtitle() {
     }
@@ -143,6 +144,14 @@ public class Subtitle extends DAO {
 
     public void setPreviousSubtitle(Subtitle previousSubtitle) {
         this.previousSubtitle = previousSubtitle;
+    }
+
+    public Boolean getExtNpcPhraseFailed() {
+        return extNpcPhraseFailed;
+    }
+
+    public void setExtNpcPhraseFailed(Boolean extNpcPhraseFailed) {
+        this.extNpcPhraseFailed = extNpcPhraseFailed;
     }
 
 }

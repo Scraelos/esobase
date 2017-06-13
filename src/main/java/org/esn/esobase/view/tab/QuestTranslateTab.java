@@ -47,7 +47,7 @@ public class QuestTranslateTab extends VerticalLayout {
     private BeanItemContainer<Quest> questContainer;
     private ComboBox locationTable;
     private BeanItemContainer<Location> locationContainer;
-    
+
     private TabSheet tabSheet;
     private VerticalLayout infoLayout;
     private HorizontalLayout nameHLayout;
@@ -68,7 +68,7 @@ public class QuestTranslateTab extends VerticalLayout {
     public QuestTranslateTab(DBService service_) {
         this.service = service_;
         QuestChangeListener questChangeListener = new QuestChangeListener();
-        FilterChangeListener filterChangeListener=new FilterChangeListener();
+        FilterChangeListener filterChangeListener = new FilterChangeListener();
         stepDirectionNameColumnGenerator = new StepDirectionNameColumnGenerator();
         directionTranslationColumnGenerator = new DirectionTranslationColumnGenerator();
         questListlayout = new HorizontalLayout();
@@ -92,7 +92,7 @@ public class QuestTranslateTab extends VerticalLayout {
         questTable.setContainerDataSource(questContainer);
         questTable.setFilteringMode(FilteringMode.CONTAINS);
         questListlayout.addComponent(questTable);
-        
+
         this.addComponent(questListlayout);
         infoLayout = new VerticalLayout();
         infoLayout.setSizeFull();
@@ -186,6 +186,9 @@ public class QuestTranslateTab extends VerticalLayout {
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
 
+                        if (translatedText.getSpreadSheetsQuestName() != null) {
+                            translatedText.getSpreadSheetsQuestName().getTranslatedTexts().add(translatedText);
+                        }
                         nameTranslateLayout.addComponent(new TranslationCell(translatedText));
                         event.getButton().setVisible(false);
                     }
@@ -197,6 +200,7 @@ public class QuestTranslateTab extends VerticalLayout {
             questNameRawRuArea.setValue(null);
         }
         stepContainer.addAll(currentQuest.getSteps());
+        stepContainer.sort(new Object[]{"weight"}, new boolean[]{true});
         questNameEnArea.setReadOnly(true);
         questNameRuArea.setReadOnly(true);
         questNameRawEnArea.setReadOnly(true);
@@ -208,8 +212,8 @@ public class QuestTranslateTab extends VerticalLayout {
         locationContainer.removeAllItems();
         questContainer = service.loadBeanItems(questContainer);
         questContainer.sort(new Object[]{"name"}, new boolean[]{true});
-        for(Quest q:questContainer.getItemIds()) {
-            if(q.getLocation()!=null) {
+        for (Quest q : questContainer.getItemIds()) {
+            if (q.getLocation() != null) {
                 locationContainer.addBean(q.getLocation());
             }
         }
@@ -219,18 +223,18 @@ public class QuestTranslateTab extends VerticalLayout {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
-            if(questTable.getValue()!=null) {
+            if (questTable.getValue() != null) {
                 LoadContent();
             }
         }
     }
-    
+
     private class FilterChangeListener implements Property.ValueChangeListener {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
             questContainer.removeAllContainerFilters();
-            if(locationTable.getValue()!=null) {
+            if (locationTable.getValue() != null) {
                 questContainer.addContainerFilter(new Compare.Equal("location", locationTable.getValue()));
             }
         }
@@ -290,9 +294,9 @@ public class QuestTranslateTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
             VerticalLayout result = new VerticalLayout();
             QuestDirection d = (QuestDirection) itemId;
-            if(d.getDirectionType()!=null) {
-               Label l=new Label(d.getDirectionType().name());
-               result.addComponent(l);
+            if (d.getDirectionType() != null) {
+                Label l = new Label(d.getDirectionType().name());
+                result.addComponent(l);
             }
             if (d.getTextEn() != null && !d.getTextEn().isEmpty()) {
                 TextArea textEnArea = new TextArea("Текст в игре");
@@ -390,6 +394,9 @@ public class QuestTranslateTab extends VerticalLayout {
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
 
+                        if (translatedText.getSpreadSheetsJournalEntry() != null) {
+                            translatedText.getSpreadSheetsJournalEntry().getTranslatedTexts().add(translatedText);
+                        }
                         vl.addComponent(new TranslationCell(translatedText));
                         event.getButton().setVisible(false);
                     }
@@ -430,6 +437,9 @@ public class QuestTranslateTab extends VerticalLayout {
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
 
+                        if (translatedText.getSpreadSheetsQuestDirection() != null) {
+                            translatedText.getSpreadSheetsQuestDirection().getTranslatedTexts().add(translatedText);
+                        }
                         vl.addComponent(new TranslationCell(translatedText));
                         event.getButton().setVisible(false);
                     }
@@ -528,8 +538,11 @@ public class QuestTranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            save.setVisible(false);
-
+            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+                save.setVisible(true);
+            } else {
+                save.setVisible(false);
+            }
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
                 if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
                     preAccept = new Button("Перевод верен");

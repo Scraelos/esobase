@@ -2798,13 +2798,19 @@ public class DBService {
         int total = 0;
         int counter = 0;
         int foundCounter = 0;
-        Session session = (Session) em.getDelegate();
-        Criteria subtitleCrit = session.createCriteria(Subtitle.class);
-        //subtitleCrit.setFirstResult(0);
-        //subtitleCrit.setMaxResults(100);
-        subtitleCrit.add(Restrictions.isNotNull("text"));
-        subtitleCrit.add(Restrictions.isNull("extNpcPhrase"));
-        List<Subtitle> subtitleList = subtitleCrit.list();
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Subtitle> subtitleQuery = cb.createQuery(Subtitle.class);
+        Root<Subtitle> subtitleFrom = subtitleQuery.from(Subtitle.class);
+        subtitleQuery.select(subtitleFrom);
+        subtitleQuery.where(cb.and(
+                cb.or(
+                        cb.isNotNull(subtitleFrom.get("text")),
+                        cb.isNotNull(subtitleFrom.get("textRu"))
+                ),
+                cb.isNull(subtitleFrom.get("extNpcPhrase")),
+                cb.isNull(subtitleFrom.get("extNpcPhraseFailed"))
+        ));
+        List<Subtitle> subtitleList = em.createQuery(subtitleQuery).setMaxResults(10000).getResultList();
         total = subtitleList.size();
         counter = 0;
         foundCounter = 0;
@@ -2812,65 +2818,46 @@ public class DBService {
             counter++;
             Logger.getLogger(DBService.class.getName()).log(Level.INFO, "subtitle {0}/{1}", new Object[]{counter, total});
             if (s.getText() != null && !s.getText().isEmpty()) {
-                GSpreadSheetsNpcPhrase phrase = getNpcPharse(s.getText());
-                if (phrase != null) {
+                Long textId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", s.getText());
+                if (textId != null) {
                     foundCounter++;
+                    GSpreadSheetsNpcPhrase phrase = em.find(GSpreadSheetsNpcPhrase.class, textId);
                     s.setExtNpcPhrase(phrase);
-                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}. \nS: {3} \nF: {4}", new Object[]{Integer.toString(counter), total, foundCounter, s.getText(), phrase.getTextEn()});
                     em.merge(s);
                 } else {
-                    assignSubtitleToPhrase(s);
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Not found phrase for {0} of {1}. Total phrases found {2}. \nS: {3}", new Object[]{Integer.toString(counter), total, foundCounter, s.getText()});
+                    s.setExtNpcPhraseFailed(Boolean.TRUE);
+                    em.merge(s);
                 }
-            }
-        }
-
-        Criteria greetingCrit = session.createCriteria(Greeting.class);
-        greetingCrit.add(Restrictions.isNull("extNpcPhrase"));
-        //greetingCrit.setFirstResult(0);
-        //greetingCrit.setMaxResults(100);
-        greetingCrit.add(Restrictions.isNotNull("text"));
-        List<Greeting> greetingList = greetingCrit.list();
-        total = greetingList.size();
-        counter = 0;
-        foundCounter = 0;
-        for (Greeting g : greetingList) {
-            counter++;
-            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "greeting {0}/{1}", new Object[]{counter, total});
-            if (g.getText() != null && !g.getText().isEmpty()) {
-                GSpreadSheetsNpcPhrase phrase = getNpcPharse(g.getText());
-                if (phrase != null) {
+            } else if (s.getTextRu() != null && !s.getTextRu().isEmpty()) {
+                Long textId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", s.getTextRu());
+                if (textId != null) {
                     foundCounter++;
-                    g.setExtNpcPhrase(phrase);
-                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
-                    em.merge(g);
+                    GSpreadSheetsNpcPhrase phrase = em.find(GSpreadSheetsNpcPhrase.class, textId);
+                    s.setExtNpcPhrase(phrase);
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}. \nS: {3} \nF: {4}", new Object[]{Integer.toString(counter), total, foundCounter, s.getTextRu(), phrase.getTextRu()});
+                    em.merge(s);
                 } else {
-                    Query fullTextQuery = em.createNativeQuery("select id from gspreadsheetsnpcphrase where texten @@ :textEn");
-                    fullTextQuery.setParameter("textEn", g.getText());
-                    List resultList = fullTextQuery.getResultList();
-                    if (resultList != null && resultList.size() > 0) {
-                        Object firstRow = resultList.get(0);
-                        BigInteger phraseId = (BigInteger) firstRow;
-                        phrase = em.find(GSpreadSheetsNpcPhrase.class, Long.valueOf(phraseId.longValue()));
-                        foundCounter++;
-                        g.setExtNpcPhrase(phrase);
-                        Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
-                        em.merge(g);
-                    }
-                    if (phrase == null) {
-                        assignGreetingToPhrase(g);
-                    }
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Not found phrase for {0} of {1}. Total phrases found {2}. \nS: {3}", new Object[]{Integer.toString(counter), total, foundCounter, s.getTextRu()});
+                    s.setExtNpcPhraseFailed(Boolean.TRUE);
+                    em.merge(s);
                 }
             }
         }
 
-        Criteria npcTopicCrit = session.createCriteria(Topic.class);
-        npcTopicCrit.add(Restrictions.or(Restrictions.ne("extNpcPhraseFailed", Boolean.TRUE), Restrictions.isNull("extNpcPhraseFailed")));
-        npcTopicCrit.add(Restrictions.isNull("extNpcPhrase"));
-        //npcTopicCrit.setFirstResult(0);
-        //npcTopicCrit.setMaxResults(100);
-        npcTopicCrit.add(Restrictions.isNotNull("npcText"));
-        npcTopicCrit.add(Restrictions.not(Restrictions.eq("npcText", "")));
-        List<Topic> npcTopicList = npcTopicCrit.list();
+        CriteriaQuery<Topic> npcTopicQuery = cb.createQuery(Topic.class);
+        Root<Topic> npcTopicFrom = npcTopicQuery.from(Topic.class);
+        npcTopicQuery.select(npcTopicFrom);
+        npcTopicQuery.where(cb.and(
+                cb.or(
+                        cb.and(cb.isNotNull(npcTopicFrom.get("npcText")), cb.notEqual(npcTopicFrom.get("npcText"), "")),
+                        cb.and(cb.isNotNull(npcTopicFrom.get("npcTextRu")), cb.notEqual(npcTopicFrom.get("npcTextRu"), ""))
+                ),
+                cb.isNull(npcTopicFrom.get("extNpcPhrase")),
+                cb.isNull(npcTopicFrom.get("extNpcPhraseFailed"))
+        ));
+        List<Topic> npcTopicList = em.createQuery(npcTopicQuery).setMaxResults(10000).getResultList();
         total = npcTopicList.size();
         counter = 0;
         foundCounter = 0;
@@ -2878,66 +2865,94 @@ public class DBService {
             counter++;
             Logger.getLogger(DBService.class.getName()).log(Level.INFO, "npc topic {0}/{1}", new Object[]{counter, total});
             if (t.getNpcText() != null && !t.getNpcText().isEmpty()) {
-                GSpreadSheetsNpcPhrase phrase = getNpcPharse(t.getNpcText());
-                if (phrase != null) {
+                Long phraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", t.getNpcText());
+                if (phraseId != null) {
+                    GSpreadSheetsNpcPhrase phrase = em.find(GSpreadSheetsNpcPhrase.class, phraseId);
                     foundCounter++;
                     t.setExtNpcPhrase(phrase);
-                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}. \nS: {3} \nF: {4}", new Object[]{Integer.toString(counter), total, foundCounter, t.getNpcText(), phrase.getTextEn()});
                     em.merge(t);
                 } else {
-                    Query fullTextQuery = em.createNativeQuery("select id from gspreadsheetsnpcphrase where texten like '%<<%' and texten @@ :textEn");
-                    fullTextQuery.setParameter("textEn", t.getNpcText());
-                    List resultList = fullTextQuery.getResultList();
-                    if (resultList != null && resultList.size() > 0) {
-                        Object firstRow = resultList.get(0);
-                        BigInteger phraseId = (BigInteger) firstRow;
-                        phrase = em.find(GSpreadSheetsNpcPhrase.class, Long.valueOf(phraseId.longValue()));
-                        foundCounter++;
-                        t.setExtNpcPhrase(phrase);
-                        Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
-                        em.merge(t);
-                    }
-                    if (phrase == null) {
-                        assignTopicToPhrase(t);
-                    }
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Not found phrase for {0} of {1}. Total phrases found {2}. \nS: {3}", new Object[]{Integer.toString(counter), total, foundCounter, t.getNpcText()});
+                    t.setExtNpcPhraseFailed(Boolean.TRUE);
+                    em.merge(t);
                 }
-                if (t.getExtNpcPhrase() == null) {
+
+            } else if (t.getNpcTextRu() != null && !t.getNpcTextRu().isEmpty()) {
+                Long phraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", t.getNpcTextRu());
+                if (phraseId != null) {
+                    GSpreadSheetsNpcPhrase phrase = em.find(GSpreadSheetsNpcPhrase.class, phraseId);
+                    foundCounter++;
+                    t.setExtNpcPhrase(phrase);
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}. \nS: {3} \nF: {4}", new Object[]{Integer.toString(counter), total, foundCounter, t.getNpcTextRu(), phrase.getTextRu()});
+                    em.merge(t);
+                } else {
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Not found phrase for {0} of {1}. Total phrases found {2}. \nS: {3}", new Object[]{Integer.toString(counter), total, foundCounter, t.getNpcTextRu()});
                     t.setExtNpcPhraseFailed(Boolean.TRUE);
                     em.merge(t);
                 }
             }
         }
 
-        Criteria playerTopicCrit = session.createCriteria(Topic.class);
-        playerTopicCrit.add(Restrictions.isNull("extPlayerPhrase"));
-        //playerTopicCrit.setFirstResult(0);
-        //playerTopicCrit.setMaxResults(100);
-        playerTopicCrit.add(Restrictions.or(Restrictions.ne("extPlayerPhraseFailed", Boolean.TRUE), Restrictions.isNull("extPlayerPhraseFailed")));
-        playerTopicCrit.add(Restrictions.isNotNull("playerText"));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%Here's % gold. Clear my bounty.")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%Here's % gold and everything I've stolen. Clear my bounty.")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "View Stable")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Store")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Store (%)")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Store (%), Smuggler's Fee %")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Guild Store")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Guild Store (%)")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%I have powerful friends. My bounty has already been covered.")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Bank")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Buy Backpack Upgrade")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "%I won''t pay the bounty.")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Guild Bank")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Bid on Guild Trader")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Hire Guild Trader")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Soul Healing")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Have any poisons or potions today?")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Have anything that can help make me less noticeable?")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Have any equipment today?")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Торговать (%)")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Магазин (%), процент контрабандиста %")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Гильдейский магазин (%)")));
-        playerTopicCrit.add(Restrictions.not(Restrictions.like("playerText", "Магазин (%)")));
-        List<Topic> playerTopicList = playerTopicCrit.list();
+        CriteriaQuery<Topic> playerTopicQuery = cb.createQuery(Topic.class);
+        Root<Topic> playerTopicFrom = playerTopicQuery.from(Topic.class);
+
+        playerTopicQuery.select(playerTopicFrom);
+
+        playerTopicQuery.where(cb.and(
+                cb.or(
+                        cb.and(cb.isNotNull(playerTopicFrom.get("playerText")),
+                                cb.notLike(playerTopicFrom.get("playerText"), ""),
+                                cb.notLike(playerTopicFrom.get("playerText"), "%Here's % gold. Clear my bounty."),
+                                cb.notLike(playerTopicFrom.get("playerText"), "%Here's % gold and everything I've stolen. Clear my bounty."),
+                                cb.notLike(playerTopicFrom.get("playerText"), "View Stable"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Store"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Store (%)"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Store (%), Smuggler's Fee %"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Guild Store"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Guild Store (%)"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "%I have powerful friends. My bounty has already been covered."),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Bank"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Buy Backpack Upgrade"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "%I won''t pay the bounty."),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Guild Bank"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Bid on Guild Trader"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Hire Guild Trader"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Soul Healing"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Have any poisons or potions today?"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Have anything that can help make me less noticeable?"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Have any equipment today?"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Торговать (%)"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Магазин (%), процент контрабандиста %"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Гильдейский магазин (%)"),
+                                cb.notLike(playerTopicFrom.get("playerText"), "Магазин (%)")),
+                        cb.and(cb.isNotNull(playerTopicFrom.get("playerTextRu")),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), ""),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Store (%)"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Store (%), Smuggler's Fee %"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Guild Store (%)"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "%I have powerful friends. My bounty has already been covered."),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "%У меня есть могущественные друзья. Мой штраф уже был оплачен."),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "%I won''t pay the bounty."),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Торговать (%)"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Магазин (%), процент контрабандиста %"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Гильдейский магазин (%)"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Гильдейский банк"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Банк"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Сделать ставку на гильдейского торговца"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Торговать (%)"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Торговать"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Заплатить Вот % в уплату моего штрафа."),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Заплатить Вот % и все украденное мной. Сними с меня штраф."),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Гильдейский магазин"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Купить улучшение рюкзака"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Осмотреть конюшню"),
+                                cb.notLike(playerTopicFrom.get("playerTextRu"), "Магазин (%)"))
+                ),
+                cb.isNull(playerTopicFrom.get("extPlayerPhrase")),
+                cb.isNull(npcTopicFrom.get("extPlayerPhraseFailed"))
+        ));
+        List<Topic> playerTopicList = em.createQuery(playerTopicQuery).setMaxResults(10000).getResultList();
         total = playerTopicList.size();
         counter = 0;
         foundCounter = 0;
@@ -2945,39 +2960,33 @@ public class DBService {
             counter++;
             Logger.getLogger(DBService.class.getName()).log(Level.INFO, "player topic {0}/{1}", new Object[]{counter, total});
             if (t.getPlayerText() != null && !t.getPlayerText().isEmpty()) {
-                GSpreadSheetsPlayerPhrase phrase = getPlayerPharse(t.getPlayerText());
-                if (phrase == null) {
-                    phrase = getPlayerPharse(t.getPlayerText().replace("Intimidate ", "").replace("Persuade ", ""));
-                }
-                if (phrase != null) {
+                Long phraseId = searchTableItemIndexed("GSpreadSheetsPlayerPhrase", t.getPlayerText().replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
+                if (phraseId != null) {
+                    GSpreadSheetsPlayerPhrase phrase = em.find(GSpreadSheetsPlayerPhrase.class, phraseId);
                     foundCounter++;
                     t.setExtPlayerPhrase(phrase);
-                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}. \nS: {3} \nF: {4}", new Object[]{Integer.toString(counter), total, foundCounter, t.getPlayerText(), phrase.getTextEn()});
                     em.merge(t);
                 } else {
-                    Query fullTextQuery = em.createNativeQuery("select id from gspreadsheetsplayerphrase where texten like '%<<%' and texten @@ :textEn");
-                    fullTextQuery.setParameter("textEn", t.getPlayerText());
-                    List resultList = fullTextQuery.getResultList();
-                    if (resultList != null && resultList.size() > 0) {
-                        Object firstRow = resultList.get(0);
-                        BigInteger phraseId = (BigInteger) firstRow;
-                        phrase = em.find(GSpreadSheetsPlayerPhrase.class, Long.valueOf(phraseId.longValue()));
-                        foundCounter++;
-                        t.setExtPlayerPhrase(phrase);
-                        Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}", new Object[]{Integer.toString(counter), total, foundCounter});
-                        em.merge(t);
-                    }
-                    if (phrase == null) {
-                        assignTopicToPhrase(t);
-                    }
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Not found phrase for {0} of {1}. Total phrases found {2}. \nS: {3}", new Object[]{Integer.toString(counter), total, foundCounter, t.getPlayerText()});
+                    t.setExtPlayerPhraseFailed(Boolean.TRUE);
+                    em.merge(t);
                 }
-                if (t.getExtPlayerPhrase() == null) {
+            } else if (t.getPlayerTextRu() != null && !t.getPlayerTextRu().isEmpty()) {
+                Long phraseId = searchTableItemRuIndexed("GSpreadSheetsPlayerPhrase", t.getPlayerTextRu().replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
+                if (phraseId != null) {
+                    GSpreadSheetsPlayerPhrase phrase = em.find(GSpreadSheetsPlayerPhrase.class, phraseId);
+                    foundCounter++;
+                    t.setExtPlayerPhrase(phrase);
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "found phrase for {0} of {1}. Total phrases found {2}. \nS: {3} \nF: {4}", new Object[]{Integer.toString(counter), total, foundCounter, t.getPlayerTextRu(), phrase.getTextRu()});
+                    em.merge(t);
+                } else {
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Not found phrase for {0} of {1}. Total phrases found {2}. \nS: {3}", new Object[]{Integer.toString(counter), total, foundCounter, t.getPlayerTextRu()});
                     t.setExtPlayerPhraseFailed(Boolean.TRUE);
                     em.merge(t);
                 }
             }
         }
-
     }
 
     private GSpreadSheetsNpcPhrase getNpcPharse(String text) {
@@ -3033,11 +3042,15 @@ public class DBService {
             for (Object[] row : resultList) {
                 result = new GSpreadSheetsPlayerPhrase();
                 result.setId(((BigInteger) row[0]).longValue());
-                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "successfull match {0} for {1}", new Object[]{row[1], text});
+                Logger
+                        .getLogger(DBService.class
+                                .getName()).log(Level.INFO, "successfull match {0} for {1}", new Object[]{row[1], text});
                 break;
+
             }
             if (result == null) {
-                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "nothing found with " + regexp);
+                Logger.getLogger(DBService.class
+                        .getName()).log(Level.INFO, "nothing found with " + regexp);
             }
         }
 
@@ -3089,52 +3102,6 @@ public class DBService {
             em.merge(subtitle);
         }
 
-    }
-
-    @Transactional
-    public void assignGreetingToPhrase(Greeting greeting) {
-        Session session = (Session) em.getDelegate();
-        GSpreadSheetsNpcPhrase npcPhrase = null;
-        if (greeting.getText() != null && !greeting.getText().isEmpty()) {
-            Criteria exactNpcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
-            exactNpcPhraseCrit.add(Restrictions.eq("textEn", greeting.getText().replace("\n", "$")));
-            exactNpcPhraseCrit.setMaxResults(1);
-            npcPhrase = (GSpreadSheetsNpcPhrase) exactNpcPhraseCrit.uniqueResult();
-        }
-        if (npcPhrase == null && greeting.getTextRu() != null && !greeting.getTextRu().isEmpty()) {
-            Criteria exactNpcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
-            exactNpcPhraseCrit.add(Restrictions.eq("textRu", greeting.getTextRu().replace("\n", "$")));
-            exactNpcPhraseCrit.setMaxResults(1);
-            npcPhrase = (GSpreadSheetsNpcPhrase) exactNpcPhraseCrit.uniqueResult();
-        }
-        if (npcPhrase == null) {
-            List<GSpreadSheetsNpcPhrase> foundPhrases = new ArrayList<>();
-            Criteria npcCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
-            List<GSpreadSheetsNpcPhrase> npcList = npcCrit.list();
-            for (GSpreadSheetsNpcPhrase phrase : npcList) {
-                if (greeting.getText() != null && !greeting.getText().isEmpty()) {
-                    if (getMatch(phrase.getTextEn(), greeting.getText())) {
-                        foundPhrases.add(phrase);
-                    }
-                }
-                if (npcPhrase == null && greeting.getTextRu() != null && !greeting.getTextRu().isEmpty()) {
-                    if (getMatch(phrase.getTextRu(), greeting.getTextRu())) {
-                        foundPhrases.add(phrase);
-                    }
-                }
-            }
-            for (GSpreadSheetsNpcPhrase foundPhrase : foundPhrases) {
-                if (npcPhrase == null) {
-                    npcPhrase = foundPhrase;
-                } else if (foundPhrase.getTextEn().length() > npcPhrase.getTextEn().length()) {
-                    npcPhrase = foundPhrase;
-                }
-            }
-        }
-        if (npcPhrase != null) {
-            greeting.setExtNpcPhrase(npcPhrase);
-            em.merge(greeting);
-        }
     }
 
     private boolean getMatch(String string1, String string2) {
@@ -3309,7 +3276,7 @@ public class DBService {
                             cb.isNull(join.get("translator"))
                     ));
                     predicates1.add(cb.and(
-                            cb.isNotNull(topicsJoin1.get("extNpcPhrase")),
+                            cb.isNotNull(topicsJoin1.get("extPlayerPhrase")),
                             cb.isEmpty(join1.get("translatedTexts")),
                             cb.isNull(join1.get("translator"))
                     ));
@@ -3404,7 +3371,8 @@ public class DBService {
     public BeanItemContainer<Npc> getNpcs(BeanItemContainer<Npc> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations) {
         container.removeAllItems();
         Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(Npc.class);
+        Criteria crit = session.createCriteria(Npc.class
+        );
         crit.setFetchMode("location", FetchMode.JOIN);
         if (translateStatus != null && translator != null) {
             Query q = em.createNativeQuery("select npc_id from (select t.npc_id from translatedtext tt join topic t on tt.npctopic_id=t.id where tt.status=:translateStatus and tt.author_id=:authorId\n"
@@ -3492,8 +3460,10 @@ public class DBService {
         if (entity.getId() == null) {
             entity.setCreateTime(new Date());
             em.persist(entity);
+
         } else if (entity.getText() == null || entity.getText().isEmpty()) {
-            em.remove(em.find(TranslatedText.class, entity.getId()));
+            em.remove(em.find(TranslatedText.class,
+                    entity.getId()));
         } else {
             entity.setChangeTime(new Date());
             em.merge(entity);
@@ -3511,8 +3481,10 @@ public class DBService {
         if (entity.getId() == null) {
             entity.setCreateTime(new Date());
             em.persist(entity);
+
         } else if (entity.getText() == null || entity.getText().isEmpty()) {
-            em.remove(em.find(TranslatedText.class, entity.getId()));
+            em.remove(em.find(TranslatedText.class,
+                    entity.getId()));
         } else {
             entity.setChangeTime(new Date());
             em.merge(entity);
@@ -3522,8 +3494,10 @@ public class DBService {
     @Transactional
     public void savePlayerPhrases(List<GSpreadSheetsPlayerPhrase> phrases) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsPlayerPhrase phrase : phrases) {
-            Criteria crit = session.createCriteria(GSpreadSheetsPlayerPhrase.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsPlayerPhrase.class
+            );
             crit.add(Restrictions.eq("rowNum", phrase.getRowNum()));
             GSpreadSheetsPlayerPhrase result = (GSpreadSheetsPlayerPhrase) crit.uniqueResult();
             if (result != null) {
@@ -3540,8 +3514,10 @@ public class DBService {
     @Transactional
     public void saveNpcPhrases(List<GSpreadSheetsNpcPhrase> phrases) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsNpcPhrase phrase : phrases) {
-            Criteria crit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsNpcPhrase.class
+            );
             crit.add(Restrictions.eq("rowNum", phrase.getRowNum()));
             GSpreadSheetsNpcPhrase result = (GSpreadSheetsNpcPhrase) crit.uniqueResult();
             if (result != null) {
@@ -3558,8 +3534,10 @@ public class DBService {
     @Transactional
     public void saveNpcnames(List<GSpreadSheetsNpcName> names) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsNpcName name : names) {
-            Criteria crit = session.createCriteria(GSpreadSheetsNpcName.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsNpcName.class
+            );
             crit.add(Restrictions.eq("rowNum", name.getRowNum()));
             GSpreadSheetsNpcName result = (GSpreadSheetsNpcName) crit.uniqueResult();
             if (result != null) {
@@ -3570,8 +3548,10 @@ public class DBService {
                 em.merge(result);
             } else {
                 em.persist(name);
+
             }
-            Criteria npcNameCrit = session.createCriteria(Npc.class);
+            Criteria npcNameCrit = session.createCriteria(Npc.class
+            );
             npcNameCrit.add(Restrictions.ilike("name", name.getTextEn()));
             List<Npc> npcs = npcNameCrit.list();
             for (Npc npc : npcs) {
@@ -3592,8 +3572,10 @@ public class DBService {
     @Transactional
     public void saveLocationNames(List<GSpreadSheetsLocationName> names) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsLocationName name : names) {
-            Criteria crit = session.createCriteria(GSpreadSheetsLocationName.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsLocationName.class
+            );
             crit.add(Restrictions.eq("rowNum", name.getRowNum()));
             GSpreadSheetsLocationName result = (GSpreadSheetsLocationName) crit.uniqueResult();
             if (result != null) {
@@ -3603,8 +3585,10 @@ public class DBService {
                 em.merge(result);
             } else {
                 em.persist(name);
+
             }
-            Criteria locationsCrit = session.createCriteria(Location.class);
+            Criteria locationsCrit = session.createCriteria(Location.class
+            );
             locationsCrit.add(Restrictions.ilike("name", name.getTextEn()));
             List<Location> list = locationsCrit.list();
             for (Location l : list) {
@@ -3617,8 +3601,10 @@ public class DBService {
     @Transactional
     public void saveQuestNames(List<GSpreadSheetsQuestName> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsQuestName item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsQuestName.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsQuestName.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsQuestName result = (GSpreadSheetsQuestName) crit.uniqueResult();
             if (result != null) {
@@ -3628,8 +3614,10 @@ public class DBService {
                 em.merge(result);
             } else {
                 em.persist(item);
+
             }
-            Criteria questsCrit = session.createCriteria(Quest.class);
+            Criteria questsCrit = session.createCriteria(Quest.class
+            );
             questsCrit.add(Restrictions.ilike("name", item.getTextEn()));
             List<Quest> list = questsCrit.list();
             for (Quest q : list) {
@@ -3643,8 +3631,10 @@ public class DBService {
     @Transactional
     public void saveQuestDescriptions(List<GSpreadSheetsQuestDescription> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsQuestDescription item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsQuestDescription.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsQuestDescription.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsQuestDescription result = (GSpreadSheetsQuestDescription) crit.uniqueResult();
             if (result != null) {
@@ -3661,8 +3651,10 @@ public class DBService {
     @Transactional
     public void saveQuestDirections(List<GSpreadSheetsQuestDirection> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsQuestDirection item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsQuestDirection.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsQuestDirection.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsQuestDirection result = (GSpreadSheetsQuestDirection) crit.uniqueResult();
             if (result != null) {
@@ -3679,8 +3671,10 @@ public class DBService {
     @Transactional
     public void saveItemNames(List<GSpreadSheetsItemName> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsItemName item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsItemName.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsItemName.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsItemName result = (GSpreadSheetsItemName) crit.uniqueResult();
             if (result != null) {
@@ -3697,8 +3691,10 @@ public class DBService {
     @Transactional
     public void saveItemDescriptions(List<GSpreadSheetsItemDescription> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsItemDescription item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsItemDescription.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsItemDescription.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsItemDescription result = (GSpreadSheetsItemDescription) crit.uniqueResult();
             if (result != null) {
@@ -3715,8 +3711,10 @@ public class DBService {
     @Transactional
     public void saveActivators(List<GSpreadSheetsActivator> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsActivator item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsActivator.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsActivator.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsActivator result = (GSpreadSheetsActivator) crit.uniqueResult();
             if (result != null) {
@@ -3733,8 +3731,10 @@ public class DBService {
     @Transactional
     public void saveAchievements(List<GSpreadSheetsAchievement> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsAchievement item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsAchievement.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsAchievement.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsAchievement result = (GSpreadSheetsAchievement) crit.uniqueResult();
             if (result != null) {
@@ -3751,8 +3751,10 @@ public class DBService {
     @Transactional
     public void saveAchievementDescriptions(List<GSpreadSheetsAchievementDescription> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsAchievementDescription item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsAchievementDescription.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsAchievementDescription result = (GSpreadSheetsAchievementDescription) crit.uniqueResult();
             if (result != null) {
@@ -3769,8 +3771,10 @@ public class DBService {
     @Transactional
     public void saveNotes(List<GSpreadSheetsNote> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsNote item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsNote.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsNote.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsNote result = (GSpreadSheetsNote) crit.uniqueResult();
             if (result != null) {
@@ -3787,8 +3791,10 @@ public class DBService {
     @Transactional
     public void saveAbilityDescriptions(List<GSpreadSheetsAbilityDescription> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsAbilityDescription item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsAbilityDescription.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsAbilityDescription result = (GSpreadSheetsAbilityDescription) crit.uniqueResult();
             if (result != null) {
@@ -3805,8 +3811,10 @@ public class DBService {
     @Transactional
     public void saveCollectibles(List<GSpreadSheetsCollectible> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsCollectible item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsCollectible.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsCollectible.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsCollectible result = (GSpreadSheetsCollectible) crit.uniqueResult();
             if (result != null) {
@@ -3823,8 +3831,10 @@ public class DBService {
     @Transactional
     public void saveCollectibleDescriptions(List<GSpreadSheetsCollectibleDescription> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsCollectibleDescription item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsCollectibleDescription.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsCollectibleDescription result = (GSpreadSheetsCollectibleDescription) crit.uniqueResult();
             if (result != null) {
@@ -3841,8 +3851,10 @@ public class DBService {
     @Transactional
     public void saveLoadscreens(List<GSpreadSheetsLoadscreen> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsLoadscreen item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsLoadscreen.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsLoadscreen result = (GSpreadSheetsLoadscreen) crit.uniqueResult();
             if (result != null) {
@@ -3859,8 +3871,10 @@ public class DBService {
     @Transactional
     public void saveJournalEntries(List<GSpreadSheetsJournalEntry> items) {
         Session session = (Session) em.getDelegate();
+
         for (GSpreadSheetsJournalEntry item : items) {
-            Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+            Criteria crit = session.createCriteria(GSpreadSheetsJournalEntry.class
+            );
             crit.add(Restrictions.eq("rowNum", item.getRowNum()));
             GSpreadSheetsJournalEntry result = (GSpreadSheetsJournalEntry) crit.uniqueResult();
             if (result != null) {
@@ -4393,7 +4407,8 @@ public class DBService {
         }
         Session session = (Session) em.getDelegate();
 
-        Criteria npcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
+        Criteria npcCrit = session.createCriteria(GSpreadSheetsNpcName.class
+        );
         npcCrit.add(searchTerms);
         List<GSpreadSheetsNpcName> npcList = npcCrit.list();
         for (GSpreadSheetsNpcName npc : npcList) {
@@ -4406,8 +4421,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(npc.getWeight());
             item.getItemProperty("translator").setValue(npc.getTranslator());
             item.getItemProperty("catalogType").setValue("NPC");
+
         }
-        Criteria locationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+        Criteria locationCrit = session.createCriteria(GSpreadSheetsLocationName.class
+        );
         locationCrit.add(searchTerms);
         List<GSpreadSheetsLocationName> locationList = locationCrit.list();
         for (GSpreadSheetsLocationName loc : locationList) {
@@ -4417,8 +4434,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(loc.getWeight());
             item.getItemProperty("translator").setValue(loc.getTranslator());
             item.getItemProperty("catalogType").setValue("Локация");
+
         }
-        Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class);
+        Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class
+        );
         activatorCrit.add(searchTerms);
         List<GSpreadSheetsActivator> activatorList = activatorCrit.list();
         for (GSpreadSheetsActivator loc : activatorList) {
@@ -4428,9 +4447,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(loc.getWeight());
             item.getItemProperty("translator").setValue(loc.getTranslator());
             item.getItemProperty("catalogType").setValue("Активатор");
+
         }
 
-        Criteria itemNameCrit = session.createCriteria(GSpreadSheetsItemName.class);
+        Criteria itemNameCrit = session.createCriteria(GSpreadSheetsItemName.class
+        );
         itemNameCrit.add(searchTerms);
         List<GSpreadSheetsItemName> itemNameList = itemNameCrit.list();
         for (GSpreadSheetsItemName row : itemNameList) {
@@ -4440,9 +4461,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(row.getWeight());
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Название предмета");
+
         }
 
-        Criteria itemDescriptionCrit = session.createCriteria(GSpreadSheetsItemDescription.class);
+        Criteria itemDescriptionCrit = session.createCriteria(GSpreadSheetsItemDescription.class
+        );
         itemDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionCrit.list();
         for (GSpreadSheetsItemDescription row : itemDescriptionList) {
@@ -4452,9 +4475,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(row.getWeight());
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание предмета");
+
         }
 
-        Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
+        Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class
+        );
         questNameCrit.add(searchTerms);
         List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
         for (GSpreadSheetsQuestName row : questNameList) {
@@ -4464,9 +4489,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(row.getWeight());
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Название квеста");
+
         }
 
-        Criteria questDescriptionCrit = session.createCriteria(GSpreadSheetsQuestDescription.class);
+        Criteria questDescriptionCrit = session.createCriteria(GSpreadSheetsQuestDescription.class
+        );
         questDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsQuestDescription> questDescriptionList = questDescriptionCrit.list();
         for (GSpreadSheetsQuestDescription row : questDescriptionList) {
@@ -4476,9 +4503,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(row.getWeight());
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание квеста");
+
         }
 
-        Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class);
+        Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class
+        );
         questDirectionCrit.add(searchTerms);
         List<GSpreadSheetsQuestDirection> questDirectionList = questDirectionCrit.list();
         for (GSpreadSheetsQuestDirection row : questDirectionList) {
@@ -4488,9 +4517,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(row.getWeight());
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Цель квеста");
+
         }
 
-        Criteria journalEntryCrit = session.createCriteria(GSpreadSheetsJournalEntry.class);
+        Criteria journalEntryCrit = session.createCriteria(GSpreadSheetsJournalEntry.class
+        );
         journalEntryCrit.add(searchTerms);
         List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryCrit.list();
         for (GSpreadSheetsJournalEntry row : journalEntryList) {
@@ -4500,9 +4531,11 @@ public class DBService {
             item.getItemProperty("weight").setValue(row.getWeight());
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Запись в журнале");
+
         }
 
-        Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class);
+        Criteria npcPhraseCrit = session.createCriteria(GSpreadSheetsNpcPhrase.class
+        );
         npcPhraseCrit.add(searchTerms);
         List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseCrit.list();
         for (GSpreadSheetsNpcPhrase gSpreadSheetsNpcPhrase : npcPhraseList) {
@@ -4512,8 +4545,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(gSpreadSheetsNpcPhrase.getWeight());
             item.getItemProperty("translator").setValue(gSpreadSheetsNpcPhrase.getTranslator());
             item.getItemProperty("catalogType").setValue("Фраза NPC");
+
         }
-        Criteria playerPhraseCrit = session.createCriteria(GSpreadSheetsPlayerPhrase.class);
+        Criteria playerPhraseCrit = session.createCriteria(GSpreadSheetsPlayerPhrase.class
+        );
         playerPhraseCrit.add(searchTerms);
         List<GSpreadSheetsPlayerPhrase> playerPhraseList = playerPhraseCrit.list();
         for (GSpreadSheetsPlayerPhrase gSpreadSheetsPlayerPhrase : playerPhraseList) {
@@ -4523,8 +4558,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(gSpreadSheetsPlayerPhrase.getWeight());
             item.getItemProperty("translator").setValue(gSpreadSheetsPlayerPhrase.getTranslator());
             item.getItemProperty("catalogType").setValue("Фраза игрока");
+
         }
-        Criteria achievementCrit = session.createCriteria(GSpreadSheetsAchievement.class);
+        Criteria achievementCrit = session.createCriteria(GSpreadSheetsAchievement.class
+        );
         achievementCrit.add(searchTerms);
         List<GSpreadSheetsAchievement> achievementList = achievementCrit.list();
         for (GSpreadSheetsAchievement i : achievementList) {
@@ -4534,8 +4571,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Достижение");
+
         }
-        Criteria achievementDescriptionCrit = session.createCriteria(GSpreadSheetsAchievementDescription.class);
+        Criteria achievementDescriptionCrit = session.createCriteria(GSpreadSheetsAchievementDescription.class
+        );
         achievementDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionCrit.list();
         for (GSpreadSheetsAchievementDescription i : achievementDescriptionList) {
@@ -4545,8 +4584,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание достижения");
+
         }
-        Criteria noteCrit = session.createCriteria(GSpreadSheetsNote.class);
+        Criteria noteCrit = session.createCriteria(GSpreadSheetsNote.class
+        );
         noteCrit.add(searchTerms);
         List<GSpreadSheetsNote> noteList = noteCrit.list();
         for (GSpreadSheetsNote i : noteList) {
@@ -4556,8 +4597,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Письмо");
+
         }
-        Criteria abilityDescriptionCrit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
+        Criteria abilityDescriptionCrit = session.createCriteria(GSpreadSheetsAbilityDescription.class
+        );
         abilityDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionCrit.list();
         for (GSpreadSheetsAbilityDescription i : abilityDescriptionList) {
@@ -4567,8 +4610,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание способности");
+
         }
-        Criteria collectibleCrit = session.createCriteria(GSpreadSheetsCollectible.class);
+        Criteria collectibleCrit = session.createCriteria(GSpreadSheetsCollectible.class
+        );
         collectibleCrit.add(searchTerms);
         List<GSpreadSheetsCollectible> collectibleList = collectibleCrit.list();
         for (GSpreadSheetsCollectible i : collectibleList) {
@@ -4578,8 +4623,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Коллекционный предмет");
+
         }
-        Criteria collectibleDescriptionCrit = session.createCriteria(GSpreadSheetsCollectibleDescription.class);
+        Criteria collectibleDescriptionCrit = session.createCriteria(GSpreadSheetsCollectibleDescription.class
+        );
         collectibleDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsCollectibleDescription> collectibleDescriptionList = collectibleDescriptionCrit.list();
         for (GSpreadSheetsCollectibleDescription i : collectibleDescriptionList) {
@@ -4589,8 +4636,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Описание коллекционного предмета");
+
         }
-        Criteria loadscreenCrit = session.createCriteria(GSpreadSheetsLoadscreen.class);
+        Criteria loadscreenCrit = session.createCriteria(GSpreadSheetsLoadscreen.class
+        );
         loadscreenCrit.add(searchTerms);
         List<GSpreadSheetsLoadscreen> loadscreenList = loadscreenCrit.list();
         for (GSpreadSheetsLoadscreen i : loadscreenList) {
@@ -4600,8 +4649,10 @@ public class DBService {
             item.getItemProperty("weight").setValue(i.getWeight());
             item.getItemProperty("translator").setValue(i.getTranslator());
             item.getItemProperty("catalogType").setValue("Загрузочный экран");
+
         }
-        Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
+        Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class
+        );
         searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
         searchTermitems.add(Restrictions.ilike("textRu", search, MatchMode.ANYWHERE));
@@ -4989,7 +5040,8 @@ public class DBService {
             if (itemId instanceof GSpreadSheetsLocationName) {
                 GSpreadSheetsLocationName locationName = (GSpreadSheetsLocationName) itemId;
                 Session session = (Session) em.getDelegate();
-                Criteria crit = session.createCriteria(Location.class);
+                Criteria crit = session.createCriteria(Location.class
+                );
                 crit.add(Restrictions.ilike("name", locationName.getTextEn()));
                 List<Location> list = crit.list();
                 for (Location l : list) {
@@ -5000,7 +5052,8 @@ public class DBService {
             if (itemId instanceof GSpreadSheetsQuestName) {
                 GSpreadSheetsQuestName questName = (GSpreadSheetsQuestName) itemId;
                 Session session = (Session) em.getDelegate();
-                Criteria crit = session.createCriteria(Quest.class);
+                Criteria crit = session.createCriteria(Quest.class
+                );
                 crit.add(Restrictions.ilike("name", questName.getTextEn()));
                 List<Quest> list = crit.list();
                 for (Quest q : list) {
@@ -5011,7 +5064,8 @@ public class DBService {
             if (itemId instanceof GSpreadSheetsNpcName) {
                 GSpreadSheetsNpcName npcName = (GSpreadSheetsNpcName) itemId;
                 Session session = (Session) em.getDelegate();
-                Criteria crit = session.createCriteria(Npc.class);
+                Criteria crit = session.createCriteria(Npc.class
+                );
                 crit.add(Restrictions.ilike("name", npcName.getTextEn()));
                 List<Npc> list = crit.list();
                 for (Npc n : list) {
@@ -5028,8 +5082,12 @@ public class DBService {
 
     public HierarchicalContainer getStatistics() {
         HierarchicalContainer result = new HierarchicalContainer();
-        result.addContainerProperty("name", String.class, null);
-        result.addContainerProperty("value", String.class, null);
+        result
+                .addContainerProperty("name", String.class,
+                        null);
+        result
+                .addContainerProperty("value", String.class,
+                        null);
         Query gdpreadsheetsStatsQuery = em.createNativeQuery("select 'Перевод названий локаций', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetslocationname where texten!=textru union all select null as translated,count(*) as total from gspreadsheetslocationname) as qres union all\n"
                 + "select 'Перевод активаторов', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsactivator where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsactivator) as qres union all\n"
                 + "select 'Перевод достижений', sum(translated) as translated,sum(total) as total from (select count(*) as translated,null as total from gspreadsheetsachievement where texten!=textru union all select null as translated,count(*) as total from gspreadsheetsachievement) as qres union all\n"
@@ -5077,7 +5135,8 @@ public class DBService {
     public boolean getIsAutoSynchronizationEnabled() {
         boolean result = false;
         Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(SystemProperty.class);
+        Criteria crit = session.createCriteria(SystemProperty.class
+        );
         crit.add(Restrictions.eq("name", "autoSync"));
         SystemProperty property = (SystemProperty) crit.uniqueResult();
         if (property == null) {
@@ -5094,7 +5153,8 @@ public class DBService {
     @Transactional
     public void setIsAutoSynchronizationEnabled(boolean isEnabled) {
         Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(SystemProperty.class);
+        Criteria crit = session.createCriteria(SystemProperty.class
+        );
         crit.add(Restrictions.eq("name", "autoSync"));
         SystemProperty property = (SystemProperty) crit.uniqueResult();
         if (property == null) {
@@ -5193,7 +5253,8 @@ public class DBService {
     @Transactional
     public void addSpellerWord(String word) {
         Session session = (Session) em.getDelegate();
-        Criteria c = session.createCriteria(SpellerWord.class);
+        Criteria c = session.createCriteria(SpellerWord.class
+        );
         c.add(Restrictions.eq("text", word));
         SpellerWord w = (SpellerWord) c.uniqueResult();
         if (w == null) {
@@ -5206,7 +5267,8 @@ public class DBService {
     @Transactional
     public boolean isExistSpellerWord(String word) {
         Session session = (Session) em.getDelegate();
-        Criteria c = session.createCriteria(SpellerWord.class);
+        Criteria c = session.createCriteria(SpellerWord.class
+        );
         c.add(Restrictions.eq("text", word));
         SpellerWord w = (SpellerWord) c.uniqueResult();
         if (w != null) {
@@ -5218,10 +5280,13 @@ public class DBService {
     @Transactional
     public void assignSpreadSheetRowsToRawStrings() {
 
-        TypedQuery<GSpreadSheetsActivator> activatorQuery = em.createQuery("select a from GSpreadSheetsActivator a where aId is null", GSpreadSheetsActivator.class);
+        TypedQuery<GSpreadSheetsActivator> activatorQuery = em.createQuery("select a from GSpreadSheetsActivator a where aId is null", GSpreadSheetsActivator.class
+        );
         List<GSpreadSheetsActivator> activatorList = activatorQuery.getResultList();
+
         for (GSpreadSheetsActivator item : activatorList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{87370069L, 19398485L, 39619172L, 14464837L, 207758933L, 77659573L, 124318053L, 219936053L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5232,12 +5297,16 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsItemDescription> itemDescriptionQuery = em.createQuery("select a from GSpreadSheetsItemDescription a where aId is null", GSpreadSheetsItemDescription.class);
+        TypedQuery<GSpreadSheetsItemDescription> itemDescriptionQuery = em.createQuery("select a from GSpreadSheetsItemDescription a where aId is null", GSpreadSheetsItemDescription.class
+        );
         List<GSpreadSheetsItemDescription> itemDescriptionList = itemDescriptionQuery.getResultList();
+
         for (GSpreadSheetsItemDescription item : itemDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{139139780L, 228378404L, 249673710L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5248,12 +5317,16 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsItemName> itemNameQuery = em.createQuery("select a from GSpreadSheetsItemName a where aId is null", GSpreadSheetsItemName.class);
+        TypedQuery<GSpreadSheetsItemName> itemNameQuery = em.createQuery("select a from GSpreadSheetsItemName a where aId is null", GSpreadSheetsItemName.class
+        );
         List<GSpreadSheetsItemName> itemNameList = itemNameQuery.getResultList();
+
         for (GSpreadSheetsItemName item : itemNameList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{242841733L, 267697733L, 124362421L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5264,12 +5337,16 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsJournalEntry> journalEntryQuery = em.createQuery("select a from GSpreadSheetsJournalEntry a where aId is null", GSpreadSheetsJournalEntry.class);
+        TypedQuery<GSpreadSheetsJournalEntry> journalEntryQuery = em.createQuery("select a from GSpreadSheetsJournalEntry a where aId is null", GSpreadSheetsJournalEntry.class
+        );
         List<GSpreadSheetsJournalEntry> journalEntryList = journalEntryQuery.getResultList();
+
         for (GSpreadSheetsJournalEntry item : journalEntryList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{103224356L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5280,12 +5357,16 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsLocationName> locationNameQuery = em.createQuery("select a from GSpreadSheetsLocationName a where aId is null", GSpreadSheetsLocationName.class);
+        TypedQuery<GSpreadSheetsLocationName> locationNameQuery = em.createQuery("select a from GSpreadSheetsLocationName a where aId is null", GSpreadSheetsLocationName.class
+        );
         List<GSpreadSheetsLocationName> locationNameList = locationNameQuery.getResultList();
+
         for (GSpreadSheetsLocationName item : locationNameList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{10860933L, 146361138L, 162946485L, 162658389L, 164009093L, 267200725L, 28666901L, 81344020L, 268015829L, 111863941L, 157886597L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5296,9 +5377,11 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsNpcName> npcNameQuery = em.createQuery("select a from GSpreadSheetsNpcName a where aId is null", GSpreadSheetsNpcName.class);
+        TypedQuery<GSpreadSheetsNpcName> npcNameQuery = em.createQuery("select a from GSpreadSheetsNpcName a where aId is null", GSpreadSheetsNpcName.class
+        );
         npcNameQuery.setMaxResults(1000);
         List<GSpreadSheetsNpcName> npcNameList = npcNameQuery.getResultList();
         for (GSpreadSheetsNpcName item : npcNameList) {
@@ -5334,9 +5417,11 @@ public class DBService {
                         textEn = item.getTextEn() + "^n";
                         textEn2 = item.getTextEn() + "^n";
                         break;
+
                 }
             }
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where (textEn=:textEn or textEn=:textEn2) and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where (textEn=:textEn or textEn=:textEn2) and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", textEn);
             rawQ.setParameter("textEn2", textEn2);
             rawQ.setParameter("aId", Arrays.asList(new Long[]{8290981L, 51188660L, 191999749L}));
@@ -5348,13 +5433,17 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsNpcPhrase> npcPhraseQuery = em.createQuery("select a from GSpreadSheetsNpcPhrase a where aId is null order by changeTime", GSpreadSheetsNpcPhrase.class);
+        TypedQuery<GSpreadSheetsNpcPhrase> npcPhraseQuery = em.createQuery("select a from GSpreadSheetsNpcPhrase a where aId is null order by changeTime", GSpreadSheetsNpcPhrase.class
+        );
         npcPhraseQuery.setMaxResults(1000);
         List<GSpreadSheetsNpcPhrase> npcPhraseList = npcPhraseQuery.getResultList();
+
         for (GSpreadSheetsNpcPhrase item : npcPhraseList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{55049764L, 115740052L, 149328292L, 3952276L, 165399380L, 200879108L, 116521668L, 211899940L, 234743124L}));
             rawQ.setParameter("bId", item.getWeight().longValue());
@@ -5365,13 +5454,17 @@ public class DBService {
                 item.setbId(s.getbId());
                 item.setcId(s.getcId());
                 em.merge(item);
+
             }
         }
-        TypedQuery<GSpreadSheetsPlayerPhrase> PlayerPhraseQuery = em.createQuery("select a from GSpreadSheetsPlayerPhrase a where aId is null order by changeTime", GSpreadSheetsPlayerPhrase.class);
+        TypedQuery<GSpreadSheetsPlayerPhrase> PlayerPhraseQuery = em.createQuery("select a from GSpreadSheetsPlayerPhrase a where aId is null order by changeTime", GSpreadSheetsPlayerPhrase.class
+        );
         PlayerPhraseQuery.setMaxResults(100);
         List<GSpreadSheetsPlayerPhrase> PlayerPhraseList = PlayerPhraseQuery.getResultList();
+
         for (GSpreadSheetsPlayerPhrase item : PlayerPhraseList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId and textDe is not null order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and bId=:bId and textDe is not null order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{204987124L, 20958740L, 249936564L, 228103012L, 232026500L, 150525940L, 99155012L, 109216308L}));
             rawQ.setParameter("bId", item.getWeight().longValue());
@@ -5379,13 +5472,17 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
-        TypedQuery<GSpreadSheetsQuestDescription> GSpreadSheetsQuestQuery = em.createQuery("select a from GSpreadSheetsQuestDescription a where aId is null order by changeTime", GSpreadSheetsQuestDescription.class);
+        TypedQuery<GSpreadSheetsQuestDescription> GSpreadSheetsQuestQuery = em.createQuery("select a from GSpreadSheetsQuestDescription a where aId is null order by changeTime", GSpreadSheetsQuestDescription.class
+        );
         GSpreadSheetsQuestQuery.setMaxResults(100);
         List<GSpreadSheetsQuestDescription> GSpreadSheetsQuestList = GSpreadSheetsQuestQuery.getResultList();
+
         for (GSpreadSheetsQuestDescription item : GSpreadSheetsQuestList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{265851556L, 205344756L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5393,13 +5490,17 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
-        TypedQuery<GSpreadSheetsQuestDirection> QuestDirectionQuery = em.createQuery("select a from GSpreadSheetsQuestDirection a where aId is null order by changeTime", GSpreadSheetsQuestDirection.class);
+        TypedQuery<GSpreadSheetsQuestDirection> QuestDirectionQuery = em.createQuery("select a from GSpreadSheetsQuestDirection a where aId is null order by changeTime", GSpreadSheetsQuestDirection.class
+        );
         QuestDirectionQuery.setMaxResults(1000);
         List<GSpreadSheetsQuestDirection> QuestDirectionList = QuestDirectionQuery.getResultList();
+
         for (GSpreadSheetsQuestDirection item : QuestDirectionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{7949764L, 256430276L, 121487972L, 168415844L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5407,14 +5508,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsQuestName> QuestNameQuery = em.createQuery("select a from GSpreadSheetsQuestName a where aId is null order by changeTime", GSpreadSheetsQuestName.class);
+        TypedQuery<GSpreadSheetsQuestName> QuestNameQuery = em.createQuery("select a from GSpreadSheetsQuestName a where aId is null order by changeTime", GSpreadSheetsQuestName.class
+        );
         QuestNameQuery.setMaxResults(100);
         List<GSpreadSheetsQuestName> QuestNameList = QuestNameQuery.getResultList();
+
         for (GSpreadSheetsQuestName item : QuestNameList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{52420949L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5422,14 +5527,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsAchievement> achievementQuery = em.createQuery("select a from GSpreadSheetsAchievement a where aId is null order by changeTime", GSpreadSheetsAchievement.class);
+        TypedQuery<GSpreadSheetsAchievement> achievementQuery = em.createQuery("select a from GSpreadSheetsAchievement a where aId is null order by changeTime", GSpreadSheetsAchievement.class
+        );
         achievementQuery.setMaxResults(100);
         List<GSpreadSheetsAchievement> achievementList = achievementQuery.getResultList();
+
         for (GSpreadSheetsAchievement item : achievementList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{12529189L, 172030117L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5437,14 +5546,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsAchievementDescription> achievementDescriptionQuery = em.createQuery("select a from GSpreadSheetsAchievementDescription a where aId is null order by changeTime", GSpreadSheetsAchievementDescription.class);
+        TypedQuery<GSpreadSheetsAchievementDescription> achievementDescriptionQuery = em.createQuery("select a from GSpreadSheetsAchievementDescription a where aId is null order by changeTime", GSpreadSheetsAchievementDescription.class
+        );
         achievementDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsAchievementDescription> achievementDescriptionList = achievementDescriptionQuery.getResultList();
+
         for (GSpreadSheetsAchievementDescription item : achievementDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{188155806L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5452,14 +5565,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsNote> noteQuery = em.createQuery("select a from GSpreadSheetsNote a where aId is null order by changeTime", GSpreadSheetsNote.class);
+        TypedQuery<GSpreadSheetsNote> noteQuery = em.createQuery("select a from GSpreadSheetsNote a where aId is null order by changeTime", GSpreadSheetsNote.class
+        );
         noteQuery.setMaxResults(100);
         List<GSpreadSheetsNote> noteList = noteQuery.getResultList();
+
         for (GSpreadSheetsNote item : noteList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{219317028L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5467,13 +5584,17 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
-        TypedQuery<GSpreadSheetsAbilityDescription> abilityDescriptionQuery = em.createQuery("select a from GSpreadSheetsAbilityDescription a where aId is null order by changeTime", GSpreadSheetsAbilityDescription.class);
+        TypedQuery<GSpreadSheetsAbilityDescription> abilityDescriptionQuery = em.createQuery("select a from GSpreadSheetsAbilityDescription a where aId is null order by changeTime", GSpreadSheetsAbilityDescription.class
+        );
         //abilityDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionQuery.getResultList();
+
         for (GSpreadSheetsAbilityDescription item : abilityDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{132143172L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5481,14 +5602,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsCollectible> collectibleQuery = em.createQuery("select a from GSpreadSheetsCollectible a where aId is null order by changeTime", GSpreadSheetsCollectible.class);
+        TypedQuery<GSpreadSheetsCollectible> collectibleQuery = em.createQuery("select a from GSpreadSheetsCollectible a where aId is null order by changeTime", GSpreadSheetsCollectible.class
+        );
         //abilityDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsCollectible> collectibleList = collectibleQuery.getResultList();
+
         for (GSpreadSheetsCollectible item : collectibleList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{18173141L, 70328405L, 160914197L, 245765621L, 213229525L, 204530069L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5496,14 +5621,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsCollectibleDescription> collectibleDescriptionQuery = em.createQuery("select a from GSpreadSheetsCollectibleDescription a where aId is null order by changeTime", GSpreadSheetsCollectibleDescription.class);
+        TypedQuery<GSpreadSheetsCollectibleDescription> collectibleDescriptionQuery = em.createQuery("select a from GSpreadSheetsCollectibleDescription a where aId is null order by changeTime", GSpreadSheetsCollectibleDescription.class
+        );
         //abilityDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsCollectibleDescription> collectibleDescriptionList = collectibleDescriptionQuery.getResultList();
+
         for (GSpreadSheetsCollectibleDescription item : collectibleDescriptionList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{211640654L, 263796174L, 86917166L, 69169806L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5511,14 +5640,18 @@ public class DBService {
             if (rList != null && !rList.isEmpty()) {
                 EsoRawString s = rList.get(0);
                 setAidBidCid(item, s.getaId(), s.getbId(), s.getcId());
+
             }
         }
 
-        TypedQuery<GSpreadSheetsLoadscreen> loadscreenQuery = em.createQuery("select a from GSpreadSheetsLoadscreen a where aId is null order by changeTime", GSpreadSheetsLoadscreen.class);
+        TypedQuery<GSpreadSheetsLoadscreen> loadscreenQuery = em.createQuery("select a from GSpreadSheetsLoadscreen a where aId is null order by changeTime", GSpreadSheetsLoadscreen.class
+        );
         //abilityDescriptionQuery.setMaxResults(100);
         List<GSpreadSheetsLoadscreen> loadscreenList = loadscreenQuery.getResultList();
+
         for (GSpreadSheetsLoadscreen item : loadscreenList) {
-            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class);
+            TypedQuery<EsoRawString> rawQ = em.createQuery("select a from EsoRawString a where textEn=:textEn and aId in (:aId) and cId=:cId order by aId,cId", EsoRawString.class
+            );
             rawQ.setParameter("textEn", item.getTextEn().replace("$", "\n"));
             rawQ.setParameter("aId", Arrays.asList(new Long[]{70901198L, 153349653L, 4922190L}));
             rawQ.setParameter("cId", item.getWeight().longValue());
@@ -5555,7 +5688,8 @@ public class DBService {
     @Transactional
     public void importInterfaceStrings(List<EsoInterfaceVariable> list) {
         for (EsoInterfaceVariable i : list) {
-            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class);
+            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class
+            );
             q.setParameter("name", i.getName());
             try {
                 EsoInterfaceVariable r = q.getSingleResult();
@@ -5574,7 +5708,8 @@ public class DBService {
     @Transactional
     public void importRuInterfaceStrings(List<EsoInterfaceVariable> list) {
         for (EsoInterfaceVariable i : list) {
-            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class);
+            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class
+            );
             q.setParameter("name", i.getName());
             try {
                 EsoInterfaceVariable r = q.getSingleResult();
@@ -5927,7 +6062,7 @@ public class DBService {
             String eTextEn = ((String) row[2]);
             String gTextRu = ((String) row[3]);
             String eTextRu = ((String) row[4]);
-            if (gTextEn.equals(eTextEn) || gTextRu.equals(eTextRu)) {
+            if (!eTextEn.equals(eTextRu) && gTextEn.equals(gTextRu)) {
                 LOG.log(Level.INFO, "{0} -> {1}", new Object[]{gTextEn, eTextEn});
                 Query updateQ = em.createNativeQuery("update booktext set textEn=:textEn,textRu=:textRu where id=:id");
                 updateQ.setParameter("id", id);
@@ -6017,18 +6152,19 @@ public class DBService {
             Iterator locationsKeys = npcLocationObject.keys();
             while (locationsKeys.hasNext()) {
                 String locationName = (String) locationsKeys.next();
-                Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+                Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class
+                );
                 sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
                 List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
                 if (list != null && !list.isEmpty()) {
                     GSpreadSheetsLocationName sheetsLocationName = list.get(0);
                     Criteria locationCrit = session.createCriteria(Location.class);
-                    locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                    locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
                     List<Location> locations = locationCrit.list();
                     Location location = null;
                     if (locations != null && !locations.isEmpty()) {
                         location = locations.get(0);
-                        if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                             location.setNameRu(sheetsLocationName.getTextRu());
                         }
                     } else {
@@ -6067,13 +6203,13 @@ public class DBService {
                             if (npcWithCasesMatcher.matches()) {
                                 String group1 = npcWithCasesMatcher.group(1);
                                 String group2 = npcWithCasesMatcher.group(2);
-                                if (!EsnDecoder.IsRu(group1)) {
+                                if (!EsnDecoder.IsMostlyRu(group1)) {
                                     npcName = group1.trim();
                                 } else {
                                     npcNameRu = group2.trim();
                                 }
                             } else {
-                                if (EsnDecoder.IsRu(npcNameString)) {
+                                if (EsnDecoder.IsMostlyRu(npcNameString)) {
                                     npcNameRu = npcNameString;
                                 } else {
                                     npcName = npcNameString;
@@ -6094,7 +6230,7 @@ public class DBService {
                                 List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                                 if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                                     sheetNpc = sheetNpcList.get(0);
-                                    if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                    if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
                                         npcNameRu = sheetNpc.getTextRu();
                                     }
                                 }
@@ -6133,13 +6269,15 @@ public class DBService {
                             }
                             String subtitleText = null;
                             String subtitleTextRu = null;
-                            if (EsnDecoder.IsRu(subtitleTextString)) {
+                            if (EsnDecoder.IsMostlyRu(subtitleTextString)) {
                                 subtitleTextRu = subtitleTextString;
                             } else {
                                 subtitleText = subtitleTextString;
+
                             }
                             if ((subtitleText != null && !subtitleText.isEmpty()) || (subtitleTextRu != null && !subtitleTextRu.isEmpty())) {
-                                Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
+                                Criteria subtitleCriteria = session.createCriteria(Subtitle.class
+                                );
                                 subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
                                 if (subtitleText != null) {
                                     subtitleCriteria.add(Restrictions.ilike("text", subtitleText));
@@ -6198,26 +6336,29 @@ public class DBService {
             if (locationWithCasesMatcher.matches()) {
                 String group1 = locationWithCasesMatcher.group(1);
                 String group2 = locationWithCasesMatcher.group(2);
-                if (!EsnDecoder.IsRu(group1)) {
+                if (!EsnDecoder.IsMostlyRu(group1)) {
                     locationName = group1.trim();
                 } else {
                     locationName = group2.trim();
                 }
             } else {
                 locationName = locationKey;
+
             }
-            Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
+            Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class
+            );
             sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
             List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
             if (list != null && !list.isEmpty()) {
                 GSpreadSheetsLocationName sheetsLocationName = list.get(0);
-                Criteria locationCrit = session.createCriteria(Location.class);
-                locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                Criteria locationCrit = session.createCriteria(Location.class
+                );
+                locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
                 List<Location> locations = locationCrit.list();
                 Location location = null;
                 if (locations != null && !locations.isEmpty()) {
                     location = locations.get(0);
-                    if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                    if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                         location.setNameRu(sheetsLocationName.getTextRu());
                     }
                 } else {
@@ -6247,13 +6388,13 @@ public class DBService {
                     if (npcWithCasesMatcher.matches()) {
                         String group1 = npcWithCasesMatcher.group(1);
                         String group2 = npcWithCasesMatcher.group(2);
-                        if (!EsnDecoder.IsRu(group1)) {
+                        if (!EsnDecoder.IsMostlyRu(group1)) {
                             npcName = group1.trim();
                         } else {
                             npcNameRu = group2.trim();
                         }
                     } else {
-                        if (EsnDecoder.IsRu(npcKey)) {
+                        if (EsnDecoder.IsMostlyRu(npcKey)) {
                             npcNameRu = npcKey;
                         } else {
                             npcName = npcKey;
@@ -6274,12 +6415,14 @@ public class DBService {
                         List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                         if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                             sheetNpc = sheetNpcList.get(0);
-                            if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                            if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
                                 npcNameRu = sheetNpc.getTextRu();
+
                             }
                         }
                     }
-                    Criteria npcCriteria = session.createCriteria(Npc.class);
+                    Criteria npcCriteria = session.createCriteria(Npc.class
+                    );
                     npcCriteria.add(Restrictions.eq("location", location));
                     if (npcName != null) {
                         npcCriteria.add(Restrictions.ilike("name", npcName));
@@ -6327,7 +6470,7 @@ public class DBService {
                             String greetingskey = (String) greetingsKeys.next();
                             String greetingText = null;
                             String greetingTextRu = null;
-                            if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
+                            if (EsnDecoder.IsMostlyRu(greetingsObject.getString(greetingskey))) {
                                 greetingTextRu = greetingsObject.getString(greetingskey);
                             } else {
                                 greetingText = greetingsObject.getString(greetingskey);
@@ -6378,12 +6521,12 @@ public class DBService {
                             String playerTextRu = null;
                             String npcText = null;
                             String npcTextRu = null;
-                            if (EsnDecoder.IsRu(topickey)) {
+                            if (EsnDecoder.IsMostlyRu(topickey)) {
                                 playerTextRu = topickey;
                             } else {
                                 playerText = topickey;
                             }
-                            if (EsnDecoder.IsRu(topicsObject.getString(topickey))) {
+                            if (EsnDecoder.IsMostlyRu(topicsObject.getString(topickey))) {
                                 npcTextRu = topicsObject.getString(topickey);
                             } else {
                                 npcText = topicsObject.getString(topickey);
@@ -6393,9 +6536,11 @@ public class DBService {
                             }
                             if (npcTextRu != null && npcTextRu.isEmpty()) {
                                 npcTextRu = null;
+
                             }
                             if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty())) {
-                                Criteria topicCriteria = session.createCriteria(Topic.class);
+                                Criteria topicCriteria = session.createCriteria(Topic.class
+                                );
                                 topicCriteria.add(Restrictions.eq("npc", currentNpc));
                                 if (playerText != null) {
                                     topicCriteria.add(Restrictions.ilike("playerText", playerText));
@@ -6496,13 +6641,15 @@ public class DBService {
                             String subtitlekey = (String) subtitlesKeys.next();
                             String subtitleText = null;
                             String subtitleTextRu = null;
-                            if (EsnDecoder.IsRu(subtitlekey)) {
+                            if (EsnDecoder.IsMostlyRu(subtitlekey)) {
                                 subtitleTextRu = subtitlekey;
                             } else {
                                 subtitleText = subtitlekey;
+
                             }
                             if (subtitleText != null && !subtitleText.isEmpty()) {
-                                Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
+                                Criteria subtitleCriteria = session.createCriteria(Subtitle.class
+                                );
                                 subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
                                 if (subtitleText != null) {
                                     subtitleCriteria.add(Restrictions.ilike("text", subtitleText));
@@ -6541,7 +6688,7 @@ public class DBService {
             if (locationWithCasesMatcher.matches()) {
                 String group1 = locationWithCasesMatcher.group(1);
                 String group2 = locationWithCasesMatcher.group(2);
-                if (!EsnDecoder.IsRu(group1)) {
+                if (!EsnDecoder.IsMostlyRu(group1)) {
                     locationName = group1.trim();
                 } else {
                     locationName = group2.trim();
@@ -6555,12 +6702,12 @@ public class DBService {
             if (list != null && !list.isEmpty()) {
                 GSpreadSheetsLocationName sheetsLocationName = list.get(0);
                 Criteria locationCrit = session.createCriteria(Location.class);
-                locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
                 List<Location> locations = locationCrit.list();
                 Location location = null;
                 if (locations != null && !locations.isEmpty()) {
                     location = locations.get(0);
-                    if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                    if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                         location.setNameRu(sheetsLocationName.getTextRu());
                     }
                 } else {
@@ -6595,7 +6742,7 @@ public class DBService {
                         if (subLocationWithCasesMatcher.matches()) {
                             String group1 = subLocationWithCasesMatcher.group(1);
                             String group2 = subLocationWithCasesMatcher.group(2);
-                            if (!EsnDecoder.IsRu(group1)) {
+                            if (!EsnDecoder.IsMostlyRu(group1)) {
                                 subLocationName = group1.trim();
                             } else {
                                 subLocationName = group2.trim();
@@ -6605,17 +6752,17 @@ public class DBService {
                         }
 
                         Criteria sheetSubLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
-                        sheetSubLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", subLocationName), Restrictions.ilike("textRu", subLocationName)));
+                        sheetSubLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", subLocationName), Restrictions.ilike("textRu", subLocationName), Restrictions.ilike("textRu", subLocationName.replace("—", "-"))));
                         List<GSpreadSheetsLocationName> sulLocationList = sheetSubLocationCrit.list();
                         if (sulLocationList != null && !sulLocationList.isEmpty()) {
                             GSpreadSheetsLocationName sheetsSubLocationName = sulLocationList.get(0);
                             Criteria subLocationCrit = session.createCriteria(Location.class);
-                            subLocationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsSubLocationName.getTextRu())));
+                            subLocationCrit.add(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()));
                             List<Location> subLocations = subLocationCrit.list();
 
                             if (subLocations != null && !subLocations.isEmpty()) {
                                 subLocation = subLocations.get(0);
-                                if (EsnDecoder.IsRu(sheetsSubLocationName.getTextRu())) {
+                                if (EsnDecoder.IsMostlyRu(sheetsSubLocationName.getTextRu())) {
                                     subLocation.setNameRu(sheetsSubLocationName.getTextRu());
                                 }
                             } else {
@@ -6650,13 +6797,13 @@ public class DBService {
                         if (npcWithCasesMatcher.matches()) {
                             String group1 = npcWithCasesMatcher.group(1);
                             String group2 = npcWithCasesMatcher.group(2);
-                            if (!EsnDecoder.IsRu(group1)) {
+                            if (!EsnDecoder.IsMostlyRu(group1)) {
                                 npcName = group1.trim();
                             } else {
                                 npcNameRu = group2.trim();
                             }
                         } else {
-                            if (EsnDecoder.IsRu(npcKey)) {
+                            if (EsnDecoder.IsMostlyRu(npcKey)) {
                                 npcNameRu = npcKey;
                             } else {
                                 npcName = npcKey;
@@ -6677,7 +6824,7 @@ public class DBService {
                             List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                             if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                                 sheetNpc = sheetNpcList.get(0);
-                                if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
                                     npcNameRu = sheetNpc.getTextRu();
                                 }
                             }
@@ -6732,43 +6879,69 @@ public class DBService {
                                 String greetingTextRu = null;
                                 Integer weight = Integer.valueOf(greetingskey);
                                 weight = weight * 1000;
-                                if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
-                                    greetingTextRu = greetingsObject.getString(greetingskey);
-                                } else {
-                                    greetingText = greetingsObject.getString(greetingskey);
+                                Topic greetingTopic = null;
+                                Criteria greetingsCriteria0 = session.createCriteria(Topic.class);
+                                greetingsCriteria0.add(Restrictions.eq("npc", currentNpc));
+                                greetingsCriteria0.add(Restrictions.or(Restrictions.ilike("npcText", greetingsObject.getString(greetingskey)), Restrictions.ilike("npcTextRu", greetingsObject.getString(greetingskey))));
+                                List<Topic> greetingList = greetingsCriteria0.list();
+                                if (greetingList != null && !greetingList.isEmpty()) {
+                                    greetingTopic = greetingList.get(0);
                                 }
-                                if ((greetingText != null && !greetingText.isEmpty()) || (greetingTextRu != null && !greetingTextRu.isEmpty())) {
+                                GSpreadSheetsNpcPhrase greetingExtPhrase = null;
+                                Long greetingExtPhraseId = null;
+                                if (greetingTopic == null) {
+
+                                    if (EsnDecoder.IsRu(greetingsObject.getString(greetingskey))) {
+                                        greetingTextRu = greetingsObject.getString(greetingskey);
+                                        greetingExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", greetingTextRu);
+                                    } else if (EsnDecoder.IsEn(greetingsObject.getString(greetingskey))) {
+                                        greetingText = greetingsObject.getString(greetingskey);
+                                        greetingExtPhraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", greetingText);
+                                    } else {
+                                        greetingText = greetingsObject.getString(greetingskey);
+                                        greetingExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsNpcPhrase", greetingText);
+                                    }
+                                    if (greetingExtPhraseId != null) {
+                                        greetingExtPhrase = em.find(GSpreadSheetsNpcPhrase.class, greetingExtPhraseId);
+                                    }
                                     Criteria greetingsCriteria = session.createCriteria(Topic.class);
                                     greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
-                                    if (greetingText != null) {
-                                        greetingsCriteria.add(Restrictions.eq("npcText", greetingText));
+                                    if (greetingExtPhrase != null) {
+                                        greetingsCriteria.add(Restrictions.eq("extNpcPhrase", greetingExtPhrase));
+                                    } else if (greetingText != null) {
+                                        greetingsCriteria.add(Restrictions.ilike("npcText", greetingText));
+                                    } else if (greetingTextRu != null) {
+                                        greetingsCriteria.add(Restrictions.ilike("npcTextRu", greetingTextRu));
                                     }
-                                    if (greetingTextRu != null) {
-                                        greetingsCriteria.add(Restrictions.eq("npcTextRu", greetingTextRu));
+                                    greetingList = greetingsCriteria.list();
+                                    if (greetingList != null && !greetingList.isEmpty()) {
+                                        greetingTopic = greetingList.get(0);
                                     }
-                                    List<Topic> greetingList = greetingsCriteria.list();
-                                    if (greetingList == null || greetingList.isEmpty()) {
-                                        Topic greeting = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
-                                        LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
-                                        greeting.setWeight(weight);
-                                        em.persist(greeting);
-                                        npcTopics.add(greeting);
-                                    } else {
-                                        Topic greeting = greetingList.get(0);
-                                        if (greeting.getNpcText() == null && greetingText != null) {
-                                            greeting.setNpcText(greetingText);
-                                            em.merge(greeting);
-                                        }
-                                        if (greeting.getNpcTextRu() == null && greetingTextRu != null) {
-                                            greeting.setNpcTextRu(greetingTextRu);
-                                            em.merge(greeting);
-                                        }
-                                        if (greeting.getWeight() == null || greeting.getWeight() < weight) {
-                                            greeting.setWeight(weight);
-                                            em.merge(greeting);
-                                        }
-                                        npcTopics.add(greeting);
+
+                                }
+                                if (greetingTopic == null) {
+                                    greetingTopic = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
+                                    LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
+                                    if (greetingExtPhrase != null) {
+                                        greetingTopic.setExtNpcPhrase(greetingExtPhrase);
                                     }
+                                    greetingTopic.setWeight(weight);
+                                    em.persist(greetingTopic);
+                                    npcTopics.add(greetingTopic);
+                                } else {
+                                    if (greetingTopic.getNpcText() == null && greetingText != null) {
+                                        greetingTopic.setNpcText(greetingText);
+                                        em.merge(greetingTopic);
+                                    }
+                                    if (greetingTopic.getNpcTextRu() == null && greetingTextRu != null) {
+                                        greetingTopic.setNpcTextRu(greetingTextRu);
+                                        em.merge(greetingTopic);
+                                    }
+                                    if (greetingTopic.getWeight() == null || greetingTopic.getWeight() < weight) {
+                                        greetingTopic.setWeight(weight);
+                                        em.merge(greetingTopic);
+                                    }
+                                    npcTopics.add(greetingTopic);
                                 }
 
                             }
@@ -6788,57 +6961,113 @@ public class DBService {
                                 String playerTextRu = null;
                                 String npcText = null;
                                 String npcTextRu = null;
-                                if (EsnDecoder.IsRu(topickey)) {
-                                    playerTextRu = topickey;
-                                } else {
-                                    playerText = topickey;
+                                Topic topic = null;
+                                Criteria topicCriteria0 = session.createCriteria(Topic.class);
+                                topicCriteria0.add(Restrictions.eq("npc", currentNpc));
+                                topicCriteria0.add(Restrictions.or(
+                                        Restrictions.ilike("playerText", topickey),
+                                        Restrictions.ilike("playerTextRu", topickey)
+                                ));
+                                topicCriteria0.add(Restrictions.or(
+                                        Restrictions.ilike("npcText", topicsObject.getString(topickey)),
+                                        Restrictions.ilike("npcTextRu", topicsObject.getString(topickey)),
+                                        Restrictions.and(Restrictions.isNull("npcText"), Restrictions.isNull("npcTextRu"))
+                                ));
+                                List<Topic> topicList = topicCriteria0.list();
+                                if (topicList != null && !topicList.isEmpty()) {
+                                    topic = topicList.get(0);
                                 }
-                                if (EsnDecoder.IsRu(topicsObject.getString(topickey))) {
-                                    npcTextRu = topicsObject.getString(topickey);
-                                } else {
-                                    npcText = topicsObject.getString(topickey);
-                                }
-                                if (npcText != null && npcText.isEmpty()) {
-                                    npcText = null;
-                                }
-                                if (npcTextRu != null && npcTextRu.isEmpty()) {
-                                    npcTextRu = null;
-                                }
-                                if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty()) || (playerTextRu != null && !playerTextRu.isEmpty()) || (npcTextRu != null && !npcTextRu.isEmpty())) {
+                                GSpreadSheetsNpcPhrase npcExtPhrase = null;
+                                Long npcExtPhraseId = null;
+                                GSpreadSheetsPlayerPhrase playerExtPhrase = null;
+                                Long playerExtPhraseId = null;
+
+                                if (topic == null) {
+                                    if (EsnDecoder.IsRu(topickey)) {
+                                        playerTextRu = topickey;
+                                        playerExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsPlayerPhrase", playerTextRu);
+                                    } else if (EsnDecoder.IsEn(topickey)) {
+                                        playerText = topickey;
+                                        playerExtPhraseId = searchTableItemIndexed("GSpreadSheetsPlayerPhrase", playerText);
+                                    } else {
+                                        playerText = topickey;
+                                        playerExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsPlayerPhrase", playerText);
+                                    }
+                                    if (EsnDecoder.IsRu(topicsObject.getString(topickey))) {
+                                        npcTextRu = topicsObject.getString(topickey);
+                                        npcExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", npcTextRu);
+                                    } else if (EsnDecoder.IsEn(topicsObject.getString(topickey))) {
+                                        npcText = topicsObject.getString(topickey);
+                                        npcExtPhraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", npcText);
+                                    } else {
+                                        npcText = topicsObject.getString(topickey);
+                                        npcExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsNpcPhrase", npcText);
+                                    }
+                                    if (npcExtPhraseId != null) {
+                                        npcExtPhrase = em.find(GSpreadSheetsNpcPhrase.class, npcExtPhraseId);
+                                    }
+                                    if (playerExtPhraseId != null) {
+                                        playerExtPhrase = em.find(GSpreadSheetsPlayerPhrase.class, playerExtPhraseId);
+                                    }
+                                    if (npcText != null && npcText.isEmpty()) {
+                                        npcText = null;
+                                    }
+                                    if (npcTextRu != null && npcTextRu.isEmpty()) {
+                                        npcTextRu = null;
+                                    }
                                     Criteria topicCriteria = session.createCriteria(Topic.class);
                                     topicCriteria.add(Restrictions.eq("npc", currentNpc));
-                                    if (playerText != null) {
+                                    if (playerExtPhrase != null) {
+                                        topicCriteria.add(Restrictions.eq("extPlayerPhrase", playerExtPhrase));
+                                    } else if (playerText != null) {
                                         topicCriteria.add(Restrictions.ilike("playerText", playerText));
-                                    }
-                                    if (playerTextRu != null) {
+                                    } else if (playerTextRu != null) {
                                         topicCriteria.add(Restrictions.ilike("playerTextRu", playerTextRu));
                                     }
-                                    if (npcText != null) {
+                                    if (npcExtPhrase != null) {
+                                        topicCriteria.add(Restrictions.or(Restrictions.eq("extNpcPhrase", npcExtPhrase), Restrictions.isNull("extNpcPhrase")));
+                                    } else if (npcText != null) {
                                         topicCriteria.add(Restrictions.or(Restrictions.ilike("npcText", npcText), Restrictions.isNull("npcText")));
-                                    }
-                                    if (npcTextRu != null) {
+                                    } else if (npcTextRu != null) {
                                         topicCriteria.add(Restrictions.or(Restrictions.ilike("npcTextRu", npcTextRu), Restrictions.isNull("npcTextRu")));
                                     }
-                                    List<Topic> topicList = topicCriteria.list();
+                                    topicList = topicCriteria.list();
                                     if (topicList != null && !topicList.isEmpty()) {
-                                        Topic topic = topicList.get(0);
-                                        if (topic.getNpcText() == null && npcText != null) {
-                                            topic.setNpcText(npcText);
-                                            LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
-                                            em.merge(topic);
-                                        }
-                                        if (topic.getNpcTextRu() == null && npcTextRu != null) {
-                                            topic.setNpcTextRu(npcTextRu);
-                                            LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
-                                            em.merge(topic);
-                                        }
-                                        npcTopics.add(topic);
-                                    } else if (playerText != null || npcText != null || playerTextRu != null || npcTextRu != null) {
-                                        Topic topic = new Topic(playerText, npcText, playerTextRu, npcTextRu, currentNpc);
-                                        LOG.log(Level.INFO, "new topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
-                                        em.persist(topic);
-                                        npcTopics.add(topic);
+                                        topic = topicList.get(0);
                                     }
+
+                                }
+                                if (topic != null) {
+                                    if (playerExtPhrase != null) {
+                                        topic.setExtPlayerPhrase(playerExtPhrase);
+                                        em.merge(topic);
+                                    }
+                                    if (npcExtPhrase != null) {
+                                        topic.setExtNpcPhrase(npcExtPhrase);
+                                        em.merge(topic);
+                                    }
+                                    if (topic.getNpcText() == null && npcText != null) {
+                                        topic.setNpcText(npcText);
+                                        LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
+                                        em.merge(topic);
+                                    }
+                                    if (topic.getNpcTextRu() == null && npcTextRu != null) {
+                                        topic.setNpcTextRu(npcTextRu);
+                                        LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
+                                        em.merge(topic);
+                                    }
+                                    npcTopics.add(topic);
+                                } else if (playerText != null || npcText != null || playerTextRu != null || npcTextRu != null) {
+                                    topic = new Topic(playerText, npcText, playerTextRu, npcTextRu, currentNpc);
+                                    LOG.log(Level.INFO, "new topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
+                                    if (playerExtPhrase != null) {
+                                        topic.setExtPlayerPhrase(playerExtPhrase);
+                                    }
+                                    if (npcExtPhrase != null) {
+                                        topic.setExtNpcPhrase(npcExtPhrase);
+                                    }
+                                    em.persist(topic);
+                                    npcTopics.add(topic);
                                 }
 
                             }
@@ -6909,26 +7138,51 @@ public class DBService {
                                 String subtitlekey = (String) subtitlesKeys.next();
                                 String subtitleText = null;
                                 String subtitleTextRu = null;
-                                if (EsnDecoder.IsRu(subtitlekey)) {
-                                    subtitleTextRu = subtitlekey;
-                                } else {
-                                    subtitleText = subtitlekey;
+                                Subtitle subtitle = null;
+                                Criteria subtitleCriteria0 = session.createCriteria(Subtitle.class);
+                                subtitleCriteria0.add(Restrictions.eq("npc", currentNpc));
+                                subtitleCriteria0.add(Restrictions.or(Restrictions.ilike("text", subtitlekey), Restrictions.ilike("textRu", subtitlekey)));
+                                List<Subtitle> subtitleList = subtitleCriteria0.list();
+                                if (subtitleList != null && !subtitleList.isEmpty()) {
+                                    subtitle = subtitleList.get(0);
                                 }
-                                if (subtitleText != null && !subtitleText.isEmpty()) {
+                                GSpreadSheetsNpcPhrase subtitleExtPhrase = null;
+                                Long subtitleExtPhraseId = null;
+                                if (subtitle == null) {
+                                    if (EsnDecoder.IsRu(subtitlekey)) {
+                                        subtitleTextRu = subtitlekey;
+                                        subtitleExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", subtitleTextRu);
+                                    } else if (EsnDecoder.IsEn(subtitlekey)) {
+                                        subtitleText = subtitlekey;
+                                        subtitleExtPhraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", subtitleText);
+                                    } else {
+                                        subtitleText = subtitlekey;
+                                        subtitleExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsNpcPhrase", subtitleText);
+                                    }
+                                    if (subtitleExtPhraseId != null) {
+                                        subtitleExtPhrase = em.find(GSpreadSheetsNpcPhrase.class, subtitleExtPhraseId);
+                                    }
                                     Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
                                     subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
-                                    if (subtitleText != null) {
+                                    if (subtitleExtPhrase != null) {
+                                        subtitleCriteria.add(Restrictions.eq("extNpcPhrase", subtitleExtPhrase));
+                                    } else if (subtitleText != null) {
                                         subtitleCriteria.add(Restrictions.ilike("text", subtitleText));
-                                    }
-                                    if (subtitleTextRu != null) {
+                                    } else if (subtitleTextRu != null) {
                                         subtitleCriteria.add(Restrictions.ilike("textRu", subtitleTextRu));
                                     }
-                                    List<Subtitle> subtitleList = subtitleCriteria.list();
-                                    if (subtitleList == null || subtitleList.isEmpty()) {
-                                        Subtitle subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
-                                        LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
-                                        em.persist(subtitle);
+                                    subtitleList = subtitleCriteria.list();
+                                    if (subtitleList != null && !subtitleList.isEmpty()) {
+                                        subtitle = subtitleList.get(0);
                                     }
+                                }
+                                if (subtitle == null) {
+                                    subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
+                                    if (subtitleExtPhrase != null) {
+                                        subtitle.setExtNpcPhrase(subtitleExtPhrase);
+                                    }
+                                    LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
+                                    em.persist(subtitle);
                                 }
 
                             }
@@ -6960,12 +7214,12 @@ public class DBService {
                 if (list != null && !list.isEmpty()) {
                     GSpreadSheetsLocationName sheetsLocationName = list.get(0);
                     Criteria locationCrit = session.createCriteria(Location.class);
-                    locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                    locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
                     List<Location> locations = locationCrit.list();
                     Location location = null;
                     if (locations != null && !locations.isEmpty()) {
                         location = locations.get(0);
-                        if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                             location.setNameRu(sheetsLocationName.getTextRu());
                         }
                     } else {
@@ -6997,7 +7251,7 @@ public class DBService {
                             if (subLocationWithCasesMatcher.matches()) {
                                 String group1 = subLocationWithCasesMatcher.group(1);
                                 String group2 = subLocationWithCasesMatcher.group(2);
-                                if (!EsnDecoder.IsRu(group1)) {
+                                if (!EsnDecoder.IsMostlyRu(group1)) {
                                     subLocationName = group1.trim();
                                 } else {
                                     subLocationName = group2.trim();
@@ -7012,12 +7266,12 @@ public class DBService {
                             if (sulLocationList != null && !sulLocationList.isEmpty()) {
                                 GSpreadSheetsLocationName sheetsSubLocationName = sulLocationList.get(0);
                                 Criteria subLocationCrit = session.createCriteria(Location.class);
-                                subLocationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsSubLocationName.getTextRu())));
+                                subLocationCrit.add(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()));
                                 List<Location> subLocations = subLocationCrit.list();
 
                                 if (subLocations != null && !subLocations.isEmpty()) {
                                     subLocation = subLocations.get(0);
-                                    if (EsnDecoder.IsRu(sheetsSubLocationName.getTextRu())) {
+                                    if (EsnDecoder.IsMostlyRu(sheetsSubLocationName.getTextRu())) {
                                         subLocation.setNameRu(sheetsSubLocationName.getTextRu());
                                     }
                                 } else {
@@ -7062,13 +7316,13 @@ public class DBService {
                                 if (npcWithCasesMatcher.matches()) {
                                     String group1 = npcWithCasesMatcher.group(1);
                                     String group2 = npcWithCasesMatcher.group(2);
-                                    if (!EsnDecoder.IsRu(group1)) {
+                                    if (!EsnDecoder.IsMostlyRu(group1)) {
                                         npcName = group1.trim();
                                     } else {
                                         npcNameRu = group2.trim();
                                     }
                                 } else {
-                                    if (EsnDecoder.IsRu(npcNameString)) {
+                                    if (EsnDecoder.IsMostlyRu(npcNameString)) {
                                         npcNameRu = npcNameString;
                                     } else {
                                         npcName = npcNameString;
@@ -7089,7 +7343,7 @@ public class DBService {
                                     List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                                     if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                                         sheetNpc = sheetNpcList.get(0);
-                                        if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                        if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
                                             npcNameRu = sheetNpc.getTextRu();
                                         }
                                     }
@@ -7128,41 +7382,69 @@ public class DBService {
                                 }
                                 String subtitleText = null;
                                 String subtitleTextRu = null;
-                                if (EsnDecoder.IsRu(subtitleTextString)) {
-                                    subtitleTextRu = subtitleTextString;
-                                } else {
-                                    subtitleText = subtitleTextString;
+                                Subtitle subtitle = null;
+                                Criteria subtitleCriteria0 = session.createCriteria(Subtitle.class);
+                                subtitleCriteria0.add(Restrictions.eq("npc", currentNpc));
+                                subtitleCriteria0.add(Restrictions.or(Restrictions.ilike("text", subtitleTextString), Restrictions.ilike("textRu", subtitleTextString)));
+                                List<Subtitle> subtitleList = subtitleCriteria0.list();
+                                if (subtitleList != null && !subtitleList.isEmpty()) {
+                                    subtitle = subtitleList.get(0);
                                 }
-                                if ((subtitleText != null && !subtitleText.isEmpty()) || (subtitleTextRu != null && !subtitleTextRu.isEmpty())) {
+                                GSpreadSheetsNpcPhrase subtitleExtPhrase = null;
+                                Long subtitleExtPhraseId = null;
+
+                                if (subtitle == null) {
+                                    if (EsnDecoder.IsRu(subtitleTextString)) {
+                                        subtitleTextRu = subtitleTextString;
+                                        subtitleExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", subtitleTextRu);
+                                    } else if (EsnDecoder.IsEn(subtitleTextString)) {
+                                        subtitleText = subtitleTextString;
+                                        subtitleExtPhraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", subtitleText);
+                                    } else {
+                                        subtitleText = subtitleTextString;
+                                        subtitleExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsNpcPhrase", subtitleText);
+                                    }
+                                    if (subtitleExtPhraseId != null) {
+                                        subtitleExtPhrase = em.find(GSpreadSheetsNpcPhrase.class, subtitleExtPhraseId);
+                                    }
                                     Criteria subtitleCriteria = session.createCriteria(Subtitle.class);
                                     subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
-                                    if (subtitleText != null) {
+                                    if (subtitleExtPhrase != null) {
+                                        subtitleCriteria.add(Restrictions.eq("extNpcPhrase", subtitleExtPhrase));
+                                    } else if (subtitleText != null) {
                                         subtitleCriteria.add(Restrictions.ilike("text", subtitleText));
-                                    }
-                                    if (subtitleTextRu != null) {
+                                    } else if (subtitleTextRu != null) {
                                         subtitleCriteria.add(Restrictions.ilike("textRu", subtitleTextRu));
                                     }
-                                    List<Subtitle> subtitleList = subtitleCriteria.list();
-                                    Subtitle subtitle = null;
-                                    if (subtitleList == null || subtitleList.isEmpty()) {
-                                        subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
-                                        LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
-                                        em.persist(subtitle);
-
-                                    } else {
+                                    subtitleList = subtitleCriteria.list();
+                                    if (subtitleList != null && !subtitleList.isEmpty()) {
                                         subtitle = subtitleList.get(0);
-                                        if (subtitleTextRu != null && subtitle.getTextRu() == null) {
-                                            subtitle.setTextRu(subtitleTextRu);
-                                        }
-                                        if (subtitleText != null && subtitle.getText() == null) {
-                                            subtitle.setText(subtitleText);
-                                        }
-                                        em.merge(subtitle);
                                     }
 
-                                    subtilteArray[currentIndex - 1] = subtitle;
-
                                 }
+                                if (subtitleList == null || subtitleList.isEmpty()) {
+                                    subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
+                                    if (subtitleExtPhrase != null) {
+                                        subtitle.setExtNpcPhrase(subtitleExtPhrase);
+                                    }
+                                    LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
+                                    em.persist(subtitle);
+
+                                } else {
+                                    subtitle = subtitleList.get(0);
+                                    if (subtitleExtPhrase != null) {
+                                        subtitle.setExtNpcPhrase(subtitleExtPhrase);
+                                    }
+                                    if (subtitleTextRu != null && subtitle.getTextRu() == null) {
+                                        subtitle.setTextRu(subtitleTextRu);
+                                    }
+                                    if (subtitleText != null && subtitle.getText() == null) {
+                                        subtitle.setText(subtitleText);
+                                    }
+                                    em.merge(subtitle);
+                                }
+
+                                subtilteArray[currentIndex - 1] = subtitle;
 
                             }
                             for (int i = 1; i < subtilteArray.length; i++) {
@@ -7201,12 +7483,12 @@ public class DBService {
                 if (list != null && !list.isEmpty()) {
                     GSpreadSheetsLocationName sheetsLocationName = list.get(0);
                     Criteria locationCrit = session.createCriteria(Location.class);
-                    locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                    locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
                     List<Location> locations = locationCrit.list();
                     Location location = null;
                     if (locations != null && !locations.isEmpty()) {
                         location = locations.get(0);
-                        if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                             location.setNameRu(sheetsLocationName.getTextRu());
                         }
                     } else {
@@ -7238,7 +7520,7 @@ public class DBService {
                             if (subLocationWithCasesMatcher.matches()) {
                                 String group1 = subLocationWithCasesMatcher.group(1);
                                 String group2 = subLocationWithCasesMatcher.group(2);
-                                if (!EsnDecoder.IsRu(group1)) {
+                                if (!EsnDecoder.IsMostlyRu(group1)) {
                                     subLocationName = group1.trim();
                                 } else {
                                     subLocationName = group2.trim();
@@ -7253,12 +7535,12 @@ public class DBService {
                             if (sulLocationList != null && !sulLocationList.isEmpty()) {
                                 GSpreadSheetsLocationName sheetsSubLocationName = sulLocationList.get(0);
                                 Criteria subLocationCrit = session.createCriteria(Location.class);
-                                subLocationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsSubLocationName.getTextRu())));
+                                subLocationCrit.add(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()));
                                 List<Location> subLocations = subLocationCrit.list();
 
                                 if (subLocations != null && !subLocations.isEmpty()) {
                                     subLocation = subLocations.get(0);
-                                    if (EsnDecoder.IsRu(sheetsSubLocationName.getTextRu())) {
+                                    if (EsnDecoder.IsMostlyRu(sheetsSubLocationName.getTextRu())) {
                                         subLocation.setNameRu(sheetsSubLocationName.getTextRu());
                                     }
                                 } else {
@@ -7291,7 +7573,7 @@ public class DBService {
                             JSONObject questObject = locationQuestsObject.getJSONObject(questKey);
                             String questNameEn = null;
                             String questNameRu = null;
-                            if (EsnDecoder.IsRu(questKey)) {
+                            if (EsnDecoder.IsMostlyRu(questKey)) {
                                 questNameRu = questKey;
                             } else {
                                 questNameEn = questKey;
@@ -7385,12 +7667,12 @@ public class DBService {
                 if (list != null && !list.isEmpty()) {
                     GSpreadSheetsLocationName sheetsLocationName = list.get(0);
                     Criteria locationCrit = session.createCriteria(Location.class);
-                    locationCrit.add(Restrictions.or(Restrictions.ilike("name", sheetsLocationName.getTextEn()), Restrictions.ilike("nameRu", sheetsLocationName.getTextRu())));
+                    locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
                     List<Location> locations = locationCrit.list();
                     Location location = null;
                     if (locations != null && !locations.isEmpty()) {
                         location = locations.get(0);
-                        if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                             location.setNameRu(sheetsLocationName.getTextRu());
                         }
                     } else {
@@ -7417,7 +7699,7 @@ public class DBService {
                         JSONObject questObject = locationQuestsObject.getJSONObject(questKey);
                         String questNameEn = null;
                         String questNameRu = null;
-                        if (EsnDecoder.IsRu(questKey)) {
+                        if (EsnDecoder.IsMostlyRu(questKey)) {
                             questNameRu = questKey;
                         } else {
                             questNameEn = questKey;
@@ -7480,18 +7762,14 @@ public class DBService {
                             if (questStepsObject != null) {
                                 Iterator questStepsIterator = questStepsObject.keys();
                                 while (questStepsIterator.hasNext()) {
-                                    JSONObject stepObject = questStepsObject.getJSONObject((String) questStepsIterator.next());
+                                    String stepKey = (String) questStepsIterator.next();
+                                    JSONObject stepObject = questStepsObject.getJSONObject(stepKey);
+                                    Integer stepWeight = Integer.valueOf(stepKey);
                                     String description = stepObject.getString("description");
                                     if (description != null && !description.isEmpty()) {
-                                        Criteria stepDescriptionCrit = session.createCriteria(GSpreadSheetsJournalEntry.class);
-                                        if (!EsnDecoder.IsRu(description)) {
-                                            stepDescriptionCrit.add(Restrictions.eq("textEn", description));
-                                        } else {
-                                            stepDescriptionCrit.add(Restrictions.eq("textRu", description));
-                                        }
-                                        List<GSpreadSheetsJournalEntry> stepDescriptionList = stepDescriptionCrit.list();
-                                        if (stepDescriptionList != null && !stepDescriptionList.isEmpty()) {
-                                            GSpreadSheetsJournalEntry journalEntry = stepDescriptionList.get(0);
+                                        Long journalEntryId = searchTableItem("GSpreadSheetsJournalEntry", description);
+                                        if (journalEntryId != null) {
+                                            GSpreadSheetsJournalEntry journalEntry = em.find(GSpreadSheetsJournalEntry.class, journalEntryId);
                                             QuestStep step = null;
                                             Criteria stepBySheetCrit = session.createCriteria(QuestStep.class);
                                             stepBySheetCrit.add(Restrictions.eq("quest", quest));
@@ -7499,18 +7777,21 @@ public class DBService {
                                             List<QuestStep> stepBySheetlist = stepBySheetCrit.list();
                                             if (stepBySheetlist != null && !stepBySheetlist.isEmpty()) {
                                                 step = stepBySheetlist.get(0);
-                                                if (step.getTextEn() == null && !EsnDecoder.IsRu(description)) {
+                                                if (step.getTextEn() == null && !EsnDecoder.IsMostlyRu(description)) {
                                                     step.setTextEn(description);
                                                 }
-                                                if (step.getTextRu() == null && EsnDecoder.IsRu(description)) {
+                                                if (step.getTextRu() == null && EsnDecoder.IsMostlyRu(description)) {
                                                     step.setTextRu(description);
+                                                }
+                                                if (step.getWeight() == null || (step.getWeight() < stepWeight)) {
+                                                    step.setWeight(stepWeight);
                                                 }
                                                 em.merge(step);
                                             } else {
                                                 step = new QuestStep();
                                                 step.setQuest(quest);
                                                 step.setSheetsJournalEntry(journalEntry);
-                                                if (!EsnDecoder.IsRu(description)) {
+                                                if (!EsnDecoder.IsMostlyRu(description)) {
                                                     step.setTextEn(description);
                                                 } else {
                                                     step.setTextRu(description);
@@ -7540,15 +7821,9 @@ public class DBService {
                                                             if (goalWithCounterMatcher.find()) {
                                                                 goalName = goalWithCounterMatcher.group(1);
                                                             }
-                                                            Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class);
-                                                            if (!EsnDecoder.IsRu(goalName)) {
-                                                                questDirectionCrit.add(Restrictions.ilike("textEn", goalName));
-                                                            } else {
-                                                                questDirectionCrit.add(Restrictions.ilike("textRu", goalName));
-                                                            }
-                                                            List<GSpreadSheetsQuestDirection> questDirectionList = questDirectionCrit.list();
-                                                            if (questDirectionList != null && !questDirectionList.isEmpty()) {
-                                                                GSpreadSheetsQuestDirection direction = questDirectionList.get(0);
+                                                            Long directionId = searchTableItem("GSpreadSheetsQuestDirection", goalName);
+                                                            if (directionId != null) {
+                                                                GSpreadSheetsQuestDirection direction = em.find(GSpreadSheetsQuestDirection.class, directionId);
                                                                 QuestDirection goal = null;
                                                                 Criteria goalByStepCrit = session.createCriteria(QuestDirection.class);
                                                                 goalByStepCrit.add(Restrictions.eq("step", step));
@@ -7570,7 +7845,7 @@ public class DBService {
                                                                     if (goal.getDirectionType() == null) {
                                                                         goal.setDirectionType(t);
                                                                     }
-                                                                    if (!EsnDecoder.IsRu(goalName)) {
+                                                                    if (!EsnDecoder.IsMostlyRu(goalName)) {
                                                                         goal.setTextEn(goalName);
                                                                     } else {
                                                                         goal.setTextRu(goalName);
@@ -7583,7 +7858,7 @@ public class DBService {
                                                                     goal.setStep(step);
                                                                     goal.setSheetsQuestDirection(direction);
                                                                     goal.setDirectionType(t);
-                                                                    if (!EsnDecoder.IsRu(goalName)) {
+                                                                    if (!EsnDecoder.IsMostlyRu(goalName)) {
                                                                         goal.setTextEn(goalName);
                                                                     } else {
                                                                         goal.setTextRu(goalName);
@@ -7629,13 +7904,13 @@ public class DBService {
                                         if (npcWithCasesMatcher.matches()) {
                                             String group1 = npcWithCasesMatcher.group(1);
                                             String group2 = npcWithCasesMatcher.group(2);
-                                            if (!EsnDecoder.IsRu(group1)) {
+                                            if (!EsnDecoder.IsMostlyRu(group1)) {
                                                 npcName = group1.trim();
                                             } else {
                                                 npcNameRu = group2.trim();
                                             }
                                         } else {
-                                            if (EsnDecoder.IsRu(npcNameString)) {
+                                            if (EsnDecoder.IsMostlyRu(npcNameString)) {
                                                 npcNameRu = npcNameString;
                                             } else {
                                                 npcName = npcNameString;
@@ -7656,7 +7931,7 @@ public class DBService {
                                             List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                                             if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                                                 sheetNpc = sheetNpcList.get(0);
-                                                if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                                if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
                                                     npcNameRu = sheetNpc.getTextRu();
                                                 }
                                             }
@@ -7728,13 +8003,13 @@ public class DBService {
                                         if (npcWithCasesMatcher.matches()) {
                                             String group1 = npcWithCasesMatcher.group(1);
                                             String group2 = npcWithCasesMatcher.group(2);
-                                            if (!EsnDecoder.IsRu(group1)) {
+                                            if (!EsnDecoder.IsMostlyRu(group1)) {
                                                 npcName = group1.trim();
                                             } else {
                                                 npcNameRu = group2.trim();
                                             }
                                         } else {
-                                            if (EsnDecoder.IsRu(npcNameString)) {
+                                            if (EsnDecoder.IsMostlyRu(npcNameString)) {
                                                 npcNameRu = npcNameString;
                                             } else {
                                                 npcName = npcNameString;
@@ -7755,7 +8030,7 @@ public class DBService {
                                             List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
                                             if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
                                                 sheetNpc = sheetNpcList.get(0);
-                                                if (EsnDecoder.IsRu(sheetNpc.getTextRu())) {
+                                                if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
                                                     npcNameRu = sheetNpc.getTextRu();
                                                 }
                                             }
@@ -7891,7 +8166,7 @@ public class DBService {
                     Location location = null;
                     if (locations != null && !locations.isEmpty()) {
                         location = locations.get(0);
-                        if (EsnDecoder.IsRu(sheetsLocationName.getTextRu())) {
+                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
                             location.setNameRu(sheetsLocationName.getTextRu());
                         }
                     } else {
@@ -7923,7 +8198,7 @@ public class DBService {
                             if (subLocationWithCasesMatcher.matches()) {
                                 String group1 = subLocationWithCasesMatcher.group(1);
                                 String group2 = subLocationWithCasesMatcher.group(2);
-                                if (!EsnDecoder.IsRu(group1)) {
+                                if (!EsnDecoder.IsMostlyRu(group1)) {
                                     subLocationName = group1.trim();
                                 } else {
                                     subLocationName = group2.trim();
@@ -7943,7 +8218,7 @@ public class DBService {
 
                                 if (subLocations != null && !subLocations.isEmpty()) {
                                     subLocation = subLocations.get(0);
-                                    if (EsnDecoder.IsRu(sheetsSubLocationName.getTextRu())) {
+                                    if (EsnDecoder.IsMostlyRu(sheetsSubLocationName.getTextRu())) {
                                         subLocation.setNameRu(sheetsSubLocationName.getTextRu());
                                     }
                                 } else {
@@ -8106,6 +8381,250 @@ public class DBService {
                 }
                 em.persist(book);
             }
+        }
+    }
+
+    @Transactional
+    private Long searchTableItem(String tableName, String searchString) {
+        Long result = null;
+        searchString = searchString.replace("\n", "$");
+        Query q = em.createNativeQuery("select id from " + tableName + " where texten ilike :searchString");
+        q.setParameter("searchString", searchString);
+        List<BigInteger> resultList = q.getResultList();
+        if (resultList != null && !resultList.isEmpty()) {
+            result = resultList.get(0).longValue();
+        } else {
+            Query q1 = em.createNativeQuery("select id from " + tableName + " where texten like '%<<%' and :searchString ilike regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g') and char_length(regexp_replace(regexp_replace(textru, '<<((player|npc|\\d){[a-z,A-Z,а-я,А-ЯёЁ\\s]*\\/[a-z,A-Z,а-я,А-ЯёЁ\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g'))>10 order by char_length(regexp_replace(texten, '<<\\w*:*\\d*>>', '%','g')) desc");
+            q1.setParameter("searchString", searchString);
+            List<BigInteger> resultList1 = q1.getResultList();
+            if (resultList1 != null && !resultList1.isEmpty()) {
+                result = resultList1.get(0).longValue();
+            }
+        }
+        return result;
+    }
+
+    @Transactional
+    private Long searchTableItemRu(String tableName, String searchString) {
+        Long result = null;
+        searchString = searchString.replace("\n\r", "\n").replace("\r\n", "\n").replace("\n", "$").replace("\r", "").replace("—", "%").replace("е", "_").replace("«", "_").replace("»", "_").replace("-", "%");
+        Logger.getLogger(DBService.class.getName()).log(Level.INFO, searchString);
+        Query q = em.createNativeQuery("select id from " + tableName + " where textru like :searchString");
+        q.setParameter("searchString", searchString);
+        List<BigInteger> resultList = q.getResultList();
+        if (resultList != null && !resultList.isEmpty()) {
+            result = resultList.get(0).longValue();
+        } else {
+            Query q1 = em.createNativeQuery("select id from " + tableName + " where textru ilike :searchString");
+            q1.setParameter("searchString", searchString);
+            List<BigInteger> resultList1 = q1.getResultList();
+            if (resultList1 != null && !resultList1.isEmpty()) {
+                result = resultList1.get(0).longValue();
+            } else {
+                Query q2 = em.createNativeQuery("select id from " + tableName + " where textru like '%<<%' and (:searchString ilike regexp_replace(regexp_replace(regexp_replace(textru, '<<((player|npc|\\d){([a-z,A-Z,а-я,А-ЯёЁ\\s]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s]*)})>>', '\\3','g'),'<<\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g') or :searchString ilike regexp_replace(regexp_replace(regexp_replace(textru, '<<((player|npc|\\d){([a-z,A-Z,а-я,А-ЯёЁ\\s]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s]*)})>>', '\\4','g'),'<<\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g')) and char_length(regexp_replace(regexp_replace(regexp_replace(textru, '<<((player|npc|\\d){([a-z,A-Z,а-я,А-ЯёЁ\\s]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s]*)})>>', '\\3','g'),'<<\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'))>6 order by char_length(regexp_replace(regexp_replace(regexp_replace(textru, '<<((player|npc|\\d){([a-z,A-Z,а-я,А-ЯёЁ\\s]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s]*)})>>', '\\3','g'),'<<\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g')) desc");
+                q2.setParameter("searchString", searchString);
+                List<BigInteger> resultList2 = q2.getResultList();
+                if (resultList2 != null && !resultList2.isEmpty()) {
+                    result = resultList2.get(0).longValue();
+                }
+            }
+        }
+        return result;
+    }
+
+    @Transactional
+    private Long searchTableItemRuIndexed(String tableName, String searchString) {
+        Long result = null;
+        searchString = searchString.replace("\n\r", "\n").replace("\r\n", "\n").replace("\n", "$").replace("\r", "").replace("»", "\"").replace("«", "\"").replace("—", "-");
+        //Logger.getLogger(DBService.class.getName()).log(Level.INFO, searchString);
+        Query q = em.createNativeQuery("select id from " + tableName + " where textru like :searchString");
+        q.setParameter("searchString", searchString);
+        List<BigInteger> resultList = q.getResultList();
+        if (resultList != null && !resultList.isEmpty()) {
+            result = resultList.get(0).longValue();
+        } else {
+            Query q1 = em.createNativeQuery("select id from " + tableName + " where textru ilike :searchString");
+            q1.setParameter("searchString", searchString);
+            List<BigInteger> resultList1 = q1.getResultList();
+            if (resultList1 != null && !resultList1.isEmpty()) {
+                result = resultList1.get(0).longValue();
+            } else {
+                Query q2 = em.createNativeQuery("select id from " + tableName + " where (:searchString ilike trrumm or :searchString ilike trruff or :searchString ilike trrufm or :searchString ilike trrumf) and char_length(trrumm)>6 order by char_length(trrumm) desc");
+                q2.setParameter("searchString", searchString);
+                List<BigInteger> resultList2 = q2.getResultList();
+                if (resultList2 != null && !resultList2.isEmpty()) {
+                    result = resultList2.get(0).longValue();
+                }
+            }
+        }
+        return result;
+    }
+
+    @Transactional
+    private Long searchTableItemIndexed(String tableName, String searchString) {
+        Long result = null;
+        searchString = searchString.replace("\n\r", "\n").replace("\r\n", "\n").replace("\n", "$").replace("\r", "");
+        // Logger.getLogger(DBService.class.getName()).log(Level.INFO, searchString);
+        Query q = em.createNativeQuery("select id from " + tableName + " where texten like :searchString");
+        q.setParameter("searchString", searchString);
+        List<BigInteger> resultList = q.getResultList();
+        if (resultList != null && !resultList.isEmpty()) {
+            result = resultList.get(0).longValue();
+        } else {
+            Query q1 = em.createNativeQuery("select id from " + tableName + " where texten ilike :searchString");
+            q1.setParameter("searchString", searchString);
+            List<BigInteger> resultList1 = q1.getResultList();
+            if (resultList1 != null && !resultList1.isEmpty()) {
+                result = resultList1.get(0).longValue();
+            } else {
+                Query q2 = em.createNativeQuery("select id from " + tableName + " where :searchString ilike tren and char_length(tren)>6 order by char_length(tren) desc");
+                q2.setParameter("searchString", searchString);
+                List<BigInteger> resultList2 = q2.getResultList();
+                if (resultList2 != null && !resultList2.isEmpty()) {
+                    result = resultList2.get(0).longValue();
+                }
+            }
+        }
+        return result;
+    }
+
+    @Transactional
+    private Long searchTableItemUncertainIndexed(String tableName, String searchString) {
+        Long result = null;
+        searchString = searchString.replace("\n\r", "\n").replace("\r\n", "\n").replace("\n", "$").replace("\r", "").replace("»", "\"").replace("«", "\"").replace("—", "-");
+        //Logger.getLogger(DBService.class.getName()).log(Level.INFO, searchString);
+        Query q = em.createNativeQuery("select id from " + tableName + " where texten like :searchString or textru like :searchString");
+        q.setParameter("searchString", searchString);
+        List<BigInteger> resultList = q.getResultList();
+        if (resultList != null && !resultList.isEmpty()) {
+            result = resultList.get(0).longValue();
+        } else {
+            Query q1 = em.createNativeQuery("select id from " + tableName + " where texten ilike :searchString or textru ilike :searchString");
+            q1.setParameter("searchString", searchString);
+            List<BigInteger> resultList1 = q1.getResultList();
+            if (resultList1 != null && !resultList1.isEmpty()) {
+                result = resultList1.get(0).longValue();
+            } else {
+                Query q2 = em.createNativeQuery("select id from " + tableName + " where (:searchString ilike tren or :searchString ilike trrumm or :searchString ilike trruff or :searchString ilike trrufm or :searchString ilike trrumf) and char_length(trrumm)>6 order by char_length(trrumm) desc");
+                q2.setParameter("searchString", searchString);
+                List<BigInteger> resultList2 = q2.getResultList();
+                if (resultList2 != null && !resultList2.isEmpty()) {
+                    result = resultList2.get(0).longValue();
+                }
+            }
+        }
+        return result;
+    }
+
+    @Transactional
+    public void generateSearchIndex() {
+        em.createNativeQuery("update gspreadsheetsplayerphrase set tren=regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsplayerphrase set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsplayerphrase set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsplayerphrase set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsplayerphrase set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+
+        em.createNativeQuery("update gspreadsheetsnpcphrase set tren=regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsnpcphrase set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsnpcphrase set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsnpcphrase set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsnpcphrase set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+    }
+
+    @Transactional
+    public void mergeSubtitles() {
+        List<Subtitle> subtitlesToDelete = new ArrayList<>();
+        Query dublicateSubtitleQuery = em.createNativeQuery("select s.id as sid,s1.id as s1id from subtitle s join subtitle s1 on s1.extnpcphrase_id=s.extnpcphrase_id and s1.id!=s.id and s1.npc_id=s.npc_id and s1.text_ru is not null where s.text_en is not null");
+        List<Object[]> resultList = dublicateSubtitleQuery.getResultList();
+        for (Object[] o : resultList) {
+            BigInteger sId = (BigInteger) o[0];
+            BigInteger s1Id = (BigInteger) o[1];
+            Subtitle s = em.find(Subtitle.class, sId.longValue());
+            Subtitle s1 = em.find(Subtitle.class, s1Id.longValue());
+            if (s.getTextRu() == null) {
+                s.setTextRu(s1.getTextRu());
+                em.merge(s);
+            }
+            if (s1.getTranslations() != null) {
+                for (TranslatedText t : s1.getTranslations()) {
+                    t.setSubtitle(s);
+                    em.merge(t);
+                }
+            }
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "merge\n{0} with \n{1}", new Object[]{s.getText(), s1.getTextRu()});
+            subtitlesToDelete.add(s1);
+        }
+
+        for (Subtitle s : subtitlesToDelete) {
+            if (s.getPreviousSubtitle() != null) {
+                Subtitle s2 = s.getPreviousSubtitle();
+                s2.setNextSubtitle(null);
+                em.merge(s2);
+            }
+        }
+        for (Subtitle s : subtitlesToDelete) {
+            em.remove(s);
+        }
+    }
+
+    @Transactional
+    public void mergeTopics() {
+        List<Topic> topicsToDelete = new ArrayList<>();
+        List<Topic> undeletable = new ArrayList<>();
+        Query dublicateTopicQuery = em.createNativeQuery("select t1.id as id1,t2.id as id2 from topic t1 join topic t2 on t1.npc_id=t2.npc_id and t1.extnpcphrase_id=t2.extnpcphrase_id and t1.extplayerphrase_id=t2.extplayerphrase_id and t1.id!=t2.id where t1.npctext is not null and t1.playertext is not null order by t1.id desc");
+        List<Object[]> resultList = dublicateTopicQuery.getResultList();
+        for (Object[] o : resultList) {
+            BigInteger sId = (BigInteger) o[0];
+            BigInteger s1Id = (BigInteger) o[1];
+            Topic t1 = em.find(Topic.class, sId.longValue());
+            Topic t2 = em.find(Topic.class, s1Id.longValue());
+            if (!undeletable.contains(t2)) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "merge\n{0}\nwith\n{1}", new Object[]{t2.getPlayerTextRu(), t1.getPlayerText()});
+                undeletable.add(t1);
+                topicsToDelete.add(t2);
+                if (t1.getNpcTextRu() == null && t2.getNpcTextRu() != null) {
+                    t1.setNpcTextRu(t2.getNpcTextRu());
+                }
+                if (t1.getPlayerTextRu() == null && t2.getPlayerTextRu() != null) {
+                    t1.setPlayerTextRu(t2.getPlayerTextRu());
+                }
+                for (TranslatedText tt : t2.getNpcTranslations()) {
+                    tt.setNpcTopic(t1);
+                    em.merge(tt);
+                }
+                t2.getNpcTranslations().clear();
+                for (TranslatedText tt : t2.getPlayerTranslations()) {
+                    tt.setPlayerTopic(t1);
+                    em.merge(tt);
+                }
+                t2.getPlayerTranslations().clear();
+                for (Topic pt : t2.getPreviousTopics()) {
+                    if (pt.getNextTopics().contains(t2)) {
+                        pt.getNextTopics().remove(t2);
+                    }
+                    if (!pt.getNextTopics().contains(t1)) {
+                        pt.getNextTopics().add(t1);
+                    }
+                    em.merge(pt);
+                }
+                t2.getPreviousTopics().clear();
+                for (Topic nt : t2.getNextTopics()) {
+                    if (nt.getPreviousTopics().contains(t2)) {
+                        nt.getPreviousTopics().remove(t2);
+                    }
+                    if (!nt.getPreviousTopics().contains(t1)) {
+                        nt.getPreviousTopics().add(t1);
+                    }
+                    em.merge(nt);
+                }
+                t2.getNextTopics().clear();
+                em.merge(t2);
+                em.merge(t1);
+                em.flush();
+            }
+        }
+        for (Topic t : topicsToDelete) {
+            em.remove(t);
         }
     }
 

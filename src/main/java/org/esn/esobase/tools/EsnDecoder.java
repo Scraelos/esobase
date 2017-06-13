@@ -35,8 +35,26 @@ public class EsnDecoder {
         }
         return result;
     }
-    
-    public static boolean IsRu(String text) {
+
+    public static boolean IsEn(String text) {
+        boolean result = false;
+        int enCounter = 0;
+        int ruCounter = 0;
+        Matcher enMatcher = enEncodingPattern.matcher(text);
+        while (enMatcher.find()) {
+            enCounter++;
+        }
+        Matcher matcher = ruPattern.matcher(text);
+        while (matcher.find()) {
+            ruCounter++;
+        }
+        if (ruCounter == 0 && enCounter > 0) {
+            result = true;
+        }
+        return result;
+    }
+
+    public static boolean IsMostlyRu(String text) {
         boolean result = false;
         int enCounter = 0;
         int ruCounter = 0;
@@ -49,6 +67,24 @@ public class EsnDecoder {
             ruCounter++;
         }
         if (ruCounter > enCounter) {
+            result = true;
+        }
+        return result;
+    }
+
+    public static boolean IsRu(String text) {
+        boolean result = false;
+        int enCounter = 0;
+        int ruCounter = 0;
+        Matcher enMatcher = enEncodingPattern.matcher(text);
+        while (enMatcher.find()) {
+            enCounter++;
+        }
+        Matcher matcher = ruPattern.matcher(text);
+        while (matcher.find()) {
+            ruCounter++;
+        }
+        if (ruCounter > 0 && enCounter == 0) {
             result = true;
         }
         return result;

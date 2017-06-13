@@ -348,7 +348,10 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
+                    service.generateSearchIndex();
                     service.assignToSpreadSheetPhrases();
+                    service.mergeSubtitles();
+                    service.mergeTopics();
                 }
             });
             this.addComponent(assignPhrases);
@@ -760,6 +763,7 @@ public class ImportTab extends VerticalLayout {
 
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
+            service.generateSearchIndex();
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
@@ -777,8 +781,7 @@ public class ImportTab extends VerticalLayout {
                 service.newFormatImportNpcs(jsonFromLua);
                 service.newFormatImportSubtitles(jsonFromLua);
             }
-            service.assignToSpreadSheetPhrases();
-
+            //service.assignToSpreadSheetPhrases();
         }
 
     }

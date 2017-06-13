@@ -640,6 +640,16 @@ public class TranslateTab extends VerticalLayout {
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
 
+                        if (translatedText.getSubtitle() != null) {
+                            translatedText.getSubtitle().getTranslations().add(translatedText);
+                        }
+                        if (translatedText.getPlayerTopic() != null) {
+                            translatedText.getPlayerTopic().getPlayerTranslations().add(translatedText);
+                        }
+                        if (translatedText.getNpcTopic() != null) {
+                            translatedText.getNpcTopic().getNpcTranslations().add(translatedText);
+                        }
+
                         vl.addComponent(new TranslationCell(translatedText));
                         event.getButton().setVisible(false);
                     }
@@ -740,8 +750,11 @@ public class TranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            save.setVisible(false);
-
+            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+                save.setVisible(true);
+            } else {
+                save.setVisible(false);
+            }
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
                 if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
                     preAccept = new Button("Перевод верен");

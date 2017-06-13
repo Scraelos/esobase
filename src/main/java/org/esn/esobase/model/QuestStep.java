@@ -30,6 +30,7 @@ public class QuestStep extends DAO {
     private Long id;
     private String textEn;
     private String textRu;
+    private Integer weight;
     @OneToMany(mappedBy = "step")
     private Set<QuestDirection> directions;
     @ManyToOne
@@ -85,6 +86,14 @@ public class QuestStep extends DAO {
 
     public void setSheetsJournalEntry(GSpreadSheetsJournalEntry sheetsJournalEntry) {
         this.sheetsJournalEntry = sheetsJournalEntry;
+    }
+
+    public Integer getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
     }
 
 }

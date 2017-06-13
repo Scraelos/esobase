@@ -222,6 +222,9 @@ public class BookTranslateTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
 
+                    if (translatedText.getBookName() != null) {
+                        translatedText.getBookName().getNameTranslations().add(translatedText);
+                    }
                     NameTranslationCell tc = new NameTranslationCell(translatedText);
                     bookNameTranslationsLayout.addComponent(tc);
                     event.getButton().setVisible(false);
@@ -250,6 +253,9 @@ public class BookTranslateTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
 
+                    if (translatedText.getBook() != null) {
+                        translatedText.getBook().getTranslations().add(translatedText);
+                    }
                     TextTranslationCell tc = new TextTranslationCell(translatedText);
                     bookTextTranslationsLayout.addComponent(tc);
                     bookTextTranslationsLayout.setExpandRatio(tc, 1f);
@@ -385,7 +391,11 @@ public class BookTranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            save.setVisible(false);
+            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+                save.setVisible(true);
+            } else {
+                save.setVisible(false);
+            }
 
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
                 if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
@@ -530,7 +540,11 @@ public class BookTranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            save.setVisible(false);
+            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+                save.setVisible(true);
+            } else {
+                save.setVisible(false);
+            }
 
             if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
                 if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {

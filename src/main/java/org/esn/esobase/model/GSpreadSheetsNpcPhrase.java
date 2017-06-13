@@ -26,10 +26,14 @@ import org.esn.esobase.model.lib.DAO;
  */
 @Entity
 @Table(indexes = {
-    @Index(columnList = "rowNum", unique = false),
-    @Index(columnList = "textEn", unique = false),
-    @Index(columnList = "textRu", unique = false),
-    @Index(columnList = "translator", unique = false),
+    @Index(columnList = "rowNum", unique = false)
+    ,
+    @Index(columnList = "textEn", unique = false)
+    ,
+    @Index(columnList = "textRu", unique = false)
+    ,
+    @Index(columnList = "translator", unique = false)
+    ,
     @Index(columnList = "aId,bId,cId", unique = true)})
 public class GSpreadSheetsNpcPhrase extends DAO implements GSpreadSheetEntity, TranslatedEntity {
 
@@ -52,6 +56,16 @@ public class GSpreadSheetsNpcPhrase extends DAO implements GSpreadSheetEntity, T
     private Integer weight;
     @OneToMany(mappedBy = "spreadSheetsNpcPhrase", fetch = FetchType.LAZY)
     private Set<TranslatedText> translatedTexts;
+    @Column(columnDefinition = "TEXT")
+    private String trEn;
+    @Column(columnDefinition = "TEXT")
+    private String trRuMM;
+    @Column(columnDefinition = "TEXT")
+    private String trRuFF;
+    @Column(columnDefinition = "TEXT")
+    private String trRuMF;
+    @Column(columnDefinition = "TEXT")
+    private String trRuFM;
 
     public GSpreadSheetsNpcPhrase() {
     }
@@ -162,4 +176,45 @@ public class GSpreadSheetsNpcPhrase extends DAO implements GSpreadSheetEntity, T
     public void setcId(Long cId) {
         this.cId = cId;
     }
+
+    public String getTrEn() {
+        return trEn;
+    }
+
+    public void setTrEn(String trEn) {
+        this.trEn = trEn;
+    }
+
+    public String getTrRuMM() {
+        return trRuMM;
+    }
+
+    public void setTrRuMM(String trRuMM) {
+        this.trRuMM = trRuMM;
+    }
+
+    public String getTrRuFF() {
+        return trRuFF;
+    }
+
+    public void setTrRuFF(String trRuFF) {
+        this.trRuFF = trRuFF;
+    }
+
+    public String getTrRuMF() {
+        return trRuMF;
+    }
+
+    public void setTrRuMF(String trRuMF) {
+        this.trRuMF = trRuMF;
+    }
+
+    public String getTrRuFM() {
+        return trRuFM;
+    }
+
+    public void setTrRuFM(String trRuFM) {
+        this.trRuFM = trRuFM;
+    }
+
 }
