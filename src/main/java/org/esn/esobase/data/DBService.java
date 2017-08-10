@@ -718,6 +718,10 @@ public class DBService {
                     t.setExtPlayerPhrase(null);
                     em.merge(t);
                 }
+                for (TranslatedText t : phrase.getTranslatedTexts()) {
+                    t.setSpreadSheetsPlayerPhrase(null);
+                    em.merge(t);
+                }
                 em.remove(phrase);
             }
         }
@@ -772,6 +776,10 @@ public class DBService {
             GSpreadSheetsLocationName result = spreadSheetLocationsMap.get(location.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing locations rownum={0} :{1}", new Object[]{location.getRowNum(), location.getTextEn()});
+                for (TranslatedText t : location.getTranslatedTexts()) {
+                    t.setSpreadSheetsLocationName(null);
+                    em.merge(t);
+                }
                 em.remove(location);
             }
         }
@@ -825,6 +833,10 @@ public class DBService {
             GSpreadSheetsQuestName result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest name rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsQuestName(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -877,6 +889,10 @@ public class DBService {
             GSpreadSheetsQuestDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsQuestDescription(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -929,6 +945,10 @@ public class DBService {
             GSpreadSheetsQuestDirection result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest direction rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsQuestDirection(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -981,6 +1001,10 @@ public class DBService {
             GSpreadSheetsItemName result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing item name rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsItemName(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1033,6 +1057,10 @@ public class DBService {
             GSpreadSheetsItemDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing item description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsItemDescription(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1085,6 +1113,10 @@ public class DBService {
             GSpreadSheetsActivator result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing activator rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsActivator(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1137,6 +1169,10 @@ public class DBService {
             GSpreadSheetsAchievement result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing achievement rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsAchievement(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1189,6 +1225,10 @@ public class DBService {
             GSpreadSheetsAchievementDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing achievement description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsAchievementDescription(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1241,6 +1281,10 @@ public class DBService {
             GSpreadSheetsNote result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing note rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsNote(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1293,6 +1337,10 @@ public class DBService {
             GSpreadSheetsAbilityDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing ability description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSheetsAbilityDescription(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1345,6 +1393,10 @@ public class DBService {
             GSpreadSheetsCollectible result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing collectible rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSheetsCollectible(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1397,6 +1449,10 @@ public class DBService {
             GSpreadSheetsCollectibleDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing collectible description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSheetsCollectibleDescription(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1449,6 +1505,10 @@ public class DBService {
             GSpreadSheetsLoadscreen result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing loadscreen rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSheetsLoadscreen(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1501,6 +1561,10 @@ public class DBService {
             GSpreadSheetsJournalEntry result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing journal entry rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsJournalEntry(null);
+                    em.merge(t);
+                }
                 em.remove(item);
             }
         }
@@ -1664,6 +1728,10 @@ public class DBService {
             GSpreadSheetsNpcName result = spreadSheetNpcsMap.get(textEn);
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing npc rownum={0} :{1}", new Object[]{npc.getRowNum(), npc.getTextEn()});
+                for (TranslatedText t : npc.getTranslatedTexts()) {
+                    t.setSpreadSheetsNpcName(null);
+                    em.merge(t);
+                }
                 em.remove(npc);
             }
         }
@@ -1745,6 +1813,10 @@ public class DBService {
                 for (Greeting g : greetings) {
                     g.setExtNpcPhrase(null);
                     em.merge(g);
+                }
+                for (TranslatedText t : phrase.getTranslatedTexts()) {
+                    t.setSpreadSheetsNpcPhrase(null);
+                    em.merge(t);
                 }
                 em.remove(phrase);
             }
@@ -3257,8 +3329,11 @@ public class DBService {
         } else {
             if (noTranslations) {
                 predicates.add(cb.isNull(join.get("translator")));
+                predicates.add(cb.isNotNull(topicsJoin.get("extNpcPhrase")));
                 predicates1.add(cb.isNull(join1.get("translator")));
+                predicates1.add(cb.isNotNull(topicsJoin1.get("extPlayerPhrase")));
                 predicates2.add(cb.isNull(join2.get("translator")));
+                predicates2.add(cb.isNotNull(subtitlesJoin.get("extNpcPhrase")));
 
             }
             if (quest != null) {
@@ -3473,6 +3548,11 @@ public class DBService {
     @Transactional
     public void refreshEntity(Object object) {
         em.refresh(object);
+    }
+
+    @Transactional
+    public DAO loadDAO(DAO object) {
+        return em.find(object.getClass(), object.getId());
     }
 
     @Transactional
@@ -5688,8 +5768,7 @@ public class DBService {
     @Transactional
     public void importInterfaceStrings(List<EsoInterfaceVariable> list) {
         for (EsoInterfaceVariable i : list) {
-            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class
-            );
+            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class);
             q.setParameter("name", i.getName());
             try {
                 EsoInterfaceVariable r = q.getSingleResult();
@@ -5708,8 +5787,7 @@ public class DBService {
     @Transactional
     public void importRuInterfaceStrings(List<EsoInterfaceVariable> list) {
         for (EsoInterfaceVariable i : list) {
-            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class
-            );
+            TypedQuery<EsoInterfaceVariable> q = em.createQuery("select v from EsoInterfaceVariable v where name=:name", EsoInterfaceVariable.class);
             q.setParameter("name", i.getName());
             try {
                 EsoInterfaceVariable r = q.getSingleResult();
@@ -8181,6 +8259,7 @@ public class DBService {
                     if (location.getId() == null) {
                         LOG.log(Level.INFO, "new location: {0}", location.toString());
                         em.persist(location);
+                        em.flush();
                     } else {
                         LOG.log(Level.INFO, "update location: {0}", location.toString());
                         em.merge(location);
@@ -8237,6 +8316,7 @@ public class DBService {
                                 if (subLocation.getId() == null) {
                                     LOG.log(Level.INFO, "new sublocation: " + subLocation.toString() + "/" + location.toString());
                                     em.persist(subLocation);
+                                    em.flush();
                                 } else {
                                     LOG.log(Level.INFO, "update sublocation: " + subLocation.toString() + "/" + location.toString());
                                     em.merge(subLocation);
@@ -8299,7 +8379,7 @@ public class DBService {
                             if (book.getLocations() == null) {
                                 book.setLocations(new HashSet<>());
                             }
-                            if (!book.getLocations().contains(subLocation)) {
+                            if (!book.getLocations().contains(subLocation) && subLocation != null && subLocation.getId() != null) {
                                 book.getLocations().add(subLocation);
                             }
 
@@ -8349,6 +8429,30 @@ public class DBService {
             bookCriteria.add(Restrictions.eq("cId", r.getcId()));
             List<Book> bookList = bookCriteria.list();
             if (bookList != null && !bookList.isEmpty()) {
+                Book book = bookList.get(0);
+                if (r.getTextRu() != null && !r.getTextRu().isEmpty() && !r.getTextRu().equals(r.getTextEn())) {
+                    BookText bookText = book.getBookText();
+                    bookText.setTextEn(r.getTextEn());
+                    if (r.getTextRu() != null && !r.getTextEn().equals(r.getTextRu())) {
+                        bookText.setTextRu(r.getTextRu());
+                    }
+                    em.merge(bookText);
+                }
+                Criteria rawBookNameCrit = session.createCriteria(EsoRawString.class);
+                rawBookNameCrit.add(Restrictions.eq("aId", 51188213L));
+                rawBookNameCrit.add(Restrictions.eq("bId", book.getbId()));
+                rawBookNameCrit.add(Restrictions.eq("cId", book.getcId()));
+                List<EsoRawString> rawBookNameList = rawBookNameCrit.list();
+                if (rawBookNameList != null && !rawBookNameList.isEmpty()) {
+                    EsoRawString rawBook = rawBookNameList.get(0);
+                    book.setNameEn(rawBook.getTextEn());
+                    if (rawBook.getTextRu() != null && !rawBook.getTextEn().equals(rawBook.getTextRu())) {
+                        book.setNameRu(rawBook.getTextRu());
+                    }
+                } else {
+                    book.setNameEn("-no name-");
+                }
+                em.merge(book);
             } else {
                 Book book = new Book();
                 book.setaId(21337012L);
