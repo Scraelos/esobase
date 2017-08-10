@@ -7,6 +7,7 @@ package org.esn.esobase.data.specification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -26,13 +27,13 @@ import org.springframework.data.jpa.domain.Specification;
 public class TopicSpecification implements Specification<Topic> {
 
     private final Npc npc;
-    private final TRANSLATE_STATUS translateStatus;
+    private final Set<TRANSLATE_STATUS> translateStatus;
     private final SysAccount translator;
     private final Boolean noTranslations;
     private final Boolean emptyTranslations;
     private final String searchString;
 
-    public TopicSpecification(Npc npc, TRANSLATE_STATUS translateStatus, SysAccount translator, Boolean noTranslations, Boolean emptyTranslations, String searchString) {
+    public TopicSpecification(Npc npc, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, Boolean noTranslations, Boolean emptyTranslations, String searchString) {
         this.npc = npc;
         this.translateStatus = translateStatus;
         this.translator = translator;
@@ -57,7 +58,7 @@ public class TopicSpecification implements Specification<Topic> {
                     cb.like(cb.lower(join1.get("textRu")), searchPattern)
             ));
         } else {
-            if (noTranslations || emptyTranslations || translateStatus != null || translator != null) {
+            if (noTranslations || emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                 Join<Object, Object> join = root.join("extNpcPhrase", JoinType.LEFT);
                 Join<Object, Object> join1 = root.join("extPlayerPhrase", JoinType.LEFT);
                 if (noTranslations) {
@@ -86,18 +87,18 @@ public class TopicSpecification implements Specification<Topic> {
                             )
                     ));
 
-                } else if (translateStatus != null || translator != null) {
+                } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join2 = join.join("translatedTexts", JoinType.LEFT);
                     Join<Object, Object> join3 = join1.join("translatedTexts", JoinType.LEFT);
-                    if (translateStatus != null && translator != null) {
+                    if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
 
                         predicates.add(cb.or(
                                 cb.and(
-                                        cb.equal(join2.get("status"), translateStatus),
+                                        join2.get("status").in(translateStatus),
                                         cb.equal(join2.get("author"), translator)
                                 ),
                                 cb.and(
-                                        cb.equal(join3.get("status"), translateStatus),
+                                        join3.get("status").in(translateStatus),
                                         cb.equal(join3.get("author"), translator)
                                 )
                         ));
@@ -106,10 +107,10 @@ public class TopicSpecification implements Specification<Topic> {
                                 cb.equal(join2.get("author"), translator),
                                 cb.equal(join3.get("author"), translator)
                         ));
-                    } else if (translateStatus != null) {
+                    } else if (translateStatus != null && !translateStatus.isEmpty()) {
                         predicates.add(cb.or(
-                                cb.equal(join2.get("status"), translateStatus),
-                                cb.equal(join3.get("status"), translateStatus)
+                                join2.get("status").in(translateStatus),
+                                join3.get("status").in(translateStatus)
                         ));
                     }
                 }

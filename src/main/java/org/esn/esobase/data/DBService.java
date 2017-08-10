@@ -3198,7 +3198,7 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
+    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
         container.removeAllItems();
         List<Topic> list = topicRepository.findAll(new TopicSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations, searchString));
         if (searchString != null && searchString.length() > 2) {
@@ -3229,7 +3229,7 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
+    public BeanItemContainer<Subtitle> getNpcSubtitles(Npc npc, BeanItemContainer<Subtitle> container, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
         container.removeAllItems();
         List<Subtitle> list = subtitleRepository.findAll(new SubtitleSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations, searchString));
         if (searchString != null && searchString.length() > 2) {
@@ -3263,7 +3263,7 @@ public class DBService {
     }
 
     @Transactional
-    public Long countTranslatedTextFilterResult(Location location, Location subLocation, Quest quest, TRANSLATE_STATUS translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
+    public Long countTranslatedTextFilterResult(Location location, Location subLocation, Quest quest, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         CriteriaQuery<Long> cq1 = cb.createQuery(Long.class);
@@ -3340,7 +3340,7 @@ public class DBService {
                 predicates1.add(cb.equal(root1.join("quests").get("id"), quest.getId()));
                 predicates2.add(cb.equal(root2.join("quests").get("id"), quest.getId()));
             }
-            if (emptyTranslations || translateStatus != null || translator != null) {
+            if (emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
 
                 if (emptyTranslations) {
 
@@ -3359,22 +3359,22 @@ public class DBService {
                             cb.isEmpty(join2.get("translatedTexts")),
                             cb.isNull(join2.get("translator"))
                     ));
-                } else if (translateStatus != null || translator != null) {
+                } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join3 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
                     Join<Object, Object> join4 = join1.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
                     Join<Object, Object> join5 = join2.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
-                    if (translateStatus != null && translator != null) {
+                    if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
 
                         predicates.add(cb.and(
-                                cb.equal(join3.get("status"), translateStatus),
+                                join3.get("status").in(translateStatus),
                                 cb.equal(join3.get("author"), translator)
                         ));
                         predicates1.add(cb.and(
-                                cb.equal(join4.get("status"), translateStatus),
+                                join4.get("status").in(translateStatus),
                                 cb.equal(join4.get("author"), translator)
                         ));
                         predicates2.add(cb.and(
-                                cb.equal(join5.get("status"), translateStatus),
+                                join5.get("status").in(translateStatus),
                                 cb.equal(join5.get("author"), translator)
                         ));
                     } else if (translator != null) {
@@ -3382,9 +3382,9 @@ public class DBService {
                         predicates1.add(cb.equal(join4.get("author"), translator));
                         predicates2.add(cb.equal(join5.get("author"), translator));
                     } else if (translateStatus != null) {
-                        predicates.add(cb.equal(join3.get("status"), translateStatus));
-                        predicates1.add(cb.equal(join4.get("status"), translateStatus));
-                        predicates2.add(cb.equal(join5.get("status"), translateStatus));
+                        predicates.add(join3.get("status").in(translateStatus));
+                        predicates1.add(join4.get("status").in(translateStatus));
+                        predicates2.add(join5.get("status").in(translateStatus));
                     }
                 }
 

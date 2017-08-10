@@ -8,6 +8,7 @@ package org.esn.esobase.data.specification;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -27,7 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public class NpcSpecification implements Specification<Npc> {
 
-    private TRANSLATE_STATUS translateStatus;
+    private Set<TRANSLATE_STATUS> translateStatus;
     private SysAccount translator;
     private Boolean noTranslations;
     private Boolean emptyTranslations;
@@ -36,7 +37,7 @@ public class NpcSpecification implements Specification<Npc> {
     private Location subLocation;
     private String searchString;
 
-    public void setTranslateStatus(TRANSLATE_STATUS translateStatus) {
+    public void setTranslateStatus(Set<TRANSLATE_STATUS> translateStatus) {
         this.translateStatus = translateStatus;
     }
 
@@ -107,7 +108,7 @@ public class NpcSpecification implements Specification<Npc> {
             if (quest != null) {
                 predicates.add(cb.equal(root.join("quests").get("id"), quest.getId()));
             }
-            if (noTranslations || emptyTranslations || translateStatus != null || translator != null) {
+            if (noTranslations || emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                 Join<Object, Object> topicsJoin = root.joinSet("topics", JoinType.LEFT);
                 Join<Object, Object> subtitlesJoin = root.joinSet("subtitles", JoinType.LEFT);
                 Join<Object, Object> join = topicsJoin.join("extNpcPhrase", JoinType.LEFT);
@@ -147,23 +148,23 @@ public class NpcSpecification implements Specification<Npc> {
                                     cb.isNull(join2.get("translator"))
                             )
                     ));
-                } else if (translateStatus != null || translator != null) {
+                } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join3 = join.join("translatedTexts", JoinType.LEFT);
                     Join<Object, Object> join4 = join1.join("translatedTexts", JoinType.LEFT);
                     Join<Object, Object> join5 = join2.join("translatedTexts", JoinType.LEFT);
-                    if (translateStatus != null && translator != null) {
+                    if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
 
                         predicates.add(cb.or(
                                 cb.and(
-                                        cb.equal(join3.get("status"), translateStatus),
+                                        join3.get("status").in( translateStatus),
                                         cb.equal(join3.get("author"), translator)
                                 ),
                                 cb.and(
-                                        cb.equal(join4.get("status"), translateStatus),
+                                        join4.get("status").in( translateStatus),
                                         cb.equal(join4.get("author"), translator)
                                 ),
                                 cb.and(
-                                        cb.equal(join5.get("status"), translateStatus),
+                                        join5.get("status").in( translateStatus),
                                         cb.equal(join5.get("author"), translator)
                                 )
                         ));
@@ -173,11 +174,11 @@ public class NpcSpecification implements Specification<Npc> {
                                 cb.equal(join4.get("author"), translator),
                                 cb.equal(join5.get("author"), translator)
                         ));
-                    } else if (translateStatus != null) {
+                    } else if (translateStatus != null && !translateStatus.isEmpty()) {
                         predicates.add(cb.or(
-                                cb.equal(join3.get("status"), translateStatus),
-                                cb.equal(join4.get("status"), translateStatus),
-                                cb.equal(join5.get("status"), translateStatus)
+                                join3.get("status").in(translateStatus),
+                                join4.get("status").in(translateStatus),
+                                join5.get("status").in(translateStatus)
                         ));
                     }
                 }
