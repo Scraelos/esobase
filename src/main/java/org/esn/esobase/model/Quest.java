@@ -34,7 +34,9 @@ public class Quest extends DAO {
     private Long id;
     private String name;
     private String nameRu;
+    @Column(length = 1024)
     private String descriptionEn;
+    @Column(length = 1024)
     private String descriptionRu;
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Npc> npcs;

@@ -28,7 +28,9 @@ public class QuestStep extends DAO {
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    @Column(length = 1024)
     private String textEn;
+    @Column(length = 1024)
     private String textRu;
     private Integer weight;
     @OneToMany(mappedBy = "step")

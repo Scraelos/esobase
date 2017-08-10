@@ -26,7 +26,9 @@ public class QuestJournalEntry extends DAO {
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    @Column(length = 1024)
     private String textEn;
+    @Column(length = 1024)
     private String textRu;
     @ManyToOne
     private GSpreadSheetsJournalEntry sheetsJournalEntry;
