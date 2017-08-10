@@ -52,6 +52,12 @@ public class TranslatedText extends DAO {
     private TRANSLATE_STATUS status;
     @ManyToOne(fetch = FetchType.EAGER)
     private SysAccount approvedBy;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private SysAccount correctedBy;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private SysAccount preApprovedBy;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private SysAccount rejectedBy;
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date createTime;
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
@@ -366,6 +372,30 @@ public class TranslatedText extends DAO {
 
     public void setBookName(Book bookName) {
         this.bookName = bookName;
+    }
+
+    public SysAccount getCorrectedBy() {
+        return correctedBy;
+    }
+
+    public void setCorrectedBy(SysAccount correctedBy) {
+        this.correctedBy = correctedBy;
+    }
+
+    public SysAccount getPreApprovedBy() {
+        return preApprovedBy;
+    }
+
+    public void setPreApprovedBy(SysAccount preApprovedBy) {
+        this.preApprovedBy = preApprovedBy;
+    }
+
+    public SysAccount getRejectedBy() {
+        return rejectedBy;
+    }
+
+    public void setRejectedBy(SysAccount rejectedBy) {
+        this.rejectedBy = rejectedBy;
     }
 
 }

@@ -9,6 +9,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.filter.Compare;
 import com.vaadin.event.FieldEvents;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Button;
@@ -180,7 +181,7 @@ public class QuestTranslateTab extends VerticalLayout {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 translatedText.setSpreadSheetsQuestName(currentQuest.getSheetsQuestName());
-                Button addTranslation = new Button("Добавить перевод");
+                Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
                 addTranslation.addClickListener(new Button.ClickListener() {
 
                     @Override
@@ -457,6 +458,7 @@ public class QuestTranslateTab extends VerticalLayout {
         private Button save;
         private Button accept;
         private Button preAccept;
+        private Button correct;
         private Button reject;
         private final TranslatedText translatedText;
 
@@ -494,10 +496,12 @@ public class QuestTranslateTab extends VerticalLayout {
 
                     if (event.getText() == null || event.getText().isEmpty()) {
                         save.setCaption("Удалить");
+                        save.setIcon(FontAwesome.RECYCLE);
                     } else {
                         translatedText.setText(event.getText());
                         service.saveTranslatedTextDirty(translatedText);
                         save.setCaption("Сохранить");
+                        save.setIcon(FontAwesome.SAVE);
                     }
                     String status = "нет";
                     if (translatedText.getStatus() != null) {
@@ -520,13 +524,11 @@ public class QuestTranslateTab extends VerticalLayout {
             });
             if (SpringSecurityHelper.getSysAccount().equals(translatedText_.getAuthor())) {
                 translation.setReadOnly(false);
-            } else if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
-                translation.setReadOnly(false);
             } else {
                 translation.setReadOnly(true);
             }
             this.addComponent(translation);
-            save = new Button("Сохранить");
+            save = new Button("Сохранить", FontAwesome.SAVE);
             save.addClickListener(new Button.ClickListener() {
 
                 @Override
@@ -543,54 +545,69 @@ public class QuestTranslateTab extends VerticalLayout {
             } else {
                 save.setVisible(false);
             }
-            if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
-                if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
-                    preAccept = new Button("Перевод верен");
-                    preAccept.addClickListener(new Button.ClickListener() {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+                translation.setReadOnly(false);
+                preAccept = new Button("Перевод верен", FontAwesome.CHECK);
+                preAccept.addClickListener(new Button.ClickListener() {
 
-                        @Override
-                        public void buttonClick(Button.ClickEvent event) {
-                            translatedText.setText(translation.getValue());
-                            service.preAcceptTranslatedText(translatedText);
-                            LoadContent();
-                            LoadFilters();
-                        }
-                    });
-                    this.addComponent(preAccept);
-                }
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        translatedText.setText(translation.getValue());
+                        service.preAcceptTranslatedText(translatedText);
+                        LoadContent();
+                        LoadFilters();
+                    }
+                });
+                this.addComponent(preAccept);
             }
 
-            if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
-                if (translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED))) {
-                    accept = new Button("Принять эту версию");
-                    accept.addClickListener(new Button.ClickListener() {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+                translation.setReadOnly(false);
+                correct = new Button("Текст корректен", FontAwesome.PENCIL);
+                correct.addClickListener(new Button.ClickListener() {
 
-                        @Override
-                        public void buttonClick(Button.ClickEvent event) {
-                            translatedText.setText(translation.getValue());
-                            service.acceptTranslatedText(translatedText);
-                            LoadContent();
-                            LoadFilters();
-                        }
-                    });
-                    this.addComponent(accept);
-                }
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        translatedText.setText(translation.getValue());
+                        service.correctTranslatedText(translatedText);
+                        LoadContent();
+                        LoadFilters();
+                    }
+                });
+                this.addComponent(correct);
             }
-            if (SpringSecurityHelper.hasRole("ROLE_ADMIN") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
-                if (translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED))) {
-                    reject = new Button("Отклонить эту версию");
-                    reject.addClickListener(new Button.ClickListener() {
 
-                        @Override
-                        public void buttonClick(Button.ClickEvent event) {
-                            translatedText.setText(translation.getValue());
-                            service.rejectTranslatedText(translatedText);
-                            LoadContent();
-                            LoadFilters();
-                        }
-                    });
-                    this.addComponent(reject);
-                }
+            if ((SpringSecurityHelper.hasRole("ROLE_APPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED))) {
+                translation.setReadOnly(false);
+                accept = new Button("Принять эту версию", FontAwesome.THUMBS_UP);
+                accept.addClickListener(new Button.ClickListener() {
+
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        translatedText.setText(translation.getValue());
+                        service.acceptTranslatedText(translatedText);
+                        LoadContent();
+                        LoadFilters();
+                    }
+                });
+                this.addComponent(accept);
+            }
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED))) {
+                reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
+                reject.addClickListener(new Button.ClickListener() {
+
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        translatedText.setText(translation.getValue());
+                        service.rejectTranslatedText(translatedText);
+                        LoadContent();
+                        LoadFilters();
+                    }
+                });
+                this.addComponent(reject);
+            }
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED)) {
+                translation.setReadOnly(false);
             }
         }
 

@@ -14,6 +14,7 @@ public enum TRANSLATE_STATUS {
     DIRTY("Черновик"),
     NEW("Новый"),
     PREACCEPTED("Перевод верен"),
+    CORRECTED("Текст корректен"),
     ACCEPTED("Принят"),
     REJECTED("Отклонён");
 

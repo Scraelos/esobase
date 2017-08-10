@@ -129,9 +129,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -312,6 +310,7 @@ public class DBService {
         roles.add(new SysAccountRole(22L, "ROLE_DIRECT_ACCESS_NOTES", "Прямое редактирование записок"));
         roles.add(new SysAccountRole(23L, "ROLE_DIRECT_ACCESS_ABILITY_DESCRIPTIONS", "Прямое редактирование описаний способностей"));
         roles.add(new SysAccountRole(24L, "ROLE_PREAPPROVE", "Проверка правильности перевода"));
+        roles.add(new SysAccountRole(25L, "ROLE_CORRECTOR", "Коррекция текста"));
         for (SysAccountRole role : roles) {
             SysAccountRole foundRole = em.find(SysAccountRole.class, role.getId());
             if (foundRole == null) {
@@ -3971,12 +3970,23 @@ public class DBService {
     @Transactional
     public void preAcceptTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.PREACCEPTED);
+        entity.setPreApprovedBy(SpringSecurityHelper.getSysAccount());
+        em.merge(entity);
+    }
+
+    @Transactional
+    public void correctTranslatedText(TranslatedText entity) {
+        entity.setStatus(TRANSLATE_STATUS.CORRECTED);
+        entity.setCorrectedBy(SpringSecurityHelper.getSysAccount());
         em.merge(entity);
     }
 
     @Transactional
     public void rejectTranslatedText(TranslatedText entity) {
         entity.setStatus(TRANSLATE_STATUS.REJECTED);
+        entity.setRejectedBy(SpringSecurityHelper.getSysAccount());
+        entity.setCorrectedBy(null);
+        entity.setPreApprovedBy(null);
         em.merge(entity);
     }
 
