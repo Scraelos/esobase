@@ -34,7 +34,7 @@ public class SyncNpcPhrasesJob {
     private static final String TABLE_NAME = "npc phrases";
 
     @Scheduled(fixedDelay = 1800000, initialDelay = 2000)
-    public void execute() throws OriginalTextMismatchException {
+    public void execute() throws OriginalTextMismatchException, Exception {
         if (dbService.getIsAutoSynchronizationEnabled()) {
             LOG.info(TABLE_NAME+": automatic sync enabled");
             HierarchicalContainer hc = new HierarchicalContainer();
