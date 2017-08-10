@@ -1420,10 +1420,8 @@ public class GoogleDocsService {
         return names;
     }
 
-    public List<GSpreadSheetsNpcPhrase> getNpcPhrases() {
+    public List<GSpreadSheetsNpcPhrase> getNpcPhrases() throws Exception {
         List<GSpreadSheetsNpcPhrase> phrases = new ArrayList<>();
-        try {
-
             Credential authorize = authorize();
 
             SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
@@ -1495,17 +1493,6 @@ public class GoogleDocsService {
             phrase.setChangeTime(editTime);
             phrases.add(phrase);
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "Fetched {0} entries", phrases.size());
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (AuthenticationException ex) {
-            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ServiceException ex) {
-            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
-        }
         return phrases;
     }
 
