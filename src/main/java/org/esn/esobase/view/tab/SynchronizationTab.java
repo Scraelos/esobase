@@ -160,10 +160,10 @@ public class SynchronizationTab extends VerticalLayout {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 GoogleDocsService docsService = new GoogleDocsService();
-                List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
                 try {
+                    List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
                     npcPhraseDiffContainer = service.getNpcPhrasesDiff(npcPhrases, npcPhraseDiffContainer);
-                } catch (OriginalTextMismatchException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(SynchronizationTab.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
                 }
             }

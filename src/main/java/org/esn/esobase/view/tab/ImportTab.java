@@ -138,9 +138,13 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
-                    service.loadNpcPhrasesFromSpreadSheet(npcPhrases);
+                    try {
+                        GoogleDocsService docsService = new GoogleDocsService();
+                        List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
+                        service.loadNpcPhrasesFromSpreadSheet(npcPhrases);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             });
             this.addComponent(importNpcPhrasesFromG);
