@@ -8,6 +8,7 @@ package org.esn.esobase.model;
 import java.util.Date;
 import java.util.Set;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -42,7 +43,7 @@ public class Book extends DAO {
     private Date changeTime;
     @OneToMany(mappedBy = "bookName", fetch = FetchType.LAZY)
     private Set<TranslatedText> nameTranslations;
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.MERGE)
     private Set<Location> locations;
     @OneToOne(fetch = FetchType.LAZY)
     private BookText bookText;
