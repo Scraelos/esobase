@@ -36,8 +36,10 @@ public class Location extends DAO {
     @Column(unique = true)
     private String name;
     private String nameRu;
-    @OneToMany(mappedBy = "location", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "location", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<Npc> npcs;
+    @OneToMany(mappedBy = "location", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    private List<Quest> quests;
     private BigDecimal progress;
     @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsLocationName sheetsLocationName;
@@ -119,6 +121,14 @@ public class Location extends DAO {
 
     public void setSubLocations(List<Location> subLocations) {
         this.subLocations = subLocations;
+    }
+
+    public List<Quest> getQuests() {
+        return quests;
+    }
+
+    public void setQuests(List<Quest> quests) {
+        this.quests = quests;
     }
 
     @Override

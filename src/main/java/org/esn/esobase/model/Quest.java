@@ -38,7 +38,7 @@ public class Quest extends DAO {
     private String descriptionEn;
     @Column(length = 1024)
     private String descriptionRu;
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<Npc> npcs;
     private BigDecimal progress;
     @ManyToOne
@@ -47,9 +47,9 @@ public class Quest extends DAO {
     private Set<QuestJournalEntry> questJournalEntrys;
     @OneToMany(mappedBy = "quest")
     private Set<QuestDirection> questDirections;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestName sheetsQuestName;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestDescription sheetsQuestDescription;
     @OneToMany(mappedBy = "quest")
     private Set<QuestStep> steps;

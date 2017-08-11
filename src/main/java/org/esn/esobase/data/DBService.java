@@ -75,6 +75,9 @@ import org.esn.esobase.data.repository.GSpreadSheetsQuestDirectionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestNameRepository;
 import org.esn.esobase.data.repository.LocationRepository;
 import org.esn.esobase.data.repository.NpcRepository;
+import org.esn.esobase.data.repository.QuestDirectionRepository;
+import org.esn.esobase.data.repository.QuestRepository;
+import org.esn.esobase.data.repository.QuestStepRepository;
 import org.esn.esobase.data.repository.SubtitleRepository;
 import org.esn.esobase.data.repository.TopicRepository;
 import org.esn.esobase.data.repository.TranslatedTextRepository;
@@ -190,6 +193,12 @@ public class DBService {
     private TopicRepository topicRepository;
     @Autowired
     private SubtitleRepository subtitleRepository;
+    @Autowired
+    private QuestRepository questRepository;
+    @Autowired
+    private QuestStepRepository questStepRepository;
+    @Autowired
+    private QuestDirectionRepository questDirectionRepository;
 
     public NpcRepository getNpcRepository() {
         return npcRepository;
@@ -277,6 +286,18 @@ public class DBService {
 
     public GSpreadSheetsCollectibleDescriptionRepository getgSpreadSheetsCollectibleDescriptionRepository() {
         return gSpreadSheetsCollectibleDescriptionRepository;
+    }
+
+    public QuestRepository getQuestRepository() {
+        return questRepository;
+    }
+
+    public QuestStepRepository getQuestStepRepository() {
+        return questStepRepository;
+    }
+
+    public QuestDirectionRepository getQuestDirectionRepository() {
+        return questDirectionRepository;
     }
 
     @PersistenceContext
