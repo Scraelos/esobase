@@ -65,47 +65,47 @@ public class TranslatedText extends DAO {
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date apptovedTime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsActivator spreadSheetsActivator;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsItemDescription spreadSheetsItemDescription;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsItemName spreadSheetsItemName;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsJournalEntry spreadSheetsJournalEntry;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsLocationName spreadSheetsLocationName;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsNpcName spreadSheetsNpcName;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsNpcPhrase spreadSheetsNpcPhrase;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsPlayerPhrase spreadSheetsPlayerPhrase;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestDescription spreadSheetsQuestDescription;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestDirection spreadSheetsQuestDirection;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestName spreadSheetsQuestName;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private EsoInterfaceVariable esoInterfaceVariable;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsAchievement spreadSheetsAchievement;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsAchievementDescription spreadSheetsAchievementDescription;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsNote spreadSheetsNote;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsAbilityDescription sheetsAbilityDescription;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsCollectible sheetsCollectible;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsCollectibleDescription sheetsCollectibleDescription;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsLoadscreen sheetsLoadscreen;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private BookText book;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Book bookName;
 
     @Override

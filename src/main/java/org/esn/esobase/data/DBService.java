@@ -45,8 +45,10 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import org.esn.esobase.data.diffs.AbilityDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementDescriptionsDiff;
 import org.esn.esobase.data.diffs.AchievementsDiff;
@@ -3455,6 +3457,212 @@ public class DBService {
             }
         }
         for (Long c : countList2) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Transactional
+    public Long countTranslatedQuestTextFilterResult(Location location, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq1 = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq2 = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq3 = cb.createQuery(Long.class);
+        Root<Quest> root = cq.from(Quest.class);
+        Root<Quest> root1 = cq1.from(Quest.class);
+        Root<Quest> root2 = cq2.from(Quest.class);
+        Root<Quest> root3 = cq3.from(Quest.class);
+        Predicate result = null;
+        Predicate result1 = null;
+        Predicate result2 = null;
+        Predicate result3 = null;
+        List<Predicate> predicates = new ArrayList<>();
+        List<Predicate> predicates1 = new ArrayList<>();
+        List<Predicate> predicates2 = new ArrayList<>();
+        List<Predicate> predicates3 = new ArrayList<>();
+        Join<Object, Object> stepsJoin = root2.join("steps", JoinType.LEFT);
+        Join<Object, Object> stepsDirectionsJoin = root3.join("steps", JoinType.LEFT).join("directions", JoinType.LEFT);
+        Join<Object, Object> join = root.join("sheetsQuestName", JoinType.LEFT);
+        Join<Object, Object> join1 = root1.join("sheetsQuestDescription", JoinType.LEFT);
+        Join<Object, Object> join2 = stepsJoin.join("sheetsJournalEntry", JoinType.LEFT);
+        Join<Object, Object> join3 = stepsDirectionsJoin.join("sheetsQuestDirection", JoinType.LEFT);
+        cq.groupBy(join.get("id"));
+        cq1.groupBy(join1.get("id"));
+        cq2.groupBy(join2.get("id"));
+        cq3.groupBy(join3.get("id"));
+        if (location != null) {
+            predicates.add(cb.or(
+                    cb.equal(root.get("location"), location),
+                    cb.equal(root.get("location").get("parentLocation"), location)
+            ));
+            predicates1.add(cb.or(
+                    cb.equal(root1.get("location"), location),
+                    cb.equal(root1.get("location").get("parentLocation"), location)
+            ));
+            predicates2.add(cb.or(
+                    cb.equal(root2.get("location"), location),
+                    cb.equal(root2.get("location").get("parentLocation"), location)
+            ));
+            predicates3.add(cb.or(
+                    cb.equal(root3.get("location"), location),
+                    cb.equal(root3.get("location").get("parentLocation"), location)
+            ));
+        }
+        if (searchString != null && (searchString.length() > 2)) {
+
+            String searchPattern = "%" + searchString.toLowerCase() + "%";
+            predicates.add(cb.or(
+                    cb.like(cb.lower(join.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join.get("textRu")), searchPattern)
+            ));
+            predicates1.add(cb.or(
+                    cb.like(cb.lower(join1.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join1.get("textRu")), searchPattern)
+            ));
+            predicates2.add(cb.or(
+                    cb.like(cb.lower(join2.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join2.get("textRu")), searchPattern)
+            ));
+            predicates3.add(cb.or(
+                    cb.like(cb.lower(join3.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join3.get("textRu")), searchPattern)
+            ));
+        } else {
+            if (noTranslations) {
+                predicates.add(cb.isNull(join.get("translator")));
+                predicates.add(cb.isNotNull(root.get("sheetsQuestName")));
+                predicates1.add(cb.isNull(join1.get("translator")));
+                predicates1.add(cb.isNotNull(root1.get("sheetsQuestDescription")));
+                predicates2.add(cb.isNull(join2.get("translator")));
+                predicates2.add(cb.isNotNull(stepsJoin.get("sheetsJournalEntry")));
+                predicates3.add(cb.isNull(join3.get("translator")));
+                predicates3.add(cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")));
+
+            }
+            if (emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
+
+                if (emptyTranslations) {
+
+                    predicates.add(cb.and(
+                            cb.isNotNull(root.get("sheetsQuestName")),
+                            cb.isEmpty(join.get("translatedTexts")),
+                            cb.isNull(join.get("translator"))
+                    ));
+                    predicates1.add(cb.and(
+                            cb.isNotNull(root1.get("sheetsQuestDescription")),
+                            cb.isEmpty(join1.get("translatedTexts")),
+                            cb.isNull(join1.get("translator"))
+                    ));
+                    predicates2.add(cb.and(
+                            cb.isNotNull(stepsJoin.get("sheetsJournalEntry")),
+                            cb.isEmpty(join2.get("translatedTexts")),
+                            cb.isNull(join2.get("translator"))
+                    ));
+                    predicates3.add(cb.and(
+                            cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
+                            cb.isEmpty(join3.get("translatedTexts")),
+                            cb.isNull(join3.get("translator"))
+                    ));
+                } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
+                    Join<Object, Object> join4 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join5 = join1.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join6 = join2.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join7 = join3.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
+
+                        predicates.add(cb.and(
+                                join4.get("status").in(translateStatus),
+                                cb.equal(join4.get("author"), translator)
+                        ));
+                        predicates1.add(cb.and(
+                                join5.get("status").in(translateStatus),
+                                cb.equal(join5.get("author"), translator)
+                        ));
+                        predicates2.add(cb.and(
+                                join6.get("status").in(translateStatus),
+                                cb.equal(join6.get("author"), translator)
+                        ));
+                        predicates3.add(cb.and(
+                                join7.get("status").in(translateStatus),
+                                cb.equal(join7.get("author"), translator)
+                        ));
+                    } else if (translator != null) {
+                        predicates.add(cb.equal(join4.get("author"), translator));
+                        predicates1.add(cb.equal(join5.get("author"), translator));
+                        predicates2.add(cb.equal(join6.get("author"), translator));
+                        predicates3.add(cb.equal(join7.get("author"), translator));
+                    } else if (translateStatus != null) {
+                        predicates.add(join4.get("status").in(translateStatus));
+                        predicates1.add(join5.get("status").in(translateStatus));
+                        predicates2.add(join6.get("status").in(translateStatus));
+                        predicates3.add(join7.get("status").in(translateStatus));
+                    }
+                }
+
+            }
+        }
+
+        if (!predicates.isEmpty() && predicates.size() > 1) {
+            result = cb.and(predicates.toArray(new Predicate[predicates.size()]));
+        } else if (!predicates.isEmpty()) {
+            result = predicates.get(0);
+        }
+        if (!predicates1.isEmpty() && predicates1.size() > 1) {
+            result1 = cb.and(predicates1.toArray(new Predicate[predicates1.size()]));
+        } else if (!predicates1.isEmpty()) {
+            result1 = predicates1.get(0);
+        }
+        if (!predicates2.isEmpty() && predicates2.size() > 1) {
+            result2 = cb.and(predicates2.toArray(new Predicate[predicates2.size()]));
+        } else if (!predicates2.isEmpty()) {
+            result2 = predicates2.get(0);
+        }
+        if (!predicates3.isEmpty() && predicates3.size() > 1) {
+            result3 = cb.and(predicates3.toArray(new Predicate[predicates3.size()]));
+        } else if (!predicates3.isEmpty()) {
+            result3 = predicates3.get(0);
+        }
+
+        cq.select(cb.count(root));
+        cq1.select(cb.count(root1));
+        cq2.select(cb.count(root2));
+        cq3.select(cb.count(root3));
+        if (result != null) {
+            cq.where(result);
+        }
+        if (result1 != null) {
+            cq1.where(result1);
+        }
+        if (result2 != null) {
+            cq2.where(result2);
+        }
+        if (result3 != null) {
+            cq3.where(result3);
+        }
+        Long count = 0L;
+        List<Long> countList = em.createQuery(cq).getResultList();
+        List<Long> countList1 = em.createQuery(cq1).getResultList();
+        List<Long> countList2 = em.createQuery(cq2).getResultList();
+        List<Long> countList3 = em.createQuery(cq3).getResultList();
+        for (Long c : countList) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList1) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList2) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList3) {
             if (c > 0) {
                 count++;
             }

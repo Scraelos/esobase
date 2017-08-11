@@ -7,7 +7,6 @@ package org.esn.esobase.view.tab;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.data.util.filter.Compare;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.combobox.FilteringMode;
@@ -97,6 +96,7 @@ public class QuestTranslateTab extends VerticalLayout {
     private final QuestStepSpecification questStepSpecification = new QuestStepSpecification();
 
     public QuestTranslateTab(DBService service_) {
+        this.setSizeFull();
         this.service = service_;
         QuestChangeListener questChangeListener = new QuestChangeListener();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
@@ -233,6 +233,7 @@ public class QuestTranslateTab extends VerticalLayout {
         stepsLayout = new VerticalLayout();
         stepsLayout.setSizeFull();
         stepsTable = new Table();
+        stepsTable.addStyleName(ValoTheme.TABLE_COMPACT);
         stepsTable.setSizeFull();
         stepContainer = new BeanItemContainer<>(QuestStep.class);
         stepsTable.setContainerDataSource(stepContainer);
@@ -248,6 +249,7 @@ public class QuestTranslateTab extends VerticalLayout {
         stepsLayout.addComponent(stepsTable);
         tabSheet.addTab(stepsLayout, "Стадии");
         this.addComponent(tabSheet);
+        this.setExpandRatio(tabSheet, 1f);
         LoadFilters();
     }
 
@@ -299,7 +301,8 @@ public class QuestTranslateTab extends VerticalLayout {
                             if (translatedText.getSpreadSheetsQuestName() != null) {
                                 translatedText.getSpreadSheetsQuestName().getTranslatedTexts().add(translatedText);
                             }
-                            nameTranslateLayout.addComponent(new TranslationCell(translatedText));
+                            TranslationCell cell = new TranslationCell(translatedText);
+                            nameTranslateLayout.addComponent(cell);
                             event.getButton().setVisible(false);
                         }
                     });
@@ -384,6 +387,8 @@ public class QuestTranslateTab extends VerticalLayout {
         locationSpecification.setTranslator((SysAccount) translatorBox.getValue());
         locationSpecification.setSearchString(searchField.getValue());
         locationContainer.addAll(service.getLocationRepository().findAll(locationSpecification));
+        Long countTranslatedTextFilterResult = service.countTranslatedQuestTextFilterResult((Location) locationTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
+        countLabel.setCaption(countTranslatedTextFilterResult.toString());
     }
 
     private class QuestChangeListener implements Property.ValueChangeListener {
@@ -510,7 +515,8 @@ public class QuestTranslateTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
             QuestStep step = (QuestStep) itemId;
             directionsTable = new Table();
-            directionsTable.setSizeFull();
+            //directionsTable.setSizeFull();
+            directionsTable.setWidth(100f, Unit.PERCENTAGE);
             directionsTable.setPageLength(0);
             directionsContainer = new BeanItemContainer<>(QuestDirection.class);
             directionsContainer.addAll(service.getQuestDirectionRepository().findAll(new QuestDirectionSpecification(step, (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue())));
@@ -688,6 +694,7 @@ public class QuestTranslateTab extends VerticalLayout {
                 translation.setReadOnly(true);
             }
             this.addComponent(translation);
+            this.setExpandRatio(translation, 1f);
             save = new Button("Сохранить", FontAwesome.SAVE);
             save.addClickListener(new Button.ClickListener() {
 

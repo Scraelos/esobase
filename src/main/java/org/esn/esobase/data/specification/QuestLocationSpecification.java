@@ -58,7 +58,6 @@ public class QuestLocationSpecification implements Specification<Location> {
         List<Predicate> predicates = new ArrayList<>();
         root.fetch("parentLocation", JoinType.LEFT);
         Join<Object, Object> npcJoin = root.join("quests");
-        //predicates.add(cb.isNotNull(npcJoin));
 
         if (searchString != null && (searchString.length() > 2)) {
             SetJoin<Object, Object> stepsJoin = npcJoin.joinSet("steps", JoinType.LEFT);
