@@ -16,7 +16,8 @@ public enum TRANSLATE_STATUS {
     PREACCEPTED("Перевод верен"),
     CORRECTED("Текст корректен"),
     ACCEPTED("Принят"),
-    REJECTED("Отклонён");
+    REJECTED("Отклонён"),
+    REVOKED("Отозван");
 
     private TRANSLATE_STATUS(String name_) {
         name = name_;

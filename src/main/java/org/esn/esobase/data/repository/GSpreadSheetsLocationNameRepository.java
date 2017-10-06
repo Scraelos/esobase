@@ -8,13 +8,12 @@ package org.esn.esobase.data.repository;
 import java.util.List;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  *
  * @author scraelos
  */
-public interface GSpreadSheetsLocationNameRepository extends JpaRepository<GSpreadSheetsLocationName, Long> {
+public interface GSpreadSheetsLocationNameRepository extends GSpreadSheetsWithDeprecated<GSpreadSheetsLocationName, Long> {
 
     List<GSpreadSheetsLocationName> findAllBy(Pageable pageable);
 

@@ -55,9 +55,7 @@ public class QuestTranslateTab extends VerticalLayout {
     private HorizontalLayout questListlayout;
     private ComboBox questTable;
     private BeanItemContainer<Quest> questContainer;
-    private ComboBox locationTable;
-    private BeanItemContainer<Location> locationContainer;
-
+    
     private TabSheet tabSheet;
     private VerticalLayout infoLayout;
     private HorizontalLayout nameHLayout;
@@ -67,6 +65,8 @@ public class QuestTranslateTab extends VerticalLayout {
     private VerticalLayout descriptionLayout;
     private VerticalLayout descriptionTranslateLayout;
 
+    private ComboBox locationTable;
+    private BeanItemContainer<Location> locationContainer;
     private ComboBoxMultiselect translateStatus;
     private CheckBox noTranslations;
     private CheckBox emptyTranslations;
@@ -728,7 +728,7 @@ public class QuestTranslateTab extends VerticalLayout {
                 this.addComponent(preAccept);
             }
 
-            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -773,7 +773,7 @@ public class QuestTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(reject);
             }
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED)) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);
             }
         }

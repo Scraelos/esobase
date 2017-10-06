@@ -28,10 +28,14 @@ import org.esn.esobase.model.lib.DAO;
  */
 @Entity
 @Table(indexes = {
-    @Index(columnList = "rowNum", unique = false),
-    @Index(columnList = "textEn", unique = false),
-    @Index(columnList = "textRu", unique = false),
-    @Index(columnList = "translator", unique = false),
+    @Index(columnList = "rowNum", unique = false)
+    ,
+    @Index(columnList = "textEn", unique = false)
+    ,
+    @Index(columnList = "textRu", unique = false)
+    ,
+    @Index(columnList = "translator", unique = false)
+    ,
     @Index(columnList = "aId,bId,cId", unique = true)})
 public class GSpreadSheetsNpcName extends DAO implements GSpreadSheetEntity, TranslatedEntity {
 
@@ -56,6 +60,7 @@ public class GSpreadSheetsNpcName extends DAO implements GSpreadSheetEntity, Tra
     private Integer weight;
     @OneToMany(mappedBy = "spreadSheetsNpcName", fetch = FetchType.LAZY)
     private Set<TranslatedText> translatedTexts;
+    private Boolean deprecated;
 
     public GSpreadSheetsNpcName() {
     }
@@ -174,5 +179,14 @@ public class GSpreadSheetsNpcName extends DAO implements GSpreadSheetEntity, Tra
 
     public void setcId(Long cId) {
         this.cId = cId;
+    }
+
+    @Override
+    public Boolean getDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(Boolean deprecated) {
+        this.deprecated = deprecated;
     }
 }

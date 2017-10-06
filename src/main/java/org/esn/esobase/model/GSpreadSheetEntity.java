@@ -20,4 +20,6 @@ public interface GSpreadSheetEntity {
     public Long getRowNum();
     
     public Integer getWeight();
+    
+    public Boolean getDeprecated();
 }

@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
@@ -70,7 +71,7 @@ public class GoogleDocsService {
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
     private static final String PLAYER_PHRASES_SPREADSHEET_ID = "1baAruBJhdijtneDx_iwhfXxdeYdc7vLCRvEcX50FZm4";
-    private static final String NPC_PHRASES_SPREADSHEET_ID = "11Frf4jXtB0gN4r-RaVUDhMikk1SQKwjRUbZWy9gqaj4";
+    private static final String NPC_PHRASES_SPREADSHEET_ID = "1fJSgh3HDzmTCsf4ZUArmGNehRTHYAItxgGLIczXnZ7o";
     private static final String NPC_NAMES_SPREADSHEET_ID = "169HZSBDhlkY6cmqxU7MBBXQVWeYo-ZqEBtnSwhGIpHs";
     private static final String LOCATION_NAMES_SPREADSHEET_ID = "1e7J6QX-SyrF5aDkc4cBBbhztR-Es2FzXu548oiRa3Ro";
     private static final String QUEST_NAMES_SPREADSHEET_ID = "1ybqrErb9bSjt1NOufI4RyWcbzjnB6zSV7wj06ibCICk";
@@ -87,6 +88,7 @@ public class GoogleDocsService {
     private static final String COLLECTIBLE_SPREADSHEET_ID = "1XhOTundmS_K0MtFQXsFnFj1HNDny3EKxcVq4nufbIwY";
     private static final String COLLECTIBLE_DESCRIPTION_SPREADSHEET_ID = "1KA8lECC8ZkzSHMYWtgGSMaJZYV-1LD2lmEA3JY6FyfE";
     private static final String LOADSCREEN_SPREADSHEET_ID = "1D4chSmA19Uk-Dnyk3gcxAb9mvJOkcI9X_RyIJirPobw";
+    private static final String TAMRIELTRADECENTRE_SPREADSHEET_ID = "17KOYWHbFTQvl7g7hdhuHK7Zy8PWOjZaqXMTw0Dzo2yU";
 
     public List<GSpreadSheetsPlayerPhrase> getPlayerPhrases() {
         List<GSpreadSheetsPlayerPhrase> phrases = new ArrayList<>();
@@ -1422,77 +1424,77 @@ public class GoogleDocsService {
 
     public List<GSpreadSheetsNpcPhrase> getNpcPhrases() throws Exception {
         List<GSpreadSheetsNpcPhrase> phrases = new ArrayList<>();
-            Credential authorize = authorize();
+        Credential authorize = authorize();
 
-            SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
-            spreadsheetService.setOAuth2Credentials(authorize);
-            SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);
-            List<SpreadsheetEntry> feedEntries = feed.getEntries();
-            SpreadsheetEntry entry = null;
-            for (SpreadsheetEntry spreadsheetEntry : feedEntries) {
-                if (spreadsheetEntry.getKey().equals(NPC_PHRASES_SPREADSHEET_ID)) {
-                    entry = spreadsheetEntry;
-                }
+        SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
+        spreadsheetService.setOAuth2Credentials(authorize);
+        SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);
+        List<SpreadsheetEntry> feedEntries = feed.getEntries();
+        SpreadsheetEntry entry = null;
+        for (SpreadsheetEntry spreadsheetEntry : feedEntries) {
+            if (spreadsheetEntry.getKey().equals(NPC_PHRASES_SPREADSHEET_ID)) {
+                entry = spreadsheetEntry;
             }
+        }
 
-            WorksheetEntry defaultWorksheet = entry.getDefaultWorksheet();
-            CellFeed feedc = spreadsheetService.getFeed(defaultWorksheet.getCellFeedUrl(), CellFeed.class);
-            List<CellEntry> entries = feedc.getEntries();
-            int counter = 0;
-            String textEn = null;
-            String textRu = null;
-            String translator = null;
-            Date editTime = null;
-            Integer weight = null;
-            int lastRow = -1;
-            for (CellEntry cellEntry : entries) {
-                String value = cellEntry.getCell().getValue();
-                int row = cellEntry.getCell().getRow();
-                int col = cellEntry.getCell().getCol();
-                if (row > lastRow) {
-                    counter++;
-                    if (lastRow > -1) {
-                        GSpreadSheetsNpcPhrase phrase = new GSpreadSheetsNpcPhrase(Long.valueOf(lastRow), textEn, textRu, translator, weight);
-                        phrase.setChangeTime(editTime);
-                        phrases.add(phrase);
-                        textEn = null;
-                        textRu = null;
-                        translator = null;
-                        editTime = null;
-                        weight = null;
-                    }
-                    lastRow = row;
+        WorksheetEntry defaultWorksheet = entry.getDefaultWorksheet();
+        CellFeed feedc = spreadsheetService.getFeed(defaultWorksheet.getCellFeedUrl(), CellFeed.class);
+        List<CellEntry> entries = feedc.getEntries();
+        int counter = 0;
+        String textEn = null;
+        String textRu = null;
+        String translator = null;
+        Date editTime = null;
+        Integer weight = null;
+        int lastRow = -1;
+        for (CellEntry cellEntry : entries) {
+            String value = cellEntry.getCell().getValue();
+            int row = cellEntry.getCell().getRow();
+            int col = cellEntry.getCell().getCol();
+            if (row > lastRow) {
+                counter++;
+                if (lastRow > -1) {
+                    GSpreadSheetsNpcPhrase phrase = new GSpreadSheetsNpcPhrase(Long.valueOf(lastRow), textEn, textRu, translator, weight);
+                    phrase.setChangeTime(editTime);
+                    phrases.add(phrase);
+                    textEn = null;
+                    textRu = null;
+                    translator = null;
+                    editTime = null;
+                    weight = null;
                 }
-                switch (col) {
-                    case 1:
-                        textEn = value;
-                        break;
-                    case 2:
-                        textRu = value;
-                        break;
-                    case 3:
-                        translator = value;
-                        break;
-                    case 6:
-                        if (value != null && !value.isEmpty()) {
-                            try {
-                                weight = Integer.parseInt(value);
-                            } catch (NumberFormatException ex) {
+                lastRow = row;
+            }
+            switch (col) {
+                case 1:
+                    textEn = value;
+                    break;
+                case 2:
+                    textRu = value;
+                    break;
+                case 3:
+                    translator = value;
+                    break;
+                case 6:
+                    if (value != null && !value.isEmpty()) {
+                        try {
+                            weight = Integer.parseInt(value);
+                        } catch (NumberFormatException ex) {
 
-                            }
                         }
-                        break;
-                    case 7:
-                        editTime = getDateFromCell(cellEntry);
-                        break;
-                    default:
+                    }
+                    break;
+                case 7:
+                    editTime = getDateFromCell(cellEntry);
+                    break;
+                default:
 
-                }
             }
-            GSpreadSheetsNpcPhrase phrase = new GSpreadSheetsNpcPhrase(Long.valueOf(lastRow), textEn, textRu, translator, weight);
-            phrase.setChangeTime(editTime);
-            phrases.add(phrase);
-            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "Fetched {0} entries", phrases.size());
+        }
+        GSpreadSheetsNpcPhrase phrase = new GSpreadSheetsNpcPhrase(Long.valueOf(lastRow), textEn, textRu, translator, weight);
+        phrase.setChangeTime(editTime);
+        phrases.add(phrase);
+        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "Fetched {0} entries", phrases.size());
         return phrases;
     }
 
@@ -3087,6 +3089,108 @@ public class GoogleDocsService {
         }
     }
 
+    public void updateTTCNpcTranslations(DBService service) {
+        try {
+            Credential authorize = authorize2();
+            SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
+            spreadsheetService.setOAuth2Credentials(authorize);
+            SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);
+            List<SpreadsheetEntry> feedEntries = feed.getEntries();
+            SpreadsheetEntry entry = null;
+            for (SpreadsheetEntry spreadsheetEntry : feedEntries) {
+                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "sheet: " + spreadsheetEntry.getTitle().getPlainText());
+                if (spreadsheetEntry.getKey().equals(TAMRIELTRADECENTRE_SPREADSHEET_ID)) {
+                    entry = spreadsheetEntry;
+                }
+            }
+
+            Pattern npcNameRowPattern = Pattern.compile("^TTC_NPC_.*$");
+            List<WorksheetEntry> worksheets = entry.getWorksheets();
+            for (WorksheetEntry wse : worksheets) {
+                if (wse.getTitle().getPlainText().equals("Addon Strings")) {
+                    for (int i = 2; i < wse.getRowCount(); i++) {
+                        URL cellFeedUrl = new URI(wse.getCellFeedUrl().toString()
+                                + "?min-row=" + i + "&max-row=" + i + "&min-col=1&max-col=7").toURL();
+                        CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
+                        List<CellEntry> entries = feedc.getEntries();
+                        String nameEn = null;
+                        EsoRawString npcNameRaw = null;
+                        GSpreadSheetsNpcName npcName=null;
+                        boolean hasDe = false;
+                        boolean hasFr = false;
+                        boolean hasRu = false;
+                        boolean hasJp = false;
+                        for (CellEntry cellEntry : entries) {
+                            Cell cell = cellEntry.getCell();
+                            String value = cell.getValue();
+                            if (cell.getCol() == 1) {
+                                Matcher npcNameMatcher = npcNameRowPattern.matcher(value);
+                                if (npcNameMatcher.matches()) {
+                                    Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "npc match");
+                                } else {
+                                    break;
+                                }
+                            }
+                            if (cell.getCol() == 2) {
+                                nameEn = value;
+                                npcNameRaw = service.getNpcRaw(nameEn);
+                                npcName=service.getNpc(nameEn);
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "npc: " + nameEn);
+                                if (npcNameRaw == null) {
+                                    break;
+                                }
+                            }
+                            if (cell.getCol() == 4) {
+                                hasDe = true;
+                                cellEntry.changeInputValueLocal(npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                                cellEntry.update();
+                            }
+                            if (cell.getCol() == 5) {
+                                hasFr = true;
+                                cellEntry.changeInputValueLocal(npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                                cellEntry.update();
+                            }
+                            if (cell.getCol() == 6) {
+                                hasJp = true;
+                                cellEntry.changeInputValueLocal(npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                                cellEntry.update();
+                            }
+                            if (cell.getCol() == 7) {
+                                hasRu = true;
+                                cellEntry.changeInputValueLocal(npcName.getTextRu().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                                cellEntry.update();
+                            }
+                        }
+                        if (!hasRu && npcNameRaw != null) {
+
+                            CellEntry cellEntry = new CellEntry(i, 7, npcName.getTextRu().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                        }
+                        if (!hasDe && npcNameRaw != null) {
+
+                            CellEntry cellEntry = new CellEntry(i, 4, npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                        }
+                        if (!hasFr && npcNameRaw != null) {
+
+                            CellEntry cellEntry = new CellEntry(i, 5, npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                        }
+                        if (!hasJp && npcNameRaw != null) {
+
+                            CellEntry cellEntry = new CellEntry(i, 6, npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                        }
+
+                    }
+
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     private static Credential authorize() throws Exception {
         // load client secrets
         FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(new File("/home/scraelos/"));
@@ -3094,6 +3198,22 @@ public class GoogleDocsService {
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory,
                 new InputStreamReader(new FileInputStream("/home/scraelos/client_secret_218230677489-0f8al27el5nvfc6iguhrlop2c17oqf6r.apps.googleusercontent.com.1.json")));
+
+        // set up authorization code flow
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                httpTransport, jsonFactory, clientSecrets, Collections.singleton("https://spreadsheets.google.com/feeds")).setAccessType("offline").setDataStoreFactory(dataStoreFactory)
+                .build();
+        // authorize
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+    }
+
+    private static Credential authorize2() throws Exception {
+        // load client secrets
+        FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(new File("/home/scraelos/"));
+        NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory,
+                new InputStreamReader(new FileInputStream("/home/scraelos/client_secret_949902383727-vijtpirvq0i6q4lnsua6bn44v9441dpa.apps.googleusercontent.com.json")));
 
         // set up authorization code flow
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(

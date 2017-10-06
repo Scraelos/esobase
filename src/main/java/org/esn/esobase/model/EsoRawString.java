@@ -40,6 +40,8 @@ public class EsoRawString extends DAO {
     private String textFr;
     @Column(columnDefinition = "TEXT")
     private String textRu;
+    @Column(columnDefinition = "TEXT")
+    private String textJp;
     @Column(length = 12)
     private String ver;
 
@@ -107,6 +109,14 @@ public class EsoRawString extends DAO {
 
     public void setTextRu(String textRu) {
         this.textRu = textRu;
+    }
+
+    public String getTextJp() {
+        return textJp;
+    }
+
+    public void setTextJp(String textJp) {
+        this.textJp = textJp;
     }
 
     public String getVer() {

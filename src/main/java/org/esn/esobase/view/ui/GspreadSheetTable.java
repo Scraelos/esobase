@@ -11,10 +11,10 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.TableFieldFactory;
 import com.vaadin.ui.TextArea;
+import org.esn.esobase.data.repository.GSpreadSheetsWithDeprecated;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.vaadin.viritin.SortableLazyList;
 import org.vaadin.viritin.fields.MTable;
 import org.vaadin.viritin.grid.GeneratedPropertyListContainer;
@@ -27,9 +27,9 @@ public class GspreadSheetTable extends MTable implements RefreshableGrid {
 
     private final GeneratedPropertyListContainer container;
     private final int pageSize;
-    private final JpaRepository repository;
+    private final GSpreadSheetsWithDeprecated repository;
 
-    public GspreadSheetTable(GeneratedPropertyListContainer container_, int pageSize_, JpaRepository repository_) {
+    public GspreadSheetTable(GeneratedPropertyListContainer container_, int pageSize_, GSpreadSheetsWithDeprecated repository_) {
         this.container = container_;
         this.pageSize = pageSize_;
         this.repository = repository_;
@@ -61,13 +61,13 @@ public class GspreadSheetTable extends MTable implements RefreshableGrid {
     }
     
     public void Load() {
-        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> repository.findAll(new PageRequest(
+        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> repository.findByDeprecated(Boolean.FALSE,new PageRequest(
                 firstRow / pageSize,
                 pageSize,
                 sortAscending ? Sort.Direction.ASC : Sort.Direction.DESC,
                 property == null ? "rowNum" : property
         )).getContent(),
-                () -> (int) repository.count(),
+                () -> (int) repository.countByDeprecated(Boolean.FALSE),
                 pageSize);
         container.setCollection(lazyList);
     }

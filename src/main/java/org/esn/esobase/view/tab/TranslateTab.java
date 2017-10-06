@@ -45,15 +45,21 @@ import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.Topic;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.security.SpringSecurityHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 
 /**
  *
  * @author scraelos
  */
+@Component
+@Scope(value = "prototype")
 public class TranslateTab extends VerticalLayout {
 
-    private final DBService service;
+    @Autowired
+    private DBService service;
     private HorizontalLayout npcListlayout;
     private VerticalLayout npcContentLayout;
     private ComboBox locationTable;
@@ -90,14 +96,18 @@ public class TranslateTab extends VerticalLayout {
     private final NpcSpecification npcSpecification = new NpcSpecification();
     private final LocationSpecification locationSpecification = new LocationSpecification();
 
-    public TranslateTab(DBService service) {
+    public TranslateTab() {
+
+    }
+
+    public void Init() {
+        removeAllComponents();
         TopicNpcColumnGenerator topicNpcColumnGenerator = new TopicNpcColumnGenerator();
         TopicPlayerColumnGenerator topicPlayerColumnGenerator = new TopicPlayerColumnGenerator();
         SubtitleColumnGenerator subtitleColumnGenerator = new SubtitleColumnGenerator();
         TranslationColumnGenerator translationColumnGenerator = new TranslationColumnGenerator();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
         this.setSizeFull();
-        this.service = service;
         npcListlayout = new HorizontalLayout();
         npcListlayout.setSizeFull();
         npcTable = new ComboBox("NPC");
@@ -772,7 +782,7 @@ public class TranslateTab extends VerticalLayout {
                 this.addComponent(preAccept);
             }
 
-            if (SpringSecurityHelper.hasRole("ROLE_CORRECTOR") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED||translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+            if (SpringSecurityHelper.hasRole("ROLE_CORRECTOR") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -819,7 +829,7 @@ public class TranslateTab extends VerticalLayout {
                 this.addComponent(reject);
             }
 
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED)) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);
             }
         }

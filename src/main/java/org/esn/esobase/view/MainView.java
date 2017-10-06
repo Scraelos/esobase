@@ -17,6 +17,7 @@ import ru.xpoft.vaadin.VaadinView;
 
 import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.view.tab.BookTranslateTab;
 import org.esn.esobase.view.tab.ChangePasswordTab;
@@ -46,6 +47,8 @@ public class MainView extends Panel implements View, Command {
 
     @Autowired
     private DBService service;
+    @Autowired
+    private InsertExecutor insertExecutor;
 
     public static final String NAME = "";
 
@@ -72,7 +75,9 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem spellerTestMenuItem;
     private MenuBar.MenuItem bookTanslateMenuItem;
 
+    @Autowired
     private ImportTab importTabContent;
+    @Autowired
     private TranslateTab translateTabContent;
     private UsersTab usersTabContent;
     private SynchronizationTab synchronizationTabContent;
@@ -217,22 +222,19 @@ public class MainView extends Panel implements View, Command {
     @Override
     public void menuSelected(MenuBar.MenuItem selectedItem) {
         if (selectedItem == importMenuItem) {
-            if (importTabContent == null) {
-                importTabContent = new ImportTab(service);
+            TabSheet.Tab tab = tabs.getTab(importTabContent);
+            if (tab == null) {
+                importTabContent.Init();
+                tab = tabs.addTab(importTabContent, selectedItem.getText());
             }
-            TabSheet.Tab tab = tabs.addTab(importTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == translateMenuItem) {
-            if (translateTabContent != null) {
-                TabSheet.Tab tab = tabs.getTab(translateTabContent);
-                if (tab == null) {
-                    translateTabContent = new TranslateTab(service);
-                }
-            } else {
-                translateTabContent = new TranslateTab(service);
+            TabSheet.Tab tab = tabs.getTab(translateTabContent);
+            if (tab == null) {
+                translateTabContent.Init();
+                tab = tabs.addTab(translateTabContent, selectedItem.getText());
             }
-            TabSheet.Tab tab = tabs.addTab(translateTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == questTranslateMenuItem) {
@@ -247,7 +249,7 @@ public class MainView extends Panel implements View, Command {
             TabSheet.Tab tab = tabs.addTab(questTranslateTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
-        }else if (selectedItem == bookTanslateMenuItem) {
+        } else if (selectedItem == bookTanslateMenuItem) {
             if (bookTranslateTabContent != null) {
                 TabSheet.Tab tab = tabs.getTab(bookTranslateTabContent);
                 if (tab == null) {

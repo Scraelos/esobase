@@ -8,13 +8,12 @@ package org.esn.esobase.data.repository;
 import java.util.List;
 import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  *
  * @author scraelos
  */
-public interface GSpreadSheetsAchievementDescriptionRepository extends JpaRepository<GSpreadSheetsAchievementDescription, Long> {
+public interface GSpreadSheetsAchievementDescriptionRepository extends GSpreadSheetsWithDeprecated<GSpreadSheetsAchievementDescription, Long> {
 
     List<GSpreadSheetsAchievementDescription> findAllBy(Pageable pageable);
 

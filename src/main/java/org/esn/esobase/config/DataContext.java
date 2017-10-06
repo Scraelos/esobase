@@ -7,6 +7,8 @@ package org.esn.esobase.config;
 
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
+import org.esn.esobase.data.InsertExecutor;
+import org.esn.esobase.data.TableUpdateService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,10 +23,20 @@ public class DataContext {
     public DBService dBService() {
         return new DBService();
     }
-    
+
     @Bean
     public GoogleDocsService googleDocsService() {
         return new GoogleDocsService();
+    }
+
+    @Bean
+    public InsertExecutor insertExecutor() {
+        return new InsertExecutor();
+    }
+
+    @Bean
+    TableUpdateService tableUpdateService() {
+        return new TableUpdateService();
     }
 
 }

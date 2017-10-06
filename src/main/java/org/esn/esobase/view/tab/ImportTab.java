@@ -6,7 +6,6 @@
 package org.esn.esobase.view.tab;
 
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.server.StreamResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.Receiver;
@@ -16,7 +15,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -35,6 +33,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
+import org.esn.esobase.data.InsertExecutor;
+import org.esn.esobase.data.TableUpdateService;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
@@ -59,16 +59,45 @@ import org.esn.esobase.model.Npc;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.EsnDecoder;
 import org.esn.esobase.tools.LuaDecoder;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
 
 /**
  *
  * @author scraelos
  */
+@Component
+@Scope(value = "prototype")
 public class ImportTab extends VerticalLayout {
 
+    @Autowired
+    private InsertExecutor executor;
+    @Autowired
     private DBService service;
-    private Upload upload;
+    @Autowired
+    private TableUpdateService tableUpdateService;
+    private Button updateAbilityDescriptions;
+    private Button updateAchievements;
+    private Button updateAchievementDescriptions;
+    private Button updateActivators;
+    private Button updateCollectibles;
+    private Button updateCollectibleDescriptions;
+    private Button updateItemDescriptions;
+    private Button updateItemNames;
+    private Button updateJournalEntrys;
+    private Button updateLoadscreens;
+    private Button updateLocationNames;
+    private Button updateNotes;
+    private Button updateNpcNames;
+    private Button updateNpcPhrases;
+    private Button updatePlayerPhrases;
+    private Button updateQuestDescriptions;
+    private Button updateQuestDirections;
+    private Button updateQuestNames;
     private Upload uploadNewFormat;
     private Button importPlayerPhrasesFromG;
     private Button importNpcPhrasesFromG;
@@ -97,6 +126,7 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadXlsEn;
     private Upload uploadXlsFr;
     private Upload uploadXlsDe;
+    private Upload uploadXlsJp;
     private Upload uploadXlsRu;
     private Upload uploadInterfaceLua;
     private Upload uploadRuInterfaceLua;
@@ -104,25 +134,255 @@ public class ImportTab extends VerticalLayout {
     private Button assignActivatorsWithItems;
     private Button transferGreetingsToTopicsButton;
     private Button loadAllBooks;
+    private Button updateTTCNpcNames;
+    private static final Logger LOG = Logger.getLogger(ImportTab.class.getName());
 
-    public ImportTab(DBService service_) {
-        this.service = service_;
-        /*ConversationsReceiver receiver = new ConversationsReceiver(service);
+    public ImportTab() {
 
-        if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
-            upload = new Upload("Загрузите файл Conversations.lua", receiver);
-            upload.addSucceededListener(receiver);
-            upload.setImmediate(true);
-            this.addComponent(upload);
-        }*/
+    }
 
+    public void Init() {
         NewConversationsReceiver newReceiver = new NewConversationsReceiver(service);
         uploadNewFormat = new Upload("Загрузите файл ConversationsQQ.lua", newReceiver);
         uploadNewFormat.addSucceededListener(newReceiver);
         uploadNewFormat.setImmediate(true);
         this.addComponent(uploadNewFormat);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
-            importPlayerPhrasesFromG = new Button("Импорт фраз игрока из гугл-таблиц");
+            updateAbilityDescriptions = new Button("Обновить описания способностей");
+            updateAbilityDescriptions.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateAbilityDescriptions();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateAbilityDescriptions);
+            updateAchievements = new Button("Обновить достижения");
+            updateAchievements.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateAchievements();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateAchievements);
+            updateAchievementDescriptions = new Button("Обновить описания достижений");
+            updateAchievementDescriptions.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateAchievementDescriptions();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateAchievementDescriptions);
+            updateActivators = new Button("Обновить активаторы");
+            updateActivators.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateActivators();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateActivators);
+            updateCollectibles = new Button("Обновить коллекционные предметы");
+            updateCollectibles.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateCollectibles();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateCollectibles);
+            updateCollectibleDescriptions = new Button("Обновить описания коллекционных предметов");
+            updateCollectibleDescriptions.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateCollectibleDescriptions();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateCollectibleDescriptions);
+            updateItemDescriptions = new Button("Обновить описания предметов");
+            updateItemDescriptions.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateItemDescriptions();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateItemDescriptions);
+            updateItemNames = new Button("Обновить названия предметов");
+            updateItemNames.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateItemNames();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateItemNames);
+            updateJournalEntrys = new Button("Обновить записи журнала");
+            updateJournalEntrys.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateJournalEntrys();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateJournalEntrys);
+            updateLoadscreens = new Button("Обновить загрузочные экраны");
+            updateLoadscreens.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateLoadscreens();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateLoadscreens);
+            updateLocationNames = new Button("Обновить названия локаций");
+            updateLocationNames.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateLocationNames();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateLocationNames);
+            updateNotes = new Button("Обновить письма");
+            updateNotes.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateNotes();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateNotes);
+            updateNpcNames = new Button("Обновить имена NPC");
+            updateNpcNames.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateNpcNames();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateNpcNames);
+            updateNpcPhrases = new Button("Обновить реплики NPC");
+            updateNpcPhrases.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateNpcPhrases();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateNpcPhrases);
+            updatePlayerPhrases = new Button("Обновить реплики игрока");
+            updatePlayerPhrases.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updatePlayerPhrases();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updatePlayerPhrases);
+            updateQuestDescriptions = new Button("Обновить описания квестов");
+            updateQuestDescriptions.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateQuestDescriptions();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateQuestDescriptions);
+            updateQuestDirections = new Button("Обновить цели квестов");
+            updateQuestDirections.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateQuestDirections();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateQuestDirections);
+            updateQuestNames = new Button("Обновить названия квестов");
+            updateQuestNames.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateQuestNames();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateQuestNames);
+            /*importPlayerPhrasesFromG = new Button("Импорт фраз игрока из гугл-таблиц");
             importPlayerPhrasesFromG.addClickListener(new Button.ClickListener() {
 
                 @Override
@@ -133,6 +393,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importPlayerPhrasesFromG);
+            
             importNpcPhrasesFromG = new Button("Импорт фраз NPC из гугл-таблиц");
             importNpcPhrasesFromG.addClickListener(new Button.ClickListener() {
 
@@ -338,6 +599,7 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importNpcNamesFromG);
+             */
             fillLocationsAndNpc = new Button("Заполнить имена локаций и NPC");
             fillLocationsAndNpc.addClickListener(new Button.ClickListener() {
 
@@ -352,7 +614,9 @@ public class ImportTab extends VerticalLayout {
 
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    service.generateSearchIndex();
+                    service.mergeLocations();
+                    service.mergeNpcs();
+                    //service.generateSearchIndex();
                     service.assignToSpreadSheetPhrases();
                     service.mergeSubtitles();
                     service.mergeTopics();
@@ -410,6 +674,11 @@ public class ImportTab extends VerticalLayout {
             uploadXlsDe.addSucceededListener(raswStringReceiverDe);
             uploadXlsDe.setImmediate(true);
             this.addComponent(uploadXlsDe);
+            RaswStringReceiverJp raswStringReceiverJp = new RaswStringReceiverJp(service);
+            uploadXlsJp = new Upload("Загрузите jp-файл xlsx", raswStringReceiverJp);
+            uploadXlsJp.addSucceededListener(raswStringReceiverJp);
+            uploadXlsJp.setImmediate(true);
+            this.addComponent(uploadXlsJp);
             RaswStringReceiverRu raswStringReceiverRu = new RaswStringReceiverRu(service);
             uploadXlsRu = new Upload("Загрузите ru-файл xlsx", raswStringReceiverRu);
             uploadXlsRu.addSucceededListener(raswStringReceiverRu);
@@ -475,6 +744,15 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(loadAllBooks);
+            updateTTCNpcNames = new Button("Обновление NPC в TTC");
+            updateTTCNpcNames.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    docsService.updateTTCNpcTranslations(service);
+                }
+            });
+            this.addComponent(updateTTCNpcNames);
 
         }
     }
@@ -525,6 +803,7 @@ public class ImportTab extends VerticalLayout {
         public void uploadSucceeded(Upload.SucceededEvent event) {
             try {
 
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                 XSSFWorkbook wb = new XSSFWorkbook(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
@@ -541,20 +820,53 @@ public class ImportTab extends VerticalLayout {
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
                         if (rows.size() > 5000) {
-                            service.insertEnRawStrings(rows);
-                            rows.clear();
+                            InsertTask task = new InsertTask(rows, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
                         }
 
                     }
                 }
                 if (rows.size() > 0) {
-                    service.insertEnRawStrings(rows);
-                    rows.clear();
+                    InsertTask task = new InsertTask(rows, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
                 }
-
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
+                }
             } catch (IOException ex) {
-                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class InsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+            private final DBService service;
+
+            public InsertTask(List<Object[]> rows, DBService service) {
+                this.rows = rows;
+                this.service = service;
+            }
+
+            @Override
+            public void run() {
+                service.insertEnRawStrings(rows);
+            }
+
         }
 
     }
@@ -578,6 +890,7 @@ public class ImportTab extends VerticalLayout {
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
             try {
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                 XSSFWorkbook wb = new XSSFWorkbook(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
@@ -594,19 +907,53 @@ public class ImportTab extends VerticalLayout {
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
                         if (rows.size() > 5000) {
-                            service.updateFrRawStrings(rows);
-                            rows.clear();
+                            InsertTask task = new InsertTask(rows, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
                         }
 
                     }
                 }
                 if (rows.size() > 0) {
-                    service.updateFrRawStrings(rows);
-                    rows.clear();
+                    InsertTask task = new InsertTask(rows, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
+                }
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class InsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+            private final DBService service;
+
+            public InsertTask(List<Object[]> rows, DBService service) {
+                this.rows = rows;
+                this.service = service;
+            }
+
+            @Override
+            public void run() {
+                service.updateFrRawStrings(rows);
+            }
+
         }
     }
 
@@ -629,6 +976,7 @@ public class ImportTab extends VerticalLayout {
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
             try {
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                 XSSFWorkbook wb = new XSSFWorkbook(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
@@ -645,19 +993,138 @@ public class ImportTab extends VerticalLayout {
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
                         if (rows.size() > 5000) {
-                            service.updateDeRawStrings(rows);
-                            rows.clear();
+                            InsertTask task = new InsertTask(rows, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
                         }
 
                     }
                 }
                 if (rows.size() > 0) {
-                    service.updateDeRawStrings(rows);
-                    rows.clear();
+                    InsertTask task = new InsertTask(rows, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
+                }
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class InsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+            private final DBService service;
+
+            public InsertTask(List<Object[]> rows, DBService service) {
+                this.rows = rows;
+                this.service = service;
+            }
+
+            @Override
+            public void run() {
+                service.updateDeRawStrings(rows);
+            }
+
+        }
+    }
+
+    private class RaswStringReceiverJp implements Receiver, SucceededListener {
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        public RaswStringReceiverJp(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Long aId = Long.valueOf(s.getSheetName());
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell bIdCell = r.getCell(1);
+                        Cell cIdCell = r.getCell(2);
+                        Cell textCell = r.getCell(3);
+                        Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
+                        rows.add(row);
+                        if (rows.size() > 5000) {
+                            InsertTask task = new InsertTask(rows, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
+                        }
+                    }
+                }
+                if (rows.size() > 0) {
+                    InsertTask task = new InsertTask(rows, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
+                }
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class InsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+            private final DBService service;
+
+            public InsertTask(List<Object[]> rows, DBService service) {
+                this.rows = rows;
+                this.service = service;
+            }
+
+            @Override
+            public void run() {
+                service.updateJpRawStrings(rows);
+            }
+
         }
     }
 
@@ -680,6 +1147,7 @@ public class ImportTab extends VerticalLayout {
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
             try {
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 SimpleDateFormat versdf = new SimpleDateFormat("yyyyMMddHHmm");
                 String ver = versdf.format(new Date());
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
@@ -698,15 +1166,29 @@ public class ImportTab extends VerticalLayout {
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
                         if (rows.size() > 5000) {
-                            service.updateRuRawStrings(rows, ver);
-                            rows.clear();
+                            InsertTask task = new InsertTask(rows, ver, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
                         }
-
                     }
                 }
                 if (rows.size() > 0) {
-                    service.updateRuRawStrings(rows, ver);
-                    rows.clear();
+                    InsertTask task = new InsertTask(rows, ver, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
+                }
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
                 }
                 Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with null ver");
                 service.cleanupRawWithNullVer();
@@ -715,6 +1197,27 @@ public class ImportTab extends VerticalLayout {
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class InsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+            private final DBService service;
+            private final String ver;
+
+            public InsertTask(List<Object[]> rows, String ver, DBService service) {
+                this.rows = rows;
+                this.service = service;
+                this.ver = ver;
+            }
+
+            @Override
+            public void run() {
+                service.updateRuRawStrings(rows, ver);
+            }
+
         }
     }
 
@@ -767,25 +1270,349 @@ public class ImportTab extends VerticalLayout {
 
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
+            Date startTime = new Date();
+            LOG.info("Search index...");
             service.generateSearchIndex();
+            LOG.info("Search index complete");
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
             if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
-                service.newFormatImportNpcsWithSublocations(jsonFromLua);
-                service.newFormatImportSubtitlesWithSublocations(jsonFromLua);
+                newFormatImportNpcsWithSublocations(jsonFromLua);
+                newFormatImportSubtitlesWithSublocations(jsonFromLua);
                 if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")) {
                     service.newFormatImportQuestsWithSublocations(jsonFromLua);
                 }
                 if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
-                    service.newFormatImportQuestsWithSteps(jsonFromLua);
-                    service.importBooksWithSublocations(jsonFromLua);
+                    newFormatImportQuestsWithSteps(jsonFromLua);
+                    importBooksWithSublocations(jsonFromLua);
                 }
             } else if (LuaDecoder.getFileheader(text).equals("ConversationsQ_SavedVariables =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables =")) {
                 service.newFormatImportNpcs(jsonFromLua);
                 service.newFormatImportSubtitles(jsonFromLua);
             }
-            //service.assignToSpreadSheetPhrases();
+            for (;;) {
+                int count = executor.getActiveCount();
+                LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, executor.getThreadPoolExecutor().getQueue().size()});
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                }
+                if (count == 0) {
+                    break;
+                }
+            }
+            Date endTime = new Date();
+            long totalTime = endTime.getTime() - startTime.getTime();
+            Date completeTime = new Date(totalTime);
+            SimpleDateFormat sdf = new SimpleDateFormat("mm:ss");
+            LOG.log(Level.INFO, "Completed in {0}", sdf.format(completeTime));
+        }
+
+        private void newFormatImportQuestsWithSteps(JSONObject source) {
+            JSONObject locationObject = null;
+            try {
+                locationObject = source.getJSONObject("quest");
+                Iterator locationsKeys = locationObject.keys();
+                while (locationsKeys.hasNext()) {
+                    String locationName = (String) locationsKeys.next();
+                    ImportQuestsLocationTask task = new ImportQuestsLocationTask(locationName, locationObject);
+                    executor.execute(task);
+                }
+            } catch (JSONException ex) {
+
+            }
+        }
+
+        private void newFormatImportSubtitlesWithSublocations(JSONObject source) {
+            JSONObject npcLocationObject = null;
+            try {
+                npcLocationObject = source.getJSONObject("subtitles");
+                Iterator locationsKeys = npcLocationObject.keys();
+                while (locationsKeys.hasNext()) {
+                    String locationName = (String) locationsKeys.next();
+                    ImportSubtitleLocationTask importSubtitleLocationTask = new ImportSubtitleLocationTask(locationName, npcLocationObject);
+                    executor.execute(importSubtitleLocationTask);
+                }
+            } catch (JSONException ex) {
+
+            }
+        }
+
+        private void newFormatImportNpcsWithSublocations(JSONObject source) {
+            JSONObject npcLocationObject = source.getJSONObject("npc");
+            Iterator locationsKeys = npcLocationObject.keys();
+            while (locationsKeys.hasNext()) {
+                String locationKey = (String) locationsKeys.next();
+                ImportNpcLocationTask importNpcLocationTask = new ImportNpcLocationTask(locationKey, npcLocationObject);
+                executor.execute(importNpcLocationTask);
+            }
+
+        }
+
+        private void importBooksWithSublocations(JSONObject source) {
+            LOG.info("Books import queue");
+            JSONObject bookLocationObject = null;
+            try {
+                bookLocationObject = source.getJSONObject("books");
+                Iterator locationsKeys = bookLocationObject.keys();
+                while (locationsKeys.hasNext()) {
+                    String locationKey = (String) locationsKeys.next();
+                    Location location = service.getLocation(locationKey);
+                    if (location != null) {
+                        JSONObject subLocationObject = bookLocationObject.getJSONObject(locationKey);
+                        Iterator subLocationKeys = subLocationObject.keys();
+                        while (subLocationKeys.hasNext()) {
+                            String subLocationKey = (String) subLocationKeys.next();
+                            Location subLocation = service.getSubLocation(subLocationKey, locationKey, location);
+                            if (subLocation != null) {
+                                JSONObject locationBooksObject = subLocationObject.getJSONObject(subLocationKey);
+                                Iterator locationBooksObjectIterator = locationBooksObject.keys();
+                                while (locationBooksObjectIterator.hasNext()) {
+                                    String bookKeyString = (String) locationBooksObjectIterator.next();
+                                    ImportBookTask task = new ImportBookTask(bookKeyString, subLocation);
+                                    executor.execute(task);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (JSONException ex) {
+                LOG.log(Level.WARNING, null, ex);
+            }
+            LOG.info("Books queued");
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportQuestsLocationTask implements Runnable {
+
+            private final String locationName;
+            private final JSONObject locationObject;
+
+            public ImportQuestsLocationTask(String locationName, JSONObject locationObject) {
+                this.locationName = locationName;
+                this.locationObject = locationObject;
+            }
+
+            @Override
+            public void run() {
+                Location location = service.getLocation(locationName);
+                if (location != null) {
+                    JSONObject locationQuestsObject = locationObject.getJSONObject(locationName);
+                    Iterator locationQuestsObjectIterator = locationQuestsObject.keys();
+                    while (locationQuestsObjectIterator.hasNext()) {
+                        String questKey = (String) locationQuestsObjectIterator.next();
+                        JSONObject questObject = locationQuestsObject.getJSONObject(questKey);
+                        ImportQuestTask task = new ImportQuestTask(questKey, questObject, location);
+                        executor.execute(task);
+                    }
+                }
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportQuestTask implements Runnable {
+
+            private final String questKey;
+            private final JSONObject questObject;
+            private final Location location;
+
+            public ImportQuestTask(String questKey, JSONObject questObject, Location location) {
+                this.questKey = questKey;
+                this.questObject = questObject;
+                this.location = location;
+            }
+
+            @Override
+            public void run() {
+                service.newFormatImportQuestWithSteps(questKey, questObject, location);
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportBookTask implements Runnable {
+
+            private final String bookKeyString;
+            private final Location subLocation;
+
+            public ImportBookTask(String bookKeyString, Location subLocation) {
+                this.bookKeyString = bookKeyString;
+                this.subLocation = subLocation;
+            }
+
+            @Override
+            public void run() {
+                service.importBook(bookKeyString, subLocation);
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportNpcLocationTask implements Runnable {
+
+            private final String locationKey;
+            private final JSONObject npcLocationObject;
+
+            public ImportNpcLocationTask(String locationKey, JSONObject npcLocationObject) {
+                this.locationKey = locationKey;
+                this.npcLocationObject = npcLocationObject;
+            }
+
+            @Override
+            public void run() {
+                Location location = service.getLocation(locationKey);
+                if (location != null) {
+                    JSONObject subLocationObject = npcLocationObject.getJSONObject(locationKey);
+                    Iterator subLocationKeys = subLocationObject.keys();
+                    while (subLocationKeys.hasNext()) {
+                        String subLocationKey = (String) subLocationKeys.next();
+                        ImportNpcSublocationTask task = new ImportNpcSublocationTask(subLocationKey, locationKey, subLocationObject, location);
+                        executor.execute(task);
+                    }
+                }
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportNpcSublocationTask implements Runnable {
+
+            private final String subLocationKey;
+            private final String locationKey;
+            private final JSONObject subLocationObject;
+            private final Location location;
+
+            public ImportNpcSublocationTask(String subLocationKey, String locationKey, JSONObject subLocationObject, Location location) {
+                this.subLocationKey = subLocationKey;
+                this.locationKey = locationKey;
+                this.subLocationObject = subLocationObject;
+                this.location = location;
+            }
+
+            @Override
+            public void run() {
+                Location subLocation = service.getSubLocation(subLocationKey, locationKey, location);
+                if (subLocation != null) {
+                    JSONObject npcsObject = subLocationObject.getJSONObject(subLocationKey);
+                    Iterator npcsKeys = npcsObject.keys();
+                    while (npcsKeys.hasNext()) {
+                        String npcKey = (String) npcsKeys.next();
+                        ImportNpcWithSublocationsTask task = new ImportNpcWithSublocationsTask(npcKey, subLocation, npcsObject);
+                        executor.execute(task);
+                    }
+                }
+            }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportNpcWithSublocationsTask implements Runnable {
+
+            private final String npcKey;
+            private final Location subLocation;
+            private final JSONObject npcsObject;
+
+            public ImportNpcWithSublocationsTask(String npcKey, Location subLocation, JSONObject npcsObject) {
+                this.npcKey = npcKey;
+                this.subLocation = subLocation;
+                this.npcsObject = npcsObject;
+            }
+
+            @Override
+            public void run() {
+                Npc currentNpc = service.getNpc(npcKey, subLocation);
+                JSONObject npcContent = npcsObject.getJSONObject(npcKey);
+                service.newFormatImportNpcWithSublocations(currentNpc, npcContent);
+                service.calculateNpcProgress(currentNpc);
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportSubtitleLocationTask implements Runnable {
+
+            private final String locationName;
+            private final JSONObject npcLocationObject;
+
+            public ImportSubtitleLocationTask(String locationName, JSONObject npcLocationObject) {
+                this.locationName = locationName;
+                this.npcLocationObject = npcLocationObject;
+            }
+
+            @Override
+            public void run() {
+                Location location = service.getLocation(locationName);
+                if (location != null) {
+                    JSONObject subLocationObject = npcLocationObject.getJSONObject(locationName);
+                    Iterator subLocationKeys = subLocationObject.keys();
+                    while (subLocationKeys.hasNext()) {
+                        String subLocationKey = (String) subLocationKeys.next();
+                        ImportSubtitleSubLocationTask task = new ImportSubtitleSubLocationTask(subLocationKey, locationName, subLocationObject, location);
+                        executor.execute(task);
+                    }
+                }
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportSubtitleSubLocationTask implements Runnable {
+
+            private final String subLocationKey;
+            private final String locationName;
+            private final JSONObject subLocationObject;
+            private final Location location;
+
+            public ImportSubtitleSubLocationTask(String subLocationKey, String locationName, JSONObject subLocationObject, Location location) {
+                this.subLocationKey = subLocationKey;
+                this.locationName = locationName;
+                this.subLocationObject = subLocationObject;
+                this.location = location;
+            }
+
+            @Override
+            public void run() {
+                Location subLocation = service.getSubLocation(subLocationKey, locationName, location);
+                if (subLocation != null) {
+                    JSONObject locationSubtitlesObject = subLocationObject.getJSONObject(subLocationKey);
+                    Iterator locationSubtitlesObjectIterator = locationSubtitlesObject.keys();
+                    while (locationSubtitlesObjectIterator.hasNext()) {
+                        JSONObject subtitleSet = locationSubtitlesObject.getJSONObject((String) locationSubtitlesObjectIterator.next());
+                        ImportSubtitlesTask task = new ImportSubtitlesTask(subtitleSet, subLocation);
+                        executor.execute(task);
+                    }
+                }
+            }
+
+        }
+
+        @Component
+        @Scope("prototype")
+        private class ImportSubtitlesTask implements Runnable {
+
+            private final JSONObject subtitleSet;
+            private final Location subLocation;
+
+            public ImportSubtitlesTask(JSONObject subtitleSet, Location subLocation) {
+                this.subtitleSet = subtitleSet;
+                this.subLocation = subLocation;
+            }
+
+            @Override
+            public void run() {
+                service.newFormatImportSubtitleWithSublocations(subtitleSet, subLocation);
+            }
+
         }
 
     }

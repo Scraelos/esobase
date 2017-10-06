@@ -14,9 +14,11 @@ import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
@@ -24,15 +26,19 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.BookSpecification;
 import org.esn.esobase.model.Book;
 import org.esn.esobase.model.Location;
+import org.esn.esobase.model.Quest;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.security.SpringSecurityHelper;
+import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 
 /**
  *
@@ -46,6 +52,15 @@ public class BookTranslateTab extends VerticalLayout {
     private TabSheet bookContentLayout;
     private ComboBox locationTable;
     private ComboBox subLocationTable;
+    private ComboBoxMultiselect translateStatus;
+    private CheckBox noTranslations;
+    private CheckBox emptyTranslations;
+    private TextField searchField;
+    private ComboBox translatorBox;
+    private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
+    private Button refreshButton;
+    private Label countLabel;
+
     private ComboBox bookTable;
     private BeanItemContainer<Location> locationContainer = new BeanItemContainer<>(Location.class);
     private BeanItemContainer<Location> subLocationContainer = new BeanItemContainer<>(Location.class);
@@ -70,8 +85,7 @@ public class BookTranslateTab extends VerticalLayout {
         this.setSizeFull();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
         bookListlayout = new HorizontalLayout();
-        bookListlayout = new HorizontalLayout();
-        bookListlayout.setSizeFull();
+        bookListlayout.setWidth(100f, Unit.PERCENTAGE);
         bookTable = new ComboBox("Книга");
         bookTable.setPageLength(20);
         bookTable.addValueChangeListener(new BookSelectListener());
@@ -98,11 +112,53 @@ public class BookTranslateTab extends VerticalLayout {
 
         bookTable.setContainerDataSource(bookContainer);
 
-        FormLayout locationAndNpc = new FormLayout(locationTable, subLocationTable, bookTable);
-        locationAndNpc.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
-        locationAndNpc.setSizeFull();
+        FormLayout locationAndBook = new FormLayout(locationTable, subLocationTable, bookTable);
+        locationAndBook.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
+        locationAndBook.setSizeFull();
 
-        bookListlayout.addComponent(locationAndNpc);
+        bookListlayout.addComponent(locationAndBook);
+        translateStatus = new ComboBoxMultiselect("Статус перевода", Arrays.asList(TRANSLATE_STATUS.values()));
+        translateStatus.setClearButtonCaption("Очистить");
+        translateStatus.addValueChangeListener(filterChangeListener);
+        noTranslations = new CheckBox("Не переведены полностью");
+        noTranslations.setValue(Boolean.FALSE);
+        noTranslations.addValueChangeListener(filterChangeListener);
+        emptyTranslations = new CheckBox("Не добавлен перевод");
+        emptyTranslations.setValue(Boolean.FALSE);
+        emptyTranslations.addValueChangeListener(filterChangeListener);
+        HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
+        translatorBox = new ComboBox("Переводчик");
+        translatorBox.setPageLength(15);
+        sysAccountContainer = service.loadBeanItems(sysAccountContainer);
+        translatorBox.setContainerDataSource(sysAccountContainer);
+        translatorBox.setFilteringMode(FilteringMode.CONTAINS);
+        translatorBox.addValueChangeListener(filterChangeListener);
+        refreshButton = new Button("Обновить");
+        refreshButton.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                LoadFilters();
+                LoadBookContent();
+            }
+        });
+        countLabel = new Label();
+        searchField = new TextField("Искомая строка");
+        searchField.setWidth(200f, Unit.PIXELS);
+        searchField.setNullRepresentation("");
+        searchField.addValueChangeListener(filterChangeListener);
+
+        FormLayout filtersLayout = new FormLayout(translateStatus, translatorBox, checkBoxlayout, searchField);
+        filtersLayout.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
+        filtersLayout.setSizeFull();
+        bookListlayout.addComponent(filtersLayout);
+        bookListlayout.addComponent(refreshButton);
+        bookListlayout.addComponent(countLabel);
+        bookListlayout.setExpandRatio(locationAndBook, 0.4f);
+        bookListlayout.setExpandRatio(filtersLayout, 0.4f);
+        bookListlayout.setExpandRatio(refreshButton, 0.1f);
+        bookListlayout.setExpandRatio(countLabel, 0.1f);
+        bookListlayout.setHeight(105f, Unit.PIXELS);
 
         bookContentLayout = new TabSheet();
         bookContentLayout.setSizeFull();
@@ -155,8 +211,19 @@ public class BookTranslateTab extends VerticalLayout {
 
     private void LoadFilters() {
         bookContainer.removeAllItems();
-        bookContainer.addAll(service.getBookRepository().findAll());
-        bookContainer.sort(new Object[]{"nameEn"}, new boolean[]{true});
+        bookSpecification.setNoTranslations(noTranslations.getValue());
+        bookSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
+        bookSpecification.setTranslator((SysAccount) translatorBox.getValue());
+        bookSpecification.setLocation((Location) locationTable.getValue());
+        bookSpecification.setSubLocation((Location) subLocationTable.getValue());
+        bookSpecification.setEmptyTranslations(emptyTranslations.getValue());
+        bookSpecification.setSearchString(searchField.getValue());
+        if (subLocationTable.getValue() != null) {
+            bookSpecification.setLocation((Location) subLocationTable.getValue());
+        } else {
+            bookSpecification.setLocation((Location) locationTable.getValue());
+        }
+        bookContainer.addAll(service.getBookRepository().findAll(bookSpecification));
         List<Location> locations = new ArrayList<>();
         for (Book book : bookContainer.getItemIds()) {
             for (Location loc : book.getLocations()) {
@@ -281,27 +348,7 @@ public class BookTranslateTab extends VerticalLayout {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
-            if (locationTable.getValue() != null) {
-                bookSpecification.setLocation((Location) locationTable.getValue());
-            } else {
-                bookSpecification.setLocation(null);
-            }
-            if (subLocationTable.getValue() != null) {
-                bookSpecification.setSubLocation((Location) subLocationTable.getValue());
-            } else {
-                bookSpecification.setSubLocation(null);
-            }
-            if (locationTable.getValue() != null) {
-                subLocationContainer.removeAllContainerFilters();
-                subLocationContainer.addContainerFilter(new Or(
-                        new Compare.Equal("parentLocation", locationTable.getValue()),
-                        new Compare.Equal("id", ((Location) locationTable.getValue()).getId())
-                )
-                );
-            }
-            bookContainer.removeAllItems();
-            bookContainer.addAll(service.getBookRepository().findAll(bookSpecification));
-            bookContainer.sort(new Object[]{"nameEn"}, new boolean[]{true});
+            LoadFilters();
         }
 
     }
@@ -413,7 +460,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(preAccept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED||translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -458,7 +505,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(reject);
             }
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED)) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);
             }
         }
@@ -576,7 +623,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(preAccept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED||translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -621,7 +668,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(reject);
             }
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED)) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);
             }
         }

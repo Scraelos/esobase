@@ -67,6 +67,7 @@ public class GSpreadSheetsPlayerPhrase extends DAO implements GSpreadSheetEntity
     private String trRuMF;
     @Column(columnDefinition = "TEXT")
     private String trRuFM;
+    private Boolean deprecated;
 
     public GSpreadSheetsPlayerPhrase() {
     }
@@ -216,6 +217,15 @@ public class GSpreadSheetsPlayerPhrase extends DAO implements GSpreadSheetEntity
 
     public void setTrRuFM(String trRuFM) {
         this.trRuFM = trRuFM;
+    }
+
+    @Override
+    public Boolean getDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(Boolean deprecated) {
+        this.deprecated = deprecated;
     }
 
 }

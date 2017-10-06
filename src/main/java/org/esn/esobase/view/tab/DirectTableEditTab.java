@@ -1196,7 +1196,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 });
                 actionLayout.addComponent(preaccept);
             }
-            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW) && SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) {
+            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) && SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) {
                 translation.setReadOnly(false);
                 correct = new Button();
                 correct.setIcon(FontAwesome.PENCIL);
@@ -1241,7 +1241,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 });
                 actionLayout.addComponent(reject);
             }
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED)) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);
             }
             this.addComponent(actionLayout);

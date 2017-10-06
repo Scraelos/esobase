@@ -66,6 +66,7 @@ public class GSpreadSheetsNpcPhrase extends DAO implements GSpreadSheetEntity, T
     private String trRuMF;
     @Column(columnDefinition = "TEXT")
     private String trRuFM;
+    private Boolean deprecated;
 
     public GSpreadSheetsNpcPhrase() {
     }
@@ -215,6 +216,15 @@ public class GSpreadSheetsNpcPhrase extends DAO implements GSpreadSheetEntity, T
 
     public void setTrRuFM(String trRuFM) {
         this.trRuFM = trRuFM;
+    }
+
+    @Override
+    public Boolean getDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(Boolean deprecated) {
+        this.deprecated = deprecated;
     }
 
 }
