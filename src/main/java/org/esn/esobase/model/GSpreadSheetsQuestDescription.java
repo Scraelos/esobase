@@ -34,7 +34,7 @@ import org.esn.esobase.model.lib.DAO;
     ,
     @Index(columnList = "translator", unique = false)
     ,
-    @Index(columnList = "aId,bId,cId", unique = true)})
+    @Index(columnList = "aId,bId,cId", unique = false)})
 public class GSpreadSheetsQuestDescription extends DAO implements GSpreadSheetEntity, TranslatedEntity {
 
     @Id
@@ -56,6 +56,16 @@ public class GSpreadSheetsQuestDescription extends DAO implements GSpreadSheetEn
     private Integer weight;
     @OneToMany(mappedBy = "spreadSheetsQuestDescription", fetch = FetchType.LAZY)
     private Set<TranslatedText> translatedTexts;
+    @Column(columnDefinition = "TEXT")
+    private String trEn;
+    @Column(columnDefinition = "TEXT")
+    private String trRuMM;
+    @Column(columnDefinition = "TEXT")
+    private String trRuFF;
+    @Column(columnDefinition = "TEXT")
+    private String trRuMF;
+    @Column(columnDefinition = "TEXT")
+    private String trRuFM;
     private Boolean deprecated;
 
     public GSpreadSheetsQuestDescription() {
@@ -166,6 +176,46 @@ public class GSpreadSheetsQuestDescription extends DAO implements GSpreadSheetEn
 
     public void setcId(Long cId) {
         this.cId = cId;
+    }
+
+    public String getTrEn() {
+        return trEn;
+    }
+
+    public void setTrEn(String trEn) {
+        this.trEn = trEn;
+    }
+
+    public String getTrRuMM() {
+        return trRuMM;
+    }
+
+    public void setTrRuMM(String trRuMM) {
+        this.trRuMM = trRuMM;
+    }
+
+    public String getTrRuFF() {
+        return trRuFF;
+    }
+
+    public void setTrRuFF(String trRuFF) {
+        this.trRuFF = trRuFF;
+    }
+
+    public String getTrRuMF() {
+        return trRuMF;
+    }
+
+    public void setTrRuMF(String trRuMF) {
+        this.trRuMF = trRuMF;
+    }
+
+    public String getTrRuFM() {
+        return trRuFM;
+    }
+
+    public void setTrRuFM(String trRuFM) {
+        this.trRuFM = trRuFM;
     }
 
     @Override

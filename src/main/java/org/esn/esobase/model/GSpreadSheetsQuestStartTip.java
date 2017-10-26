@@ -35,7 +35,7 @@ import org.esn.esobase.model.lib.DAO;
     @Index(columnList = "translator", unique = false)
     ,
     @Index(columnList = "aId,bId,cId", unique = false)})
-public class GSpreadSheetsCollectibleDescription extends DAO implements GSpreadSheetEntity, TranslatedEntity {
+public class GSpreadSheetsQuestStartTip extends DAO implements GSpreadSheetEntity, TranslatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -54,14 +54,14 @@ public class GSpreadSheetsCollectibleDescription extends DAO implements GSpreadS
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date changeTime;
     private Integer weight;
-    @OneToMany(mappedBy = "sheetsCollectibleDescription", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "spreadSheetsQuestStartTip", fetch = FetchType.LAZY)
     private Set<TranslatedText> translatedTexts;
     private Boolean deprecated;
 
-    public GSpreadSheetsCollectibleDescription() {
+    public GSpreadSheetsQuestStartTip() {
     }
 
-    public GSpreadSheetsCollectibleDescription(Long rowNum, String textEn, String textRu, String translator, Integer weight) {
+    public GSpreadSheetsQuestStartTip(Long rowNum, String textEn, String textRu, String translator, Integer weight) {
         this.rowNum = rowNum;
         this.textEn = textEn;
         this.textRu = textRu;

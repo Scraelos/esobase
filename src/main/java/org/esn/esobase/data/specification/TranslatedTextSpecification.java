@@ -43,7 +43,6 @@ public class TranslatedTextSpecification implements Specification<TranslatedText
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isNull(root.get("playerTopic")));
         predicates.add(cb.isNull(root.get("npcTopic")));
-        predicates.add(cb.isNull(root.get("greeting")));
         predicates.add(cb.isNull(root.get("subtitle")));
         if (author != null) {
             predicates.add(cb.equal(root.get("author"), author));

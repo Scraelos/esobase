@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
+import org.vaadin.viritin.layouts.MMarginInfo;
 
 /**
  *
@@ -209,7 +210,7 @@ public class TranslateTab extends VerticalLayout {
         });
         countLabel = new Label();
         searchField = new TextField("Искомая строка");
-        searchField.setWidth(200f, Unit.PIXELS);
+        searchField.setSizeFull();
         searchField.setNullRepresentation("");
         searchField.addValueChangeListener(new Property.ValueChangeListener() {
 
@@ -263,9 +264,9 @@ public class TranslateTab extends VerticalLayout {
         npcTopicsTable.setVisibleColumns(new Object[]{"playerTextG", "playerTranslations", "npcTextG", "npcTranslations"});
         npcTopicsTable.setColumnHeaders(new String[]{"Реплика игрока", "Перевод", "Реплика NPC", "Перевод"});
         npcTopicsTable.setColumnExpandRatio("playerTextG", 1f);
-        npcTopicsTable.setColumnExpandRatio("playerTranslations", 1f);
-        npcTopicsTable.setColumnExpandRatio("npcTextG", 1f);
-        npcTopicsTable.setColumnExpandRatio("npcTranslations", 1f);
+        npcTopicsTable.setColumnExpandRatio("playerTranslations", 1.5f);
+        npcTopicsTable.setColumnExpandRatio("npcTextG", 1.5f);
+        npcTopicsTable.setColumnExpandRatio("npcTranslations", 1.5f);
         npcTopicsTable.setColumnWidth("actions", 150);
         npcSubtitlesTable = new Table();
         npcSubtitlesTable.addStyleName(ValoTheme.TABLE_COMPACT);
@@ -379,37 +380,50 @@ public class TranslateTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
 
             VerticalLayout result = new VerticalLayout();
+            result.setMargin(new MMarginInfo(false, false, false, true));
             Topic topic = (Topic) itemId;
             if (topic.getNpcText() != null && !topic.getNpcText().isEmpty()) {
-                TextArea textEnArea = new TextArea("Текст в игре");
+                Label textEnAreaLabel = new Label("Текст в игре");
+                textEnAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnAreaLabel);
+                Label textEnArea = new Label();
+                textEnArea.addStyleName("v-textarea");
                 textEnArea.setValue(topic.getNpcText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.setNullRepresentation("");
-                result.addComponent(textEnArea);// "Текст в игре" 
+                result.addComponent(textEnArea);//, "Текст в игре"
             }
             if (topic.getNpcTextRu() != null && !topic.getNpcTextRu().isEmpty()) {
-                TextArea textRuArea = new TextArea("Перевод в игре");
+                Label textRuAreaLabel = new Label("Перевод в игре");
+                textRuAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textRuAreaLabel);
+                Label textRuArea = new Label();
+                textRuArea.addStyleName("v-textarea");
                 textRuArea.setValue(topic.getNpcTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.setNullRepresentation("");
-                result.addComponent(textRuArea);//"Перевод в игре" 
+                result.addComponent(textRuArea);//, "Перевод в игре"
             }
             if (topic.getExtNpcPhrase() != null) {
-                TextArea textEnRawArea = new TextArea("Текст в таблицах");
+                Label textEnRawArealabel = new Label("Текст в таблицах");
+                textEnRawArealabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnRawArealabel);
+                Label textEnRawArea = new Label();
+                textEnRawArea.addStyleName("v-textarea");
                 textEnRawArea.setValue(topic.getExtNpcPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.setNullRepresentation("");
-                result.addComponent(textEnRawArea);//"Текст в таблицах"
+                result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getExtNpcPhrase().getTranslator());
+                    Label textRuRawAreaLabel = new Label("Перевод в таблицах от " + topic.getExtNpcPhrase().getTranslator());
+                    textRuRawAreaLabel.addStyleName("v-caption-darkblue");
+                    result.addComponent(textRuRawAreaLabel);
+                    Label textRuRawArea = new Label();
+                    textRuRawArea.addStyleName("v-textarea");
                     textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.setNullRepresentation("");
-                    result.addComponent(textRuRawArea);//"Перевод в таблицах"
+                    result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
             } else if (topic.getNpcText() != null && !topic.getNpcText().isEmpty()) {
                 Button getRawButton = new Button("Искать RAW");
@@ -427,35 +441,47 @@ public class TranslateTab extends VerticalLayout {
             VerticalLayout result = new VerticalLayout();
             Topic topic = (Topic) itemId;
             if (topic.getPlayerText() != null && !topic.getPlayerText().isEmpty()) {
-                TextArea textEnArea = new TextArea("Текст в игре");
+                Label textEnAreaLabel = new Label("Текст в игре");
+                textEnAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnAreaLabel);
+                Label textEnArea = new Label();
+                textEnArea.addStyleName("v-textarea");
                 textEnArea.setValue(topic.getPlayerText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.setNullRepresentation("");
-                result.addComponent(textEnArea);//, "Текст в игре" 
+                result.addComponent(textEnArea);//, "Текст в игре"
             }
             if (topic.getPlayerTextRu() != null && !topic.getPlayerTextRu().isEmpty()) {
-                TextArea textRuArea = new TextArea("Перевод в игре");
+                Label textRuAreaLabel = new Label("Перевод в игре");
+                textRuAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textRuAreaLabel);
+                Label textRuArea = new Label();
+                textRuArea.addStyleName("v-textarea");
                 textRuArea.setValue(topic.getPlayerTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.setNullRepresentation("");
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
             if (topic.getExtPlayerPhrase() != null) {
-                TextArea textEnRawArea = new TextArea("Текст в таблицах");
+                Label textEnRawArealabel = new Label("Текст в таблицах");
+                textEnRawArealabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnRawArealabel);
+                Label textEnRawArea = new Label();
+                textEnRawArea.addStyleName("v-textarea");
                 textEnRawArea.setValue(topic.getExtPlayerPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.setNullRepresentation("");
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtPlayerPhrase().getTextRu() != null && !topic.getExtPlayerPhrase().getTextRu().equals(topic.getExtPlayerPhrase().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getExtPlayerPhrase().getTranslator());
+                    Label textRuRawAreaLabel = new Label("Перевод в таблицах от " + topic.getExtPlayerPhrase().getTranslator());
+                    textRuRawAreaLabel.addStyleName("v-caption-darkblue");
+                    result.addComponent(textRuRawAreaLabel);
+                    Label textRuRawArea = new Label();
+                    textRuRawArea.addStyleName("v-textarea");
                     textRuRawArea.setValue(topic.getExtPlayerPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.setNullRepresentation("");
-                    result.addComponent(textRuRawArea);//, "Перевод в таблицах" 
+                    result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
             } else if (topic.getPlayerText() != null && !topic.getPlayerText().isEmpty()) {
                 Button getRawButton = new Button("Искать RAW");
@@ -489,10 +515,10 @@ public class TranslateTab extends VerticalLayout {
             result.addComponent(l);
             if (subtitle.getText() != null && !subtitle.getText().isEmpty()) {
                 Label textEnAreaLabel = new Label("Текст в игре");
-                textEnAreaLabel.addStyleName(ValoTheme.LABEL_H3);
+                textEnAreaLabel.addStyleName("v-caption-darkblue");
                 result.addComponent(textEnAreaLabel);
                 Label textEnArea = new Label();
-                textEnArea.addStyleName("v-label");
+                textEnArea.addStyleName("v-textarea");
                 textEnArea.setValue(subtitle.getText());
                 textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
@@ -500,10 +526,10 @@ public class TranslateTab extends VerticalLayout {
             }
             if (subtitle.getTextRu() != null && !subtitle.getTextRu().isEmpty()) {
                 Label textRuAreaLabel = new Label("Перевод в игре");
-                textRuAreaLabel.addStyleName(ValoTheme.LABEL_H3);
+                textRuAreaLabel.addStyleName("v-caption-darkblue");
                 result.addComponent(textRuAreaLabel);
                 Label textRuArea = new Label();
-                textRuArea.addStyleName("v-label");
+                textRuArea.addStyleName("v-textarea");
                 textRuArea.setValue(subtitle.getTextRu());
                 textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
@@ -512,20 +538,20 @@ public class TranslateTab extends VerticalLayout {
 
             if (subtitle.getExtNpcPhrase() != null) {
                 Label textEnRawArealabel = new Label("Текст в таблицах");
-                textEnRawArealabel.addStyleName(ValoTheme.LABEL_H3);
+                textEnRawArealabel.addStyleName("v-caption-darkblue");
                 result.addComponent(textEnRawArealabel);
                 Label textEnRawArea = new Label();
-                textEnRawArea.addStyleName("v-label");
+                textEnRawArea.addStyleName("v-textarea");
                 textEnRawArea.setValue(subtitle.getExtNpcPhrase().getTextEn());
                 textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (subtitle.getExtNpcPhrase().getTextRu() != null && !subtitle.getExtNpcPhrase().getTextRu().equals(subtitle.getExtNpcPhrase().getTextEn())) {
                     Label textRuRawAreaLabel = new Label("Перевод в таблицах от " + subtitle.getExtNpcPhrase().getTranslator());
-                    textRuRawAreaLabel.addStyleName(ValoTheme.LABEL_H3);
+                    textRuRawAreaLabel.addStyleName("v-caption-darkblue");
                     result.addComponent(textRuRawAreaLabel);
                     Label textRuRawArea = new Label();
-                    textRuRawArea.addStyleName("v-label");
+                    textRuRawArea.addStyleName("v-textarea");
                     textRuRawArea.setValue(subtitle.getExtNpcPhrase().getTextRu());
                     textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
@@ -701,6 +727,7 @@ public class TranslateTab extends VerticalLayout {
                 caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
             translation = new TextArea(caption.toString());
+            translation.setRows(7);
             translation.setSizeFull();
             translation.setNullRepresentation("");
             translation.setImmediate(true);

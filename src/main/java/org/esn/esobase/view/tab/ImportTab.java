@@ -53,7 +53,9 @@ import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
 import org.esn.esobase.model.GSpreadSheetsQuestDirection;
+import org.esn.esobase.model.GSpreadSheetsQuestEndTip;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
+import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -98,6 +100,8 @@ public class ImportTab extends VerticalLayout {
     private Button updateQuestDescriptions;
     private Button updateQuestDirections;
     private Button updateQuestNames;
+    private Button updateQuestStartTips;
+    private Button updateQuestEndTips;
     private Upload uploadNewFormat;
     private Button importPlayerPhrasesFromG;
     private Button importNpcPhrasesFromG;
@@ -105,6 +109,8 @@ public class ImportTab extends VerticalLayout {
     private Button importQuestNamesFromG;
     private Button importQuestDescriptionsFromG;
     private Button importQuestDirectionsFromG;
+    private Button importQuestStartTipsFromG;
+    private Button importQuestEndTipsFromG;
     private Button importItemNamesFromG;
     private Button importItemDescriptionsFromG;
     private Button importJournalEntriesFromG;
@@ -132,7 +138,6 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadRuInterfaceLua;
     private Button updateGspreadSheetsWithRawText;
     private Button assignActivatorsWithItems;
-    private Button transferGreetingsToTopicsButton;
     private Button loadAllBooks;
     private Button updateTTCNpcNames;
     private static final Logger LOG = Logger.getLogger(ImportTab.class.getName());
@@ -382,6 +387,32 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(updateQuestNames);
+            updateQuestStartTips = new Button("Обновить начатые цепочки");
+            updateQuestStartTips.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateQuestStartTips();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateQuestStartTips);
+            updateQuestEndTips = new Button("Обновить завершённые цепочки");
+            updateQuestEndTips.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    try {
+                        tableUpdateService.updateQuestEndTips();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            this.addComponent(updateQuestEndTips);
             /*importPlayerPhrasesFromG = new Button("Импорт фраз игрока из гугл-таблиц");
             importPlayerPhrasesFromG.addClickListener(new Button.ClickListener() {
 
@@ -599,7 +630,29 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(importNpcNamesFromG);
-             */
+            
+            importQuestStartTipsFromG = new Button("Импорт стартовых цепочек заданий");
+            importQuestStartTipsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsQuestStartTip> items = docsService.getQuestStartTips();
+                    service.loadQuestStartTipsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importQuestStartTipsFromG);
+            importQuestEndTipsFromG = new Button("Импорт конечных цепочек заданий");
+            importQuestEndTipsFromG.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    GoogleDocsService docsService = new GoogleDocsService();
+                    List<GSpreadSheetsQuestEndTip> items = docsService.getQuestEndTips();
+                    service.loadQuestEndTipsFromSpreadSheet(items);
+                }
+            });
+            this.addComponent(importQuestEndTipsFromG); */
             fillLocationsAndNpc = new Button("Заполнить имена локаций и NPC");
             fillLocationsAndNpc.addClickListener(new Button.ClickListener() {
 
@@ -728,14 +781,6 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(assignActivatorsWithItems);
-            transferGreetingsToTopicsButton = new Button("Перенос приветствий в диалоги");
-            transferGreetingsToTopicsButton.addClickListener(new Button.ClickListener() {
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    service.transferGreetingsToTopics();
-                }
-            });
-            this.addComponent(transferGreetingsToTopicsButton);
             loadAllBooks = new Button("Импорт книг из сырых строк");
             loadAllBooks.addClickListener(new Button.ClickListener() {
                 @Override
@@ -1272,24 +1317,18 @@ public class ImportTab extends VerticalLayout {
         public void uploadSucceeded(Upload.SucceededEvent event) {
             Date startTime = new Date();
             LOG.info("Search index...");
-            service.generateSearchIndex();
+            //service.generateSearchIndex();
+            service.generateJournalEntrySearchIndex();
+            service.generateQuestDirectionSearchIndex();
             LOG.info("Search index complete");
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
-            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
-                newFormatImportNpcsWithSublocations(jsonFromLua);
-                newFormatImportSubtitlesWithSublocations(jsonFromLua);
-                if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v13 =")) {
-                    service.newFormatImportQuestsWithSublocations(jsonFromLua);
-                }
-                if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
-                    newFormatImportQuestsWithSteps(jsonFromLua);
-                    importBooksWithSublocations(jsonFromLua);
-                }
-            } else if (LuaDecoder.getFileheader(text).equals("ConversationsQ_SavedVariables =") || LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables =")) {
-                service.newFormatImportNpcs(jsonFromLua);
-                service.newFormatImportSubtitles(jsonFromLua);
+            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
+                //newFormatImportNpcsWithSublocations(jsonFromLua);
+                //newFormatImportSubtitlesWithSublocations(jsonFromLua);
+                newFormatImportQuestsWithSteps(jsonFromLua);
+                //importBooksWithSublocations(jsonFromLua);
             }
             for (;;) {
                 int count = executor.getActiveCount();

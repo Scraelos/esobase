@@ -153,7 +153,7 @@ public class QuestTranslateTab extends VerticalLayout {
         });
         countLabel = new Label();
         searchField = new TextField("Искомая строка");
-        searchField.setWidth(200f, Unit.PIXELS);
+        searchField.setSizeFull();
         searchField.setNullRepresentation("");
         searchField.addValueChangeListener(filterChangeListener);
 
@@ -237,7 +237,8 @@ public class QuestTranslateTab extends VerticalLayout {
         stepsTable.setSizeFull();
         stepContainer = new BeanItemContainer<>(QuestStep.class);
         stepsTable.setContainerDataSource(stepContainer);
-        stepsTable.setPageLength(0);
+        //stepsTable.setPageLength(0);
+        //stepsTable.setCacheRate(0);
         stepsTable.addGeneratedColumn("stepDescription", new StepDescriptionColumnGenerator());
         stepsTable.addGeneratedColumn("stepDescriptionTranslation", new StepTranslationColumnGenerator());
         stepsTable.addGeneratedColumn("stepDirections", new StepDirectionsColumnGenerator());
@@ -368,6 +369,7 @@ public class QuestTranslateTab extends VerticalLayout {
             questDescriptionRawEnArea.setReadOnly(true);
             questDescriptionRawRuArea.setReadOnly(true);
             stepContainer.addAll(service.getQuestStepRepository().findAll(questStepSpecification));
+            stepsTable.setPageLength(4);
         }
     }
 

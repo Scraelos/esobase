@@ -37,6 +37,7 @@ public class SearchInRawStringsTab extends VerticalLayout {
         GridLayout hl = new GridLayout(2, 1);
         hl.setHeight(100, Unit.PIXELS);
         searchField = new TextField();
+        searchField.setWidth(500, Unit.PIXELS);
         searchField.addShortcutListener(new ShortcutListener("Search shortcut", ShortcutAction.KeyCode.ENTER, null) {
             @Override
             public void handleAction(Object sender, Object target) {

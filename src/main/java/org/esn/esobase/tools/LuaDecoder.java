@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.esn.esobase.model.Greeting;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Subtitle;
@@ -149,15 +148,6 @@ public class LuaDecoder {
                             greetingText = greetingsObject.getString(greetingskey);
                         }
                         boolean isDublicate = false;
-                        for (Greeting g : npc.getGreetings()) {
-                            if ((g.getText() != null && greetingText != null && !g.getText().isEmpty() && g.getText().equals(greetingText)) || (g.getTextRu() != null && greetingTextRu != null && !g.getTextRu().isEmpty() && g.getTextRu().equals(greetingTextRu))) {
-                                isDublicate = true;
-                            }
-                        }
-                        if (!isDublicate) {
-                            Greeting greeting = new Greeting(greetingskey, greetingText, greetingTextRu, npc);
-                            npc.getGreetings().add(greeting);
-                        }
 
                     }
                 } catch (org.json.JSONException ex) {

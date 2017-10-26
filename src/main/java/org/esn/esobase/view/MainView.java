@@ -122,6 +122,9 @@ public class MainView extends Panel implements View, Command {
                 + "    white-space: pre-line;\n"
                 + "    overflow: hidden;\n"
                 + "}"
+                + ".v-caption-darkblue {\n"
+                + "	font-weight:bold;margin-bottom:0.33em;margin-top:0.55em;\n"
+                + "}"
                 + ".my-grid .v-grid-body .v-grid-cell { height: 100px; }");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);

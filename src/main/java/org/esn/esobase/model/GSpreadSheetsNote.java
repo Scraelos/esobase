@@ -30,7 +30,7 @@ import org.esn.esobase.model.lib.DAO;
     ,
     @Index(columnList = "translator", unique = false)
     ,
-    @Index(columnList = "aId,bId,cId", unique = true)})
+    @Index(columnList = "aId,bId,cId", unique = false)})
 public class GSpreadSheetsNote extends DAO implements GSpreadSheetEntity, TranslatedEntity {
 
     @Id

@@ -144,7 +144,7 @@ public class BookTranslateTab extends VerticalLayout {
         });
         countLabel = new Label();
         searchField = new TextField("Искомая строка");
-        searchField.setWidth(200f, Unit.PIXELS);
+        searchField.setSizeFull();
         searchField.setNullRepresentation("");
         searchField.addValueChangeListener(filterChangeListener);
 

@@ -32,7 +32,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsabilitydescription set deprecated=TRUE where id in(select g.id from gspreadsheetsabilitydescription g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsabilitydescription g1 join gspreadsheetsabilitydescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsachievementdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsachievementdescription_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsabilitydescription g1 join gspreadsheetsabilitydescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsachievementdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsachievementdescription_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsabilitydescription where id in (select max(g2.id) as gid2 from gspreadsheetsabilitydescription g1 join gspreadsheetsabilitydescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -54,7 +54,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsachievementdescription set deprecated=TRUE where id in(select g.id from gspreadsheetsachievementdescription g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsachievementdescription g1 join gspreadsheetsachievementdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsachievementdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsachievementdescription_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsachievementdescription g1 join gspreadsheetsachievementdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsachievementdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsachievementdescription_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsachievementdescription where id in (select max(g2.id) as gid2 from gspreadsheetsachievementdescription g1 join gspreadsheetsachievementdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -76,7 +76,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsachievement set deprecated=TRUE where id in(select g.id from gspreadsheetsachievement g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsachievement g1 join gspreadsheetsachievement g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsachievement_id=newid.gid1 from newid where translatedtext.spreadsheetsachievement_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsachievement g1 join gspreadsheetsachievement g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsachievement_id=newid.gid1 from newid where translatedtext.spreadsheetsachievement_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsachievement where id in (select max(g2.id) as gid2 from gspreadsheetsachievement g1 join gspreadsheetsachievement g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -98,7 +98,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsactivator set deprecated=TRUE where id in(select g.id from gspreadsheetsactivator g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsactivator g1 join gspreadsheetsactivator g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsactivator_id=newid.gid1 from newid where translatedtext.spreadsheetsactivator_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsactivator g1 join gspreadsheetsactivator g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsactivator_id=newid.gid1 from newid where translatedtext.spreadsheetsactivator_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsactivator where id in (select max(g2.id) as gid2 from gspreadsheetsactivator g1 join gspreadsheetsactivator g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -120,7 +120,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetscollectible set deprecated=TRUE where id in(select g.id from gspreadsheetscollectible g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetscollectible g1 join gspreadsheetscollectible g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set sheetscollectible_id=newid.gid1 from newid where translatedtext.sheetscollectible_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetscollectible g1 join gspreadsheetscollectible g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set sheetscollectible_id=newid.gid1 from newid where translatedtext.sheetscollectible_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetscollectible where id in (select max(g2.id) as gid2 from gspreadsheetscollectible g1 join gspreadsheetscollectible g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -142,7 +142,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetscollectibledescription set deprecated=TRUE where id in(select g.id from gspreadsheetscollectibledescription g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetscollectibledescription g1 join gspreadsheetscollectibledescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set sheetscollectibledescription_id=newid.gid1 from newid where translatedtext.sheetscollectibledescription_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetscollectibledescription g1 join gspreadsheetscollectibledescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set sheetscollectibledescription_id=newid.gid1 from newid where translatedtext.sheetscollectibledescription_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetscollectibledescription where id in (select max(g2.id) as gid2 from gspreadsheetscollectibledescription g1 join gspreadsheetscollectibledescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -164,7 +164,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsitemdescription set deprecated=TRUE where id in(select g.id from gspreadsheetsitemdescription g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsitemdescription g1 join gspreadsheetsitemdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsitemdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsitemdescription_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsitemdescription g1 join gspreadsheetsitemdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsitemdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsitemdescription_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsitemdescription where id in (select max(g2.id) as gid2 from gspreadsheetsitemdescription g1 join gspreadsheetsitemdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -186,7 +186,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsitemname set deprecated=TRUE where id in(select g.id from gspreadsheetsitemname g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsitemname g1 join gspreadsheetsitemname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsitemname_id=newid.gid1 from newid where translatedtext.spreadsheetsitemname_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsitemname g1 join gspreadsheetsitemname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsitemname_id=newid.gid1 from newid where translatedtext.spreadsheetsitemname_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsitemname where id in (select max(g2.id) as gid2 from gspreadsheetsitemname g1 join gspreadsheetsitemname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -208,11 +208,11 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsjournalentry set deprecated=TRUE where id in(select g.id from gspreadsheetsjournalentry g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsjournalentry_id=newid.gid1 from newid where translatedtext.spreadsheetsjournalentry_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsjournalentry_id=newid.gid1 from newid where translatedtext.spreadsheetsjournalentry_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update queststep set sheetsjournalentry_id=newid.gid1 from newid where queststep.sheetsjournalentry_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update queststep set sheetsjournalentry_id=newid.gid1 from newid where queststep.sheetsjournalentry_id=gid2;");
             q6.executeUpdate();
-            Query q7 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update questjournalentry set sheetsjournalentry_id=newid.gid1 from newid where questjournalentry.sheetsjournalentry_id=gid2;");
+            Query q7 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update questjournalentry set sheetsjournalentry_id=newid.gid1 from newid where questjournalentry.sheetsjournalentry_id=gid2;");
             q7.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsjournalentry where id in (select max(g2.id) as gid2 from gspreadsheetsjournalentry g1 join gspreadsheetsjournalentry g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -234,7 +234,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsloadscreen set deprecated=TRUE where id in(select g.id from gspreadsheetsloadscreen g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsloadscreen g1 join gspreadsheetsloadscreen g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set sheetsloadscreen_id=newid.gid1 from newid where translatedtext.sheetsloadscreen_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsloadscreen g1 join gspreadsheetsloadscreen g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set sheetsloadscreen_id=newid.gid1 from newid where translatedtext.sheetsloadscreen_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsloadscreen where id in (select max(g2.id) as gid2 from gspreadsheetsloadscreen g1 join gspreadsheetsloadscreen g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -255,16 +255,16 @@ public class TableUpdateService {
         Query q2 = em.createNativeQuery("update gspreadsheetslocationname set texten=regexp_replace(e.texten,'\\n','$','g'),textru=regexp_replace(e.texten,'\\n','$','g'),changetime=null,translator=null,deprecated=false from esorawstring e where gspreadsheetslocationname.texten!=regexp_replace(e.texten,'\\n','$','g') and e.aid=gspreadsheetslocationname.aid and e.bid=gspreadsheetslocationname.bid and e.cid=gspreadsheetslocationname.cid;");
         q2.executeUpdate();
         //Вставляем новые строки
-        Query q3 = em.createNativeQuery("insert into gspreadsheetslocationname_test (id,changetime,rownum,texten,textru,translator,weight,aid,bid,cid,deprecated) select nextval('hibernate_sequence'),null,null,regexp_replace(texten,'\\\\n','$','g') as ten,regexp_replace(texten,'\\\\n','$','g') as ter, null,cid,aid,bid,cid,FALSE from esorawstring where id in(select e.id from esorawstring e left join gspreadsheetslocationname_test g on lower(g.texten) = lower(regexp_replace(e.texten,'\\\\n','$','g')) where e.aid in(10860933, 146361138, 162946485, 162658389, 164009093, 267200725, 28666901, 81344020, 268015829, 111863941, 157886597) and g.id is null order by e.aid asc,e.cid asc,e.bid asc LIMIT 1);");
+        Query q3 = em.createNativeQuery("insert into gspreadsheetslocationname (id,changetime,rownum,texten,textru,translator,weight,aid,bid,cid,deprecated) select nextval('hibernate_sequence'),null,null,regexp_replace(texten,'\\\\n','$','g') as ten,regexp_replace(texten,'\\\\n','$','g') as ter, null,cid,aid,bid,cid,FALSE from esorawstring where id in(select e.id from esorawstring e left join gspreadsheetslocationname g on lower(g.texten) = lower(regexp_replace(e.texten,'\\\\n','$','g')) where e.aid in(10860933, 146361138, 162946485, 162658389, 164009093, 267200725, 28666901, 81344020, 268015829, 111863941, 157886597) and g.id is null order by e.aid asc,e.cid asc,e.bid asc LIMIT 1);");
         q3.executeUpdate();
         //Помечаем как устарвешие те строки, которых нет в сырых
         Query q4 = em.createNativeQuery("update gspreadsheetslocationname set deprecated=TRUE where id in(select g.id from gspreadsheetslocationname g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
             //Перед удалением дубликата строки, заменяем ссылки на дубликат сслылками на оригинал. Затем удаляем дубликат Несколько прогонов на случай множества дубликатов
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetslocationname g1 join gspreadsheetslocationname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetslocationname_id=newid.gid1 from newid where translatedtext.spreadsheetslocationname_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetslocationname g1 join gspreadsheetslocationname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetslocationname_id=newid.gid1 from newid where translatedtext.spreadsheetslocationname_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetslocationname g1 join gspreadsheetslocationname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update location set sheetslocationname_id=newid.gid1 from newid where location.sheetslocationname_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetslocationname g1 join gspreadsheetslocationname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update location set sheetslocationname_id=newid.gid1 from newid where location.sheetslocationname_id=gid2;");
             q6.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetslocationname where id in (select max(g2.id) as gid2 from gspreadsheetslocationname g1 join gspreadsheetslocationname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -287,7 +287,7 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsnote set deprecated=TRUE where id in(select g.id from gspreadsheetsnote g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsnote g1 join gspreadsheetsnote g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsnote_id=newid.gid1 from newid where translatedtext.spreadsheetsnote_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsnote g1 join gspreadsheetsnote g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsnote_id=newid.gid1 from newid where translatedtext.spreadsheetsnote_id=gid2;");
             q5.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsnote where id in (select max(g2.id) as gid2 from gspreadsheetsnote g1 join gspreadsheetsnote g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -313,9 +313,9 @@ public class TableUpdateService {
         Query q6 = em.createNativeQuery("update gspreadsheetsnpcname set deprecated=TRUE where id in(select g.id from gspreadsheetsnpcname g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q6.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q7 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsnpcname g1 join gspreadsheetsnpcname g2 on lower(g1.texten)=lower(g2.texten) and ((g1.sex=g2.sex) or (g2.sex is null and g1.sex is null)) and g1.id!=g2.id group by lower(g1.texten),g1.sex) update translatedtext set spreadsheetsnpcname_id=newid.gid1 from newid where translatedtext.spreadsheetsnpcname_id=gid2;");
+            Query q7 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsnpcname g1 join gspreadsheetsnpcname g2 on lower(g1.texten)=lower(g2.texten) and ((g1.sex=g2.sex) or (g2.sex is null and g1.sex is null)) and g1.id!=g2.id group by lower(g1.texten),g1.sex) update translatedtext set spreadsheetsnpcname_id=newid.gid1 from newid where translatedtext.spreadsheetsnpcname_id=gid2;");
             q7.executeUpdate();
-            Query q8 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsnpcname g1 join gspreadsheetsnpcname g2 on lower(g1.texten)=lower(g2.texten) and ((g1.sex=g2.sex) or (g2.sex is null and g1.sex is null)) and g1.id!=g2.id group by g1.texten,g1.sex) update npc set sheetsnpcname_id=newid.gid1 from newid where npc.sheetsnpcname_id=gid2;");
+            Query q8 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsnpcname g1 join gspreadsheetsnpcname g2 on lower(g1.texten)=lower(g2.texten) and ((g1.sex=g2.sex) or (g2.sex is null and g1.sex is null)) and g1.id!=g2.id group by g1.texten,g1.sex) update npc set sheetsnpcname_id=newid.gid1 from newid where npc.sheetsnpcname_id=gid2;");
             q8.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsnpcname where id in (select max(g2.id) as gid2 from gspreadsheetsnpcname g1 join gspreadsheetsnpcname g2 on lower(g1.texten)=lower(g2.texten) and ((g1.sex=g2.sex) or (g2.sex is null and g1.sex is null)) and g1.id!=g2.id group by g1.texten,g1.sex);");
             qDelete.executeUpdate();
@@ -337,11 +337,11 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsnpcphrase set deprecated=TRUE where id in(select g.id from gspreadsheetsnpcphrase g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsnpcphrase_id=newid.gid1 from newid where translatedtext.spreadsheetsnpcphrase_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsnpcphrase_id=newid.gid1 from newid where translatedtext.spreadsheetsnpcphrase_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update topic set extnpcphrase_id=newid.gid1 from newid where topic.extnpcphrase_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update topic set extnpcphrase_id=newid.gid1 from newid where topic.extnpcphrase_id=gid2;");
             q6.executeUpdate();
-            Query q7 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update subtitle set extnpcphrase_id=newid.gid1 from newid where subtitle.extnpcphrase_id=gid2;");
+            Query q7 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update subtitle set extnpcphrase_id=newid.gid1 from newid where subtitle.extnpcphrase_id=gid2;");
             q7.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsnpcphrase where id in (select max(g2.id) as gid2 from gspreadsheetsnpcphrase g1 join gspreadsheetsnpcphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -363,9 +363,9 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsplayerphrase set deprecated=TRUE where id in(select g.id from gspreadsheetsplayerphrase g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsplayerphrase g1 join gspreadsheetsplayerphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsplayerphrase_id=newid.gid1 from newid where translatedtext.spreadsheetsplayerphrase_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsplayerphrase g1 join gspreadsheetsplayerphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsplayerphrase_id=newid.gid1 from newid where translatedtext.spreadsheetsplayerphrase_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsplayerphrase g1 join gspreadsheetsplayerphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update topic set extplayerphrase_id=newid.gid1 from newid where topic.extplayerphrase_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsplayerphrase g1 join gspreadsheetsplayerphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update topic set extplayerphrase_id=newid.gid1 from newid where topic.extplayerphrase_id=gid2;");
             q6.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsplayerphrase where id in (select max(g2.id) as gid2 from gspreadsheetsplayerphrase g1 join gspreadsheetsplayerphrase g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -387,9 +387,9 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsquestdescription set deprecated=TRUE where id in(select g.id from gspreadsheetsquestdescription g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsquestdescription g1 join gspreadsheetsquestdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsquestdescription_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestdescription g1 join gspreadsheetsquestdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestdescription_id=newid.gid1 from newid where translatedtext.spreadsheetsquestdescription_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsquestdescription g1 join gspreadsheetsquestdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update quest set sheetsquestdescription_id=newid.gid1 from newid where quest.sheetsquestdescription_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestdescription g1 join gspreadsheetsquestdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update quest set sheetsquestdescription_id=newid.gid1 from newid where quest.sheetsquestdescription_id=gid2;");
             q6.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsquestdescription where id in (select max(g2.id) as gid2 from gspreadsheetsquestdescription g1 join gspreadsheetsquestdescription g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
@@ -411,14 +411,58 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsquestdirection set deprecated=TRUE where id in(select g.id from gspreadsheetsquestdirection g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsquestdirection g1 join gspreadsheetsquestdirection g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestdirection_id=newid.gid1 from newid where translatedtext.spreadsheetsquestdirection_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestdirection g1 join gspreadsheetsquestdirection g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestdirection_id=newid.gid1 from newid where translatedtext.spreadsheetsquestdirection_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsquestdirection g1 join gspreadsheetsquestdirection g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update questdirection set sheetsquestdirection_id=newid.gid1 from newid where questdirection.sheetsquestdirection_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestdirection g1 join gspreadsheetsquestdirection g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update questdirection set sheetsquestdirection_id=newid.gid1 from newid where questdirection.sheetsquestdirection_id=gid2;");
             q6.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsquestdirection where id in (select max(g2.id) as gid2 from gspreadsheetsquestdirection g1 join gspreadsheetsquestdirection g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();
         }
         Query qSort = em.createNativeQuery("with new_numbers as (select row_number() over (order by deprecated asc,aid asc,cid asc,bid asc) as new_nr,rownum, id from gspreadsheetsquestdirection) update gspreadsheetsquestdirection set rownum = nn.new_nr from new_numbers nn where nn.id = gspreadsheetsquestdirection.id;");
+        qSort.executeUpdate();
+    }
+    
+    @Transactional
+    public void updateQuestStartTips() {
+        Query q0 = em.createNativeQuery("with newid as (select g.id,e.aid,e.bid,e.cid from gspreadsheetsqueststarttip g join esorawstring e on lower(regexp_replace(e.texten,'\\n','$','g'))=lower(g.texten) and e.aid in(129979412) order by e.aid asc,e.cid asc,e.bid asc) update gspreadsheetsqueststarttip set deprecated=FALSE,aid=newid.aid,bid=newid.bid,cid=newid.cid,weight=newid.cid from newid where gspreadsheetsqueststarttip.id=newid.id;");
+        q0.executeUpdate();
+        Query q1 = em.createNativeQuery("update translatedtext set status ='REVOKED' where spreadsheetsqueststarttip_id in(select g.id from gspreadsheetsqueststarttip g join esorawstring e on g.texten!=regexp_replace(e.texten,'\\n','$','g') and e.aid=g.aid and e.bid=g.bid and e.cid=g.cid);");
+        q1.executeUpdate();
+        Query q2 = em.createNativeQuery("update gspreadsheetsqueststarttip set texten=regexp_replace(e.texten,'\\n','$','g'),textru=regexp_replace(e.texten,'\\n','$','g'),changetime=null,translator=null,deprecated=false from esorawstring e where gspreadsheetsqueststarttip.texten!=regexp_replace(e.texten,'\\n','$','g') and e.aid=gspreadsheetsqueststarttip.aid and e.bid=gspreadsheetsqueststarttip.bid and e.cid=gspreadsheetsqueststarttip.cid;");
+        q2.executeUpdate();
+        Query q3 = em.createNativeQuery("insert into gspreadsheetsqueststarttip (id,changetime,rownum,texten,textru,translator,weight,aid,bid,cid,deprecated) select nextval('hibernate_sequence'),null,null,regexp_replace(texten,'\\n','$','g') as ten,regexp_replace(texten,'\\n','$','g') as ter, null,cid,aid,bid,cid,FALSE from esorawstring where id in(select e.id from esorawstring e left join gspreadsheetsqueststarttip g on lower(g.texten) = lower(regexp_replace(e.texten,'\\n','$','g')) where e.aid in(129979412) and g.id is null order by e.aid asc,e.cid asc,e.bid asc LIMIT 1);");
+        q3.executeUpdate();
+        Query q4 = em.createNativeQuery("update gspreadsheetsqueststarttip set deprecated=TRUE where id in(select g.id from gspreadsheetsqueststarttip g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
+        q4.executeUpdate();
+        for (int i = 0; i < 5; i++) {
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsqueststarttip g1 join gspreadsheetsqueststarttip g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsqueststarttip_id=newid.gid1 from newid where translatedtext.spreadsheetsqueststarttip_id=gid2;");
+            q5.executeUpdate();
+            Query qDelete = em.createNativeQuery("delete from gspreadsheetsqueststarttip where id in (select max(g2.id) as gid2 from gspreadsheetsqueststarttip g1 join gspreadsheetsqueststarttip g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
+            qDelete.executeUpdate();
+        }
+        Query qSort = em.createNativeQuery("with new_numbers as (select row_number() over (order by deprecated asc,aid asc,cid asc,bid asc) as new_nr,rownum, id from gspreadsheetsqueststarttip) update gspreadsheetsqueststarttip set rownum = nn.new_nr from new_numbers nn where nn.id = gspreadsheetsqueststarttip.id;");
+        qSort.executeUpdate();
+    }
+    
+    @Transactional
+    public void updateQuestEndTips() {
+        Query q0 = em.createNativeQuery("with newid as (select g.id,e.aid,e.bid,e.cid from gspreadsheetsquestendtip g join esorawstring e on lower(regexp_replace(e.texten,'\\n','$','g'))=lower(g.texten) and e.aid in(108566804) order by e.aid asc,e.cid asc,e.bid asc) update gspreadsheetsquestendtip set deprecated=FALSE,aid=newid.aid,bid=newid.bid,cid=newid.cid,weight=newid.cid from newid where gspreadsheetsquestendtip.id=newid.id;");
+        q0.executeUpdate();
+        Query q1 = em.createNativeQuery("update translatedtext set status ='REVOKED' where spreadsheetsquestendtip_id in(select g.id from gspreadsheetsquestendtip g join esorawstring e on g.texten!=regexp_replace(e.texten,'\\n','$','g') and e.aid=g.aid and e.bid=g.bid and e.cid=g.cid);");
+        q1.executeUpdate();
+        Query q2 = em.createNativeQuery("update gspreadsheetsquestendtip set texten=regexp_replace(e.texten,'\\n','$','g'),textru=regexp_replace(e.texten,'\\n','$','g'),changetime=null,translator=null,deprecated=false from esorawstring e where gspreadsheetsquestendtip.texten!=regexp_replace(e.texten,'\\n','$','g') and e.aid=gspreadsheetsquestendtip.aid and e.bid=gspreadsheetsquestendtip.bid and e.cid=gspreadsheetsquestendtip.cid;");
+        q2.executeUpdate();
+        Query q3 = em.createNativeQuery("insert into gspreadsheetsquestendtip (id,changetime,rownum,texten,textru,translator,weight,aid,bid,cid,deprecated) select nextval('hibernate_sequence'),null,null,regexp_replace(texten,'\\n','$','g') as ten,regexp_replace(texten,'\\n','$','g') as ter, null,cid,aid,bid,cid,FALSE from esorawstring where id in(select e.id from esorawstring e left join gspreadsheetsquestendtip g on lower(g.texten) = lower(regexp_replace(e.texten,'\\n','$','g')) where e.aid in(108566804) and g.id is null order by e.aid asc,e.cid asc,e.bid asc LIMIT 1);");
+        q3.executeUpdate();
+        Query q4 = em.createNativeQuery("update gspreadsheetsquestendtip set deprecated=TRUE where id in(select g.id from gspreadsheetsquestendtip g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
+        q4.executeUpdate();
+        for (int i = 0; i < 5; i++) {
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestendtip g1 join gspreadsheetsquestendtip g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestendtip_id=newid.gid1 from newid where translatedtext.spreadsheetsquestendtip_id=gid2;");
+            q5.executeUpdate();
+            Query qDelete = em.createNativeQuery("delete from gspreadsheetsquestendtip where id in (select max(g2.id) as gid2 from gspreadsheetsquestendtip g1 join gspreadsheetsquestendtip g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
+            qDelete.executeUpdate();
+        }
+        Query qSort = em.createNativeQuery("with new_numbers as (select row_number() over (order by deprecated asc,aid asc,cid asc,bid asc) as new_nr,rownum, id from gspreadsheetsquestendtip) update gspreadsheetsquestendtip set rownum = nn.new_nr from new_numbers nn where nn.id = gspreadsheetsquestendtip.id;");
         qSort.executeUpdate();
     }
 
@@ -435,9 +479,9 @@ public class TableUpdateService {
         Query q4 = em.createNativeQuery("update gspreadsheetsquestname set deprecated=TRUE where id in(select g.id from gspreadsheetsquestname g left join esorawstring e on e.aid=g.aid and e.bid=g.bid and e.cid=g.cid where e.texten is null);");
         q4.executeUpdate();
         for (int i = 0; i < 5; i++) {
-            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsquestname g1 join gspreadsheetsquestname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestname_id=newid.gid1 from newid where translatedtext.spreadsheetsquestname_id=gid2;");
+            Query q5 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestname g1 join gspreadsheetsquestname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update translatedtext set spreadsheetsquestname_id=newid.gid1 from newid where translatedtext.spreadsheetsquestname_id=gid2;");
             q5.executeUpdate();
-            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,g1.texten,max(g2.id) as gid2 from gspreadsheetsquestname g1 join gspreadsheetsquestname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update quest set sheetsquestname_id=newid.gid1 from newid where quest.sheetsquestname_id=gid2;");
+            Query q6 = em.createNativeQuery("with newid as (select min(g1.id) as gid1,max(g2.id) as gid2 from gspreadsheetsquestname g1 join gspreadsheetsquestname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten)) update quest set sheetsquestname_id=newid.gid1 from newid where quest.sheetsquestname_id=gid2;");
             q6.executeUpdate();
             Query qDelete = em.createNativeQuery("delete from gspreadsheetsquestname where id in (select max(g2.id) as gid2 from gspreadsheetsquestname g1 join gspreadsheetsquestname g2 on lower(g1.texten)=lower(g2.texten) and g1.id!=g2.id group by lower(g1.texten));");
             qDelete.executeUpdate();

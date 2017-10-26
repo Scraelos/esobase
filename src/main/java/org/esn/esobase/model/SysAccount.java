@@ -32,7 +32,7 @@ public class SysAccount extends DAO {
     private String login;
     private String password;
     private Boolean isBlocked;
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<SysAccountRole> roles;
 
     @Override

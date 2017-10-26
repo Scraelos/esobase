@@ -40,13 +40,11 @@ public class TranslatedText extends DAO {
     private String text;
     @ManyToOne(fetch = FetchType.EAGER)
     private SysAccount author;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Topic playerTopic;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Topic npcTopic;
-    @ManyToOne
-    private Greeting greeting;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Subtitle subtitle;
     @Enumerated(EnumType.STRING)
     private TRANSLATE_STATUS status;
@@ -107,6 +105,10 @@ public class TranslatedText extends DAO {
     private BookText book;
     @ManyToOne(fetch = FetchType.LAZY)
     private Book bookName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GSpreadSheetsQuestStartTip spreadSheetsQuestStartTip;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GSpreadSheetsQuestEndTip spreadSheetsQuestEndTip;
 
     @Override
     public Long getId() {
@@ -148,14 +150,6 @@ public class TranslatedText extends DAO {
 
     public void setNpcTopic(Topic npcTopic) {
         this.npcTopic = npcTopic;
-    }
-
-    public Greeting getGreeting() {
-        return greeting;
-    }
-
-    public void setGreeting(Greeting greeting) {
-        this.greeting = greeting;
     }
 
     public Subtitle getSubtitle() {
@@ -396,6 +390,22 @@ public class TranslatedText extends DAO {
 
     public void setRejectedBy(SysAccount rejectedBy) {
         this.rejectedBy = rejectedBy;
+    }
+
+    public GSpreadSheetsQuestStartTip getSpreadSheetsQuestStartTip() {
+        return spreadSheetsQuestStartTip;
+    }
+
+    public void setSpreadSheetsQuestStartTip(GSpreadSheetsQuestStartTip spreadSheetsQuestStartTip) {
+        this.spreadSheetsQuestStartTip = spreadSheetsQuestStartTip;
+    }
+
+    public GSpreadSheetsQuestEndTip getSpreadSheetsQuestEndTip() {
+        return spreadSheetsQuestEndTip;
+    }
+
+    public void setSpreadSheetsQuestEndTip(GSpreadSheetsQuestEndTip spreadSheetsQuestEndTip) {
+        this.spreadSheetsQuestEndTip = spreadSheetsQuestEndTip;
     }
 
 }

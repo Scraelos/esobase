@@ -61,7 +61,9 @@ import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
 import org.esn.esobase.model.GSpreadSheetsQuestDirection;
+import org.esn.esobase.model.GSpreadSheetsQuestEndTip;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
+import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.TranslatedEntity;
@@ -116,6 +118,12 @@ public class DirectTableEditTab extends VerticalLayout {
 
     private GspreadSheetTable questDirectionTable;
     private GeneratedPropertyListContainer<GSpreadSheetsQuestDirection> questDirectionContainer;
+
+    private GspreadSheetTable questStartTipTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsQuestStartTip> questStartTipContainer;
+
+    private GspreadSheetTable questEndTipTable;
+    private GeneratedPropertyListContainer<GSpreadSheetsQuestEndTip> questEndTipContainer;
 
     private VerticalLayout itemNameLayout;
     private GspreadSheetTable itemNameTable;
@@ -174,7 +182,7 @@ public class DirectTableEditTab extends VerticalLayout {
         searchInCatalogsLayout.setSizeFull();
         HorizontalLayout hl = new HorizontalLayout();
         searchField = new TextField();
-        searchField.setWidth(300, Unit.PIXELS);
+        searchField.setWidth(500, Unit.PIXELS);
         searchField.addShortcutListener(new ShortcutListener("Search shortcut", ShortcutAction.KeyCode.ENTER, null) {
             @Override
             public void handleAction(Object sender, Object target) {
@@ -260,6 +268,10 @@ public class DirectTableEditTab extends VerticalLayout {
         translateTypeBox.setItemCaption("spreadSheetsQuestDirection", "Цели квестов");
         translateTypeBox.addItem("spreadSheetsQuestName");
         translateTypeBox.setItemCaption("spreadSheetsQuestName", "Названия квестов");
+        translateTypeBox.addItem("spreadSheetsQuestStartTip");
+        translateTypeBox.setItemCaption("spreadSheetsQuestStartTip", "Начатые цепочки");
+        translateTypeBox.addItem("spreadSheetsQuestEndTip");
+        translateTypeBox.setItemCaption("spreadSheetsQuestEndTip", "Завершённые цепочки");
         translateTypeBox.addItem("sheetsCollectible");
         translateTypeBox.setItemCaption("sheetsCollectible", "Названия коллекционных предметов");
         translateTypeBox.addItem("sheetsCollectibleDescription");
@@ -375,6 +387,24 @@ public class DirectTableEditTab extends VerticalLayout {
         questDirectionTable.build();
         questDirectionTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
         questDirectionTable.Load();
+
+        questStartTipContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsQuestStartTip.class);
+        questStartTipTable = new GspreadSheetTable(questStartTipContainer, PAGESIZE, service.getgSpreadSheetsQuestStartTipRepository());
+        questStartTipTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator());
+        questStartTipTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator(questStartTipTable));
+        tableTabs.addTab(questStartTipTable, "Начатые цепочки");
+        questStartTipTable.build();
+        questStartTipTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questStartTipTable.Load();
+
+        questEndTipContainer = new GeneratedPropertyListContainer<>(GSpreadSheetsQuestEndTip.class);
+        questEndTipTable = new GspreadSheetTable(questEndTipContainer, PAGESIZE, service.getgSpreadSheetsQuestEndTipRepository());
+        questEndTipTable.addGeneratedColumn("infoColumn", new InfoColumnGenerator());
+        questEndTipTable.addGeneratedColumn("translateColumn", new TranslateColumnGenerator(questEndTipTable));
+        tableTabs.addTab(questEndTipTable, "Завершённые цепочки");
+        questEndTipTable.build();
+        questEndTipTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
+        questEndTipTable.Load();
 
         itemNameLayout = new VerticalLayout();
         itemNameLayout.setSizeFull();
@@ -607,6 +637,12 @@ public class DirectTableEditTab extends VerticalLayout {
             } else if (entity instanceof GSpreadSheetsCollectibleDescription) {
                 tt.setSheetsCollectibleDescription((GSpreadSheetsCollectibleDescription) entity);
                 tt.getSheetsCollectibleDescription().getTranslatedTexts().add(tt);
+            } else if (entity instanceof GSpreadSheetsQuestStartTip) {
+                tt.setSpreadSheetsQuestStartTip((GSpreadSheetsQuestStartTip) entity);
+                tt.getSpreadSheetsQuestStartTip().getTranslatedTexts().add(tt);
+            } else if (entity instanceof GSpreadSheetsQuestEndTip) {
+                tt.setSpreadSheetsQuestEndTip((GSpreadSheetsQuestEndTip) entity);
+                tt.getSpreadSheetsQuestEndTip().getTranslatedTexts().add(tt);
             } else if (entity instanceof EsoInterfaceVariable) {
                 tt.setEsoInterfaceVariable((EsoInterfaceVariable) entity);
                 tt.getEsoInterfaceVariable().getTranslatedTexts().add(tt);
@@ -943,6 +979,16 @@ public class DirectTableEditTab extends VerticalLayout {
             targetTable = loadscreenTable;
             rowNum = ((GSpreadSheetsLoadscreen) entity).getRowNum().intValue();
             itemId = ((GSpreadSheetsLoadscreen) entity).getId();
+        } else if (entity instanceof GSpreadSheetsQuestStartTip) {
+            targetTabId = questStartTipTable;
+            targetTable = questStartTipTable;
+            rowNum = ((GSpreadSheetsQuestStartTip) entity).getRowNum().intValue();
+            itemId = ((GSpreadSheetsQuestStartTip) entity).getId();
+        } else if (entity instanceof GSpreadSheetsQuestEndTip) {
+            targetTabId = questEndTipTable;
+            targetTable = questEndTipTable;
+            rowNum = ((GSpreadSheetsQuestEndTip) entity).getRowNum().intValue();
+            itemId = ((GSpreadSheetsQuestEndTip) entity).getId();
         }
         if (rowNum != null) {
             rowNum--;
@@ -1062,6 +1108,16 @@ public class DirectTableEditTab extends VerticalLayout {
                 targetTable = loadscreenTable;
                 rowNum = tt.getSheetsLoadscreen().getRowNum().intValue();
                 itemId = tt.getSheetsLoadscreen().getId();
+            } else if (tt.getSpreadSheetsQuestStartTip() != null) {
+                targetTabId = questStartTipTable;
+                targetTable = questStartTipTable;
+                rowNum = tt.getSpreadSheetsQuestStartTip().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsQuestStartTip().getId();
+            } else if (tt.getSpreadSheetsQuestEndTip() != null) {
+                targetTabId = questEndTipTable;
+                targetTable = questEndTipTable;
+                rowNum = tt.getSpreadSheetsQuestStartTip().getRowNum().intValue();
+                itemId = tt.getSpreadSheetsQuestStartTip().getId();
             }
             if (rowNum != null) {
                 rowNum--;

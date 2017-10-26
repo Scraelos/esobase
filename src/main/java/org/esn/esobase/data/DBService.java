@@ -73,7 +73,9 @@ import org.esn.esobase.data.repository.GSpreadSheetsNpcPhraseRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsPlayerPhraseRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestDescriptionRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestDirectionRepository;
+import org.esn.esobase.data.repository.GSpreadSheetsQuestEndTipRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsQuestNameRepository;
+import org.esn.esobase.data.repository.GSpreadSheetsQuestStartTipRepository;
 import org.esn.esobase.data.repository.LocationRepository;
 import org.esn.esobase.data.repository.NpcRepository;
 import org.esn.esobase.data.repository.QuestDirectionRepository;
@@ -106,8 +108,9 @@ import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
 import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
 import org.esn.esobase.model.GSpreadSheetsQuestDescription;
 import org.esn.esobase.model.GSpreadSheetsQuestDirection;
+import org.esn.esobase.model.GSpreadSheetsQuestEndTip;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
-import org.esn.esobase.model.Greeting;
+import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.Npc;
@@ -186,6 +189,10 @@ public class DBService {
     private GSpreadSheetsCollectibleRepository gSpreadSheetsCollectibleRepository;
     @Autowired
     private GSpreadSheetsCollectibleDescriptionRepository gSpreadSheetsCollectibleDescriptionRepository;
+    @Autowired
+    private GSpreadSheetsQuestStartTipRepository gSpreadSheetsQuestStartTipRepository;
+    @Autowired
+    private GSpreadSheetsQuestEndTipRepository gSpreadSheetsQuestEndTipRepository;
     @Autowired
     private BookRepository bookRepository;
     @Autowired
@@ -301,6 +308,14 @@ public class DBService {
 
     public QuestDirectionRepository getQuestDirectionRepository() {
         return questDirectionRepository;
+    }
+
+    public GSpreadSheetsQuestStartTipRepository getgSpreadSheetsQuestStartTipRepository() {
+        return gSpreadSheetsQuestStartTipRepository;
+    }
+
+    public GSpreadSheetsQuestEndTipRepository getgSpreadSheetsQuestEndTipRepository() {
+        return gSpreadSheetsQuestEndTipRepository;
     }
 
     @PersistenceContext
@@ -528,23 +543,6 @@ public class DBService {
                                     em.persist(subtitle);
                                 }
                             }
-                            /*for (Greeting greeting : npc.getGreetings()) {
-                                Criteria greetingCriteria = session.createCriteria(Greeting.class);
-                                greetingCriteria.add(Restrictions.eq("npc", npc));
-                                greetingCriteria.setMaxResults(1);
-                                if (greeting.getText() != null) {
-                                    greetingCriteria.add(Restrictions.eq("text", greeting.getText()));
-                                }
-                                Greeting greetingResult = (Greeting) greetingCriteria.uniqueResult();
-                                if (greetingResult == null) {
-                                    persistCounter++;
-                                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Persist greeting. Total persists: {0}", Integer.toString(persistCounter));
-                                    if (greeting.getText() != null) {
-                                        greeting.setExtNpcPhrase(getNpcPharse(greeting.getText()));
-                                    }
-                                    em.persist(greeting);
-                                }
-                            }*/
                             for (Topic topic : npc.getTopics()) {
                                 Criteria topicCriteria = session.createCriteria(Topic.class);
                                 topicCriteria.add(Restrictions.eq("npc", npc));
@@ -581,86 +579,6 @@ public class DBService {
         }
         Logger.getLogger(DBService.class.getName()).log(Level.INFO, "Finisted persist actions. Total persists: {0}", Integer.toString(persistCounter));
 
-    }
-
-    @Transactional(readOnly = true)
-    public HierarchicalContainer getLocationsTree(HierarchicalContainer hc) {
-        if (hc == null) {
-            hc = new HierarchicalContainer();
-            hc.addContainerProperty("type", String.class, null);
-            hc.addContainerProperty("text", String.class, null);
-            hc.addContainerProperty("textRaw", String.class, null);
-            hc.addContainerProperty("textRu", String.class, null);
-            hc.addContainerProperty("textRawRu", String.class, null);
-
-        }
-        hc.removeAllItems();
-        Session session = (Session) em.getDelegate();
-        Criteria crit = session.createCriteria(Location.class);
-        crit.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        List<Location> list = crit.list();
-        for (Location location : list) {
-            Item locationItem = hc.addItem(location);
-            locationItem.getItemProperty("type").setValue("Локация");
-            locationItem.getItemProperty("text").setValue(location.getName());
-            locationItem.getItemProperty("textRu").setValue(location.getNameRu());
-            for (Npc npc : location.getNpcs()) {
-                Item npcItem = hc.addItem(npc);
-                npcItem.getItemProperty("type").setValue("NPC");
-                npcItem.getItemProperty("text").setValue(npc.getName());
-                npcItem.getItemProperty("textRu").setValue(npc.getNameRu());
-                hc.setParent(npc, location);
-                for (Greeting greeting : npc.getGreetings()) {
-                    Item greetingItem = hc.addItem(greeting);
-                    greetingItem.getItemProperty("type").setValue("Приветствие");
-                    greetingItem.getItemProperty("text").setValue(greeting.getText());
-                    greetingItem.getItemProperty("textRu").setValue(greeting.getTextRu());
-                    if (greeting.getExtNpcPhrase() != null) {
-                        greetingItem.getItemProperty("textRaw").setValue(greeting.getExtNpcPhrase().getTextEn());
-                        greetingItem.getItemProperty("textRawRu").setValue(greeting.getExtNpcPhrase().getTextRu());
-                    }
-                    hc.setParent(greeting, npc);
-                    hc.setChildrenAllowed(greeting, false);
-                }
-                for (Subtitle subtitle : npc.getSubtitles()) {
-                    Item subtitleItem = hc.addItem(subtitle);
-                    subtitleItem.getItemProperty("type").setValue("Субтитры");
-                    subtitleItem.getItemProperty("text").setValue(subtitle.getText());
-                    subtitleItem.getItemProperty("textRu").setValue(subtitle.getTextRu());
-                    if (subtitle.getExtNpcPhrase() != null) {
-                        subtitleItem.getItemProperty("textRaw").setValue(subtitle.getExtNpcPhrase().getTextEn());
-                        subtitleItem.getItemProperty("textRawRu").setValue(subtitle.getExtNpcPhrase().getTextRu());
-                    }
-                    hc.setParent(subtitle, npc);
-                    hc.setChildrenAllowed(subtitle, false);
-                }
-                for (Topic topic : npc.getTopics()) {
-                    Item topicPlayerItem = hc.addItem(topic);
-                    topicPlayerItem.getItemProperty("type").setValue("Фраза игрока");
-                    topicPlayerItem.getItemProperty("text").setValue(topic.getPlayerText());
-                    topicPlayerItem.getItemProperty("textRu").setValue(topic.getPlayerTextRu());
-                    if (topic.getExtPlayerPhrase() != null) {
-                        topicPlayerItem.getItemProperty("textRaw").setValue(topic.getExtPlayerPhrase().getTextEn());
-                        topicPlayerItem.getItemProperty("textRawRu").setValue(topic.getExtPlayerPhrase().getTextRu());
-                    }
-                    hc.setParent(topic, npc);
-                    hc.setChildrenAllowed(topic, false);
-                    NpcTopic npcTopic = new NpcTopic(topic);
-                    Item topicNpcItem = hc.addItem(npcTopic);
-                    topicNpcItem.getItemProperty("type").setValue("Фраза NPC");
-                    topicNpcItem.getItemProperty("text").setValue(topic.getNpcText());
-                    topicNpcItem.getItemProperty("textRu").setValue(topic.getNpcTextRu());
-                    if (topic.getExtNpcPhrase() != null) {
-                        topicNpcItem.getItemProperty("textRaw").setValue(topic.getExtNpcPhrase().getTextEn());
-                        topicNpcItem.getItemProperty("textRawRu").setValue(topic.getExtNpcPhrase().getTextRu());
-                    }
-                    hc.setParent(npcTopic, npc);
-                    hc.setChildrenAllowed(npcTopic, false);
-                }
-            }
-
-        }
-        return hc;
     }
 
     public class NpcTopic {
@@ -912,6 +830,118 @@ public class DBService {
             GSpreadSheetsQuestDescription result = spreadSheetItemMap.get(item.getTextEn());
             if (result == null) {
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest description rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsQuestDescription(null);
+                    em.merge(t);
+                }
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadQuestStartTipsFromSpreadSheet(List<GSpreadSheetsQuestStartTip> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsQuestStartTip.class);
+        Map<String, GSpreadSheetsQuestStartTip> itemMap = new HashMap<>();
+        List<GSpreadSheetsQuestStartTip> allItems = crit.list();
+        for (GSpreadSheetsQuestStartTip item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsQuestStartTip item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "quest start tip {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsQuestStartTip result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for quest start tip: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for quest start tip: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsQuestStartTip item : items) {
+            GSpreadSheetsQuestStartTip result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting quest start tip for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsQuestStartTip> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsQuestStartTip location : items) {
+            spreadSheetItemMap.put(location.getTextEn(), location);
+        }
+        for (GSpreadSheetsQuestStartTip item : allItems) {
+            GSpreadSheetsQuestStartTip result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest start tip rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
+                for (TranslatedText t : item.getTranslatedTexts()) {
+                    t.setSpreadSheetsQuestDescription(null);
+                    em.merge(t);
+                }
+                em.remove(item);
+            }
+        }
+    }
+
+    @Transactional
+    public void loadQuestEndTipsFromSpreadSheet(List<GSpreadSheetsQuestEndTip> items) {
+        Session session = (Session) em.getDelegate();
+        Criteria crit = session.createCriteria(GSpreadSheetsQuestEndTip.class);
+        Map<String, GSpreadSheetsQuestEndTip> itemMap = new HashMap<>();
+        List<GSpreadSheetsQuestEndTip> allItems = crit.list();
+        for (GSpreadSheetsQuestEndTip item : allItems) {
+            itemMap.put(item.getTextEn(), item);
+        }
+        int total = items.size();
+        int count = 0;
+        for (GSpreadSheetsQuestEndTip item : items) {
+            count++;
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "quest end tip {0}/{1}", new Object[]{Integer.toString(count), Integer.toString(total)});
+            GSpreadSheetsQuestEndTip result = itemMap.get(item.getTextEn());
+            if (result != null) {
+                boolean isMerge = false;
+                if (item.getWeight() != null && (result.getWeight() == null || !result.getWeight().equals(item.getWeight()))) {
+                    isMerge = true;
+                    result.setWeight(item.getWeight());
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "weight changed for quest end tip: {0}", item.getTextEn());
+                }
+                if (!result.getRowNum().equals(item.getRowNum())) {
+                    isMerge = true;
+                    Logger.getLogger(DBService.class.getName()).log(Level.INFO, "rowNum changed for quest end tip: {0}", item.getTextEn());
+                    result.setRowNum(item.getRowNum());
+                }
+                if (isMerge) {
+                    em.merge(result);
+                }
+            }
+        }
+        for (GSpreadSheetsQuestEndTip item : items) {
+            GSpreadSheetsQuestEndTip result = itemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "inserting quest end tip for rowNum {0}", item.getRowNum());
+                em.persist(item);
+            }
+        }
+        Map<String, GSpreadSheetsQuestEndTip> spreadSheetItemMap = new HashMap<>();
+        for (GSpreadSheetsQuestEndTip location : items) {
+            spreadSheetItemMap.put(location.getTextEn(), location);
+        }
+        for (GSpreadSheetsQuestEndTip item : allItems) {
+            GSpreadSheetsQuestEndTip result = spreadSheetItemMap.get(item.getTextEn());
+            if (result == null) {
+                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest end tip rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
                 for (TranslatedText t : item.getTranslatedTexts()) {
                     t.setSpreadSheetsQuestDescription(null);
                     em.merge(t);
@@ -1829,13 +1859,6 @@ public class DBService {
                 for (Subtitle s : subtitles) {
                     s.setExtNpcPhrase(null);
                     em.merge(s);
-                }
-                Criteria greetingCrit = session.createCriteria(Greeting.class);
-                greetingCrit.add(Restrictions.eq("extNpcPhrase", phrase));
-                List<Greeting> greetings = greetingCrit.list();
-                for (Greeting g : greetings) {
-                    g.setExtNpcPhrase(null);
-                    em.merge(g);
                 }
                 for (TranslatedText t : phrase.getTranslatedTexts()) {
                     t.setSpreadSheetsNpcPhrase(null);
@@ -4232,22 +4255,7 @@ public class DBService {
         }
         Npc npc = null;
         boolean isSucceeded = false;
-        if (entity.getGreeting() != null) {
-            npc = entity.getGreeting().getNpc();
-            Greeting greeting = em.find(Greeting.class, entity.getGreeting().getId());
-            GSpreadSheetsNpcPhrase npcPhrase = greeting.getExtNpcPhrase();
-            if (npcPhrase != null) {
-                npcPhrase.setTextRu(entity.getText());
-                npcPhrase.setTranslator(entity.getAuthor().getLogin());
-                npcPhrase.setChangeTime(new Date());
-                em.merge(npcPhrase);
-                entity.setStatus(TRANSLATE_STATUS.ACCEPTED);
-                entity.setApptovedTime(new Date());
-                entity.setApprovedBy(SpringSecurityHelper.getSysAccount());
-                em.merge(entity);
-            }
-
-        } else if (entity.getSubtitle() != null) {
+        if (entity.getSubtitle() != null) {
             npc = entity.getSubtitle().getNpc();
             Subtitle subtitle = em.find(Subtitle.class, entity.getSubtitle().getId());
             GSpreadSheetsNpcPhrase npcPhrase = subtitle.getExtNpcPhrase();
@@ -4313,6 +4321,20 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getSheetsAbilityDescription() != null) {
             GSpreadSheetsAbilityDescription gs = em.find(GSpreadSheetsAbilityDescription.class, entity.getSheetsAbilityDescription().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsQuestStartTip() != null) {
+            GSpreadSheetsQuestStartTip gs = em.find(GSpreadSheetsQuestStartTip.class, entity.getSpreadSheetsQuestStartTip().getId());
+            gs.setTextRu(entity.getText());
+            gs.setTranslator(entity.getAuthor().getLogin());
+            gs.setChangeTime(new Date());
+            em.merge(gs);
+            isSucceeded = true;
+        } else if (entity.getSpreadSheetsQuestEndTip() != null) {
+            GSpreadSheetsQuestEndTip gs = em.find(GSpreadSheetsQuestEndTip.class, entity.getSpreadSheetsQuestEndTip().getId());
             gs.setTextRu(entity.getText());
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
@@ -4526,17 +4548,6 @@ public class DBService {
                         }
                     }
                 }
-                for (Greeting g : npc.getGreetings()) {
-                    GSpreadSheetsNpcPhrase extNpcPhrase = g.getExtNpcPhrase();
-                    if (extNpcPhrase != null) {
-                        totalPhases++;
-                        npcTotalPhases++;
-                        if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                            translatedPhrases++;
-                            npcTranslatedPhrases++;
-                        }
-                    }
-                }
                 float npcR = 0;
                 if (npcTotalPhases > 0) {
                     npcR = (float) npcTranslatedPhrases / npcTotalPhases;
@@ -4561,27 +4572,6 @@ public class DBService {
             }
 
             em.merge(q);
-        }
-
-        Query updateNpcQuery = em.createQuery("update Npc set hasNewTranslations=false");
-        updateNpcQuery.executeUpdate();
-        Criteria npcCrit = session.createCriteria(TranslatedText.class);
-        //npcCrit.add(Restrictions.eq("status", TRANSLATE_STATUS.NEW));
-        List<TranslatedText> list1 = npcCrit.list();
-        for (TranslatedText t : list1) {
-            Npc npc = null;
-            if (t.getGreeting() != null) {
-                npc = t.getGreeting().getNpc();
-            }
-            if (t.getSubtitle() != null) {
-                npc = t.getSubtitle().getNpc();
-            }
-            if (t.getNpcTopic() != null) {
-                npc = t.getNpcTopic().getNpc();
-            }
-            if (t.getPlayerTopic() != null) {
-                npc = t.getPlayerTopic().getNpc();
-            }
         }
 
     }
@@ -4618,15 +4608,6 @@ public class DBService {
                         }
                     }
                 }
-                for (Greeting g : npc.getGreetings()) {
-                    GSpreadSheetsNpcPhrase extNpcPhrase = g.getExtNpcPhrase();
-                    if (extNpcPhrase != null) {
-                        totalPhases++;
-                        if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                            translatedPhrases++;
-                        }
-                    }
-                }
             }
             float r = 0;
             if (totalPhases > 0) {
@@ -4648,32 +4629,36 @@ public class DBService {
         int totalPhases = 0;
         int translatedPhrases = 0;
         Npc npc = em.find(Npc.class, n.getId());
-        for (Topic t : npc.getTopics()) {
-            GSpreadSheetsNpcPhrase extNpcPhrase = t.getExtNpcPhrase();
-            if (extNpcPhrase != null) {
-                totalPhases++;
-                if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                    translatedPhrases++;
+        if (npc.getTopics() != null) {
+            for (Topic t : npc.getTopics()) {
+                GSpreadSheetsNpcPhrase extNpcPhrase = t.getExtNpcPhrase();
+                if (extNpcPhrase != null) {
+                    totalPhases++;
+                    if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
+                        translatedPhrases++;
+                    }
                 }
-            }
-            GSpreadSheetsPlayerPhrase extPlayerPhrase = t.getExtPlayerPhrase();
-            if (extPlayerPhrase != null) {
-                totalPhases++;
-                if (extPlayerPhrase.getTranslator() != null && !extPlayerPhrase.getTranslator().isEmpty()) {
-                    translatedPhrases++;
-                }
-            }
-        }
-        for (Subtitle s : npc.getSubtitles()) {
-            GSpreadSheetsNpcPhrase extNpcPhrase = s.getExtNpcPhrase();
-            if (extNpcPhrase != null) {
-                totalPhases++;
-                if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                    translatedPhrases++;
+                GSpreadSheetsPlayerPhrase extPlayerPhrase = t.getExtPlayerPhrase();
+                if (extPlayerPhrase != null) {
+                    totalPhases++;
+                    if (extPlayerPhrase.getTranslator() != null && !extPlayerPhrase.getTranslator().isEmpty()) {
+                        translatedPhrases++;
+                    }
                 }
             }
         }
 
+        if (npc.getSubtitles() != null) {
+            for (Subtitle s : npc.getSubtitles()) {
+                GSpreadSheetsNpcPhrase extNpcPhrase = s.getExtNpcPhrase();
+                if (extNpcPhrase != null) {
+                    totalPhases++;
+                    if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
+                        translatedPhrases++;
+                    }
+                }
+            }
+        }
         float r = 0;
         if (totalPhases > 0) {
             r = (float) translatedPhrases / totalPhases;
@@ -4830,8 +4815,7 @@ public class DBService {
 
         }
 
-        Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class
-        );
+        Criteria questDirectionCrit = session.createCriteria(GSpreadSheetsQuestDirection.class);
         questDirectionCrit.add(searchTerms);
         List<GSpreadSheetsQuestDirection> questDirectionList = questDirectionCrit.list();
         for (GSpreadSheetsQuestDirection row : questDirectionList) {
@@ -4842,6 +4826,30 @@ public class DBService {
             item.getItemProperty("translator").setValue(row.getTranslator());
             item.getItemProperty("catalogType").setValue("Цель квеста");
 
+        }
+
+        Criteria questStartTipCrit = session.createCriteria(GSpreadSheetsQuestStartTip.class);
+        questStartTipCrit.add(searchTerms);
+        List<GSpreadSheetsQuestStartTip> questStartTipList = questStartTipCrit.list();
+        for (GSpreadSheetsQuestStartTip row : questStartTipList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Начатая цепочка");
+        }
+
+        Criteria questEndTipCrit = session.createCriteria(GSpreadSheetsQuestEndTip.class);
+        questEndTipCrit.add(searchTerms);
+        List<GSpreadSheetsQuestEndTip> questEndTipList = questEndTipCrit.list();
+        for (GSpreadSheetsQuestEndTip row : questEndTipList) {
+            Item item = hc.addItem(row);
+            item.getItemProperty("textEn").setValue(row.getTextEn());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("weight").setValue(row.getWeight());
+            item.getItemProperty("translator").setValue(row.getTranslator());
+            item.getItemProperty("catalogType").setValue("Завершённая цепочка");
         }
 
         Criteria journalEntryCrit = session.createCriteria(GSpreadSheetsJournalEntry.class
@@ -4923,8 +4931,7 @@ public class DBService {
             item.getItemProperty("catalogType").setValue("Письмо");
 
         }
-        Criteria abilityDescriptionCrit = session.createCriteria(GSpreadSheetsAbilityDescription.class
-        );
+        Criteria abilityDescriptionCrit = session.createCriteria(GSpreadSheetsAbilityDescription.class);
         abilityDescriptionCrit.add(searchTerms);
         List<GSpreadSheetsAbilityDescription> abilityDescriptionList = abilityDescriptionCrit.list();
         for (GSpreadSheetsAbilityDescription i : abilityDescriptionList) {
@@ -4936,8 +4943,7 @@ public class DBService {
             item.getItemProperty("catalogType").setValue("Описание способности");
 
         }
-        Criteria collectibleCrit = session.createCriteria(GSpreadSheetsCollectible.class
-        );
+        Criteria collectibleCrit = session.createCriteria(GSpreadSheetsCollectible.class);
         collectibleCrit.add(searchTerms);
         List<GSpreadSheetsCollectible> collectibleList = collectibleCrit.list();
         for (GSpreadSheetsCollectible i : collectibleList) {
@@ -5204,12 +5210,13 @@ public class DBService {
         hc.removeAllItems();
         Session session = (Session) em.getDelegate();
         Criteria crit = session.createCriteria(EsoRawString.class);
-        List<Criterion> searchTermitems = new ArrayList<>();
+        /*List<Criterion> searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
         searchTermitems.add(Restrictions.ilike("textDe", search, MatchMode.ANYWHERE));
         searchTermitems.add(Restrictions.ilike("textFr", search, MatchMode.ANYWHERE));
         Disjunction searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
-        crit.add(searchTerms);
+        crit.add(searchTerms);*/
+        crit.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
         List<EsoRawString> rows = crit.list();
         for (EsoRawString row : rows) {
             Item item = hc.addItem(row);
@@ -5237,7 +5244,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(EntityItem item) {
-        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote) || (item.getEntity() instanceof GSpreadSheetsAbilityDescription) || (item.getEntity() instanceof GSpreadSheetsCollectible) || (item.getEntity() instanceof GSpreadSheetsCollectibleDescription) || (item.getEntity() instanceof GSpreadSheetsLoadscreen)) {
+        if ((item.getEntity() instanceof GSpreadSheetsNpcName) || (item.getEntity() instanceof GSpreadSheetsLocationName) || (item.getEntity() instanceof GSpreadSheetsNpcPhrase) || (item.getEntity() instanceof GSpreadSheetsPlayerPhrase) || (item.getEntity() instanceof GSpreadSheetsQuestName) || (item.getEntity() instanceof GSpreadSheetsQuestDescription) || (item.getEntity() instanceof GSpreadSheetsActivator) || (item.getEntity() instanceof GSpreadSheetsJournalEntry) || (item.getEntity() instanceof GSpreadSheetsItemName) || (item.getEntity() instanceof GSpreadSheetsItemDescription) || (item.getEntity() instanceof GSpreadSheetsQuestDirection) || (item.getEntity() instanceof EsoInterfaceVariable) || (item.getEntity() instanceof GSpreadSheetsAchievement) || (item.getEntity() instanceof GSpreadSheetsAchievementDescription) || (item.getEntity() instanceof GSpreadSheetsNote) || (item.getEntity() instanceof GSpreadSheetsAbilityDescription) || (item.getEntity() instanceof GSpreadSheetsCollectible) || (item.getEntity() instanceof GSpreadSheetsCollectibleDescription) || (item.getEntity() instanceof GSpreadSheetsLoadscreen) || (item.getEntity() instanceof GSpreadSheetsQuestStartTip) || (item.getEntity() instanceof GSpreadSheetsQuestEndTip)) {
             item.getItemProperty("changeTime").setValue(new Date());
             item.getItemProperty("translator").setValue(SpringSecurityHelper.getSysAccount().getLogin());
             String textRu = (String) item.getItemProperty("textRu").getValue();
@@ -5286,7 +5293,7 @@ public class DBService {
 
     @Transactional
     public void commitTableEntityItem(Object itemId, String textRu) {
-        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote) || (itemId instanceof GSpreadSheetsAbilityDescription)) {
+        if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote) || (itemId instanceof GSpreadSheetsAbilityDescription) || (itemId instanceof GSpreadSheetsQuestStartTip) || (itemId instanceof GSpreadSheetsQuestEndTip)) {
             if (itemId instanceof GSpreadSheetsNpcName) {
                 ((GSpreadSheetsNpcName) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsNpcName) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
@@ -5359,6 +5366,14 @@ public class DBService {
                 ((GSpreadSheetsItemDescription) itemId).setChangeTime(new Date());
                 ((GSpreadSheetsItemDescription) itemId).setTextRu(textRu);
                 ((GSpreadSheetsItemDescription) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsQuestStartTip) {
+                ((GSpreadSheetsQuestStartTip) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsQuestStartTip) itemId).setTextRu(textRu);
+                ((GSpreadSheetsQuestStartTip) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
+            } else if (itemId instanceof GSpreadSheetsQuestEndTip) {
+                ((GSpreadSheetsQuestEndTip) itemId).setChangeTime(new Date());
+                ((GSpreadSheetsQuestEndTip) itemId).setTextRu(textRu);
+                ((GSpreadSheetsQuestEndTip) itemId).setTranslator(SpringSecurityHelper.getSysAccount().getLogin());
             }
             em.merge(itemId);
             if (itemId instanceof GSpreadSheetsLocationName) {
@@ -6484,539 +6499,6 @@ public class DBService {
     }
 
     @Transactional
-    public void newFormatImportSubtitles(JSONObject source) {
-        Pattern nameCasesPattern = Pattern.compile("(.*)\\((.*)\\)");
-        Session session = (Session) em.getDelegate();
-        JSONObject npcLocationObject = null;
-        try {
-            npcLocationObject = source.getJSONObject("subtitles");
-            Iterator locationsKeys = npcLocationObject.keys();
-            while (locationsKeys.hasNext()) {
-                String locationName = (String) locationsKeys.next();
-                Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class
-                );
-                sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
-                List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
-                if (list != null && !list.isEmpty()) {
-                    GSpreadSheetsLocationName sheetsLocationName = list.get(0);
-                    Criteria locationCrit = session.createCriteria(Location.class);
-                    locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
-                    List<Location> locations = locationCrit.list();
-                    Location location = null;
-                    if (locations != null && !locations.isEmpty()) {
-                        location = locations.get(0);
-                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
-                            location.setNameRu(sheetsLocationName.getTextRu());
-                        }
-                    } else {
-                        location = new Location();
-                        location.setProgress(BigDecimal.ZERO);
-
-                    }
-                    if (sheetsLocationName != null) {
-                        location.setSheetsLocationName(sheetsLocationName);
-                        location.setName(sheetsLocationName.getTextEn());
-                    }
-                    if (location.getId() == null) {
-                        LOG.log(Level.INFO, "new location: {0}", location.toString());
-                        em.persist(location);
-                    } else {
-                        LOG.log(Level.INFO, "update location: {0}", location.toString());
-                        em.merge(location);
-                    }
-
-                    JSONObject locationSubtitlesObject = npcLocationObject.getJSONObject(locationName);
-                    Iterator locationSubtitlesObjectIterator = locationSubtitlesObject.keys();
-                    while (locationSubtitlesObjectIterator.hasNext()) {
-                        JSONObject subtitleSet = locationSubtitlesObject.getJSONObject((String) locationSubtitlesObjectIterator.next());
-                        int subtitleCount = subtitleSet.length();
-                        Subtitle[] subtilteArray = new Subtitle[subtitleCount];
-                        Iterator subtitleSetIterator = subtitleSet.keys();
-                        while (subtitleSetIterator.hasNext()) {
-                            String currentKey = (String) subtitleSetIterator.next();
-                            Integer currentIndex = Integer.valueOf(currentKey);
-                            JSONObject subtitleObject = subtitleSet.getJSONObject(currentKey);
-                            String npcNameString = subtitleObject.getString("name");
-                            String subtitleTextString = subtitleObject.getString("text");
-                            String npcName = null;
-                            String npcNameRu = null;
-                            Matcher npcWithCasesMatcher = nameCasesPattern.matcher(npcNameString);
-                            if (npcWithCasesMatcher.matches()) {
-                                String group1 = npcWithCasesMatcher.group(1);
-                                String group2 = npcWithCasesMatcher.group(2);
-                                if (!EsnDecoder.IsMostlyRu(group1)) {
-                                    npcName = group1.trim();
-                                } else {
-                                    npcNameRu = group2.trim();
-                                }
-                            } else {
-                                if (EsnDecoder.IsMostlyRu(npcNameString)) {
-                                    npcNameRu = npcNameString;
-                                } else {
-                                    npcName = npcNameString;
-                                }
-                            }
-                            GSpreadSheetsNpcName sheetNpc = null;
-                            if (npcName == null) {
-                                Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-                                sheetNpcCrit.add(Restrictions.ilike("textRu", npcNameRu));
-                                List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
-                                if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
-                                    sheetNpc = sheetNpcList.get(0);
-                                    npcName = sheetNpc.getTextEn();
-                                }
-                            } else {
-                                Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-                                sheetNpcCrit.add(Restrictions.ilike("textEn", npcName));
-                                List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
-                                if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
-                                    sheetNpc = sheetNpcList.get(0);
-                                    if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
-                                        npcNameRu = sheetNpc.getTextRu();
-                                    }
-                                }
-                            }
-                            Criteria npcCriteria = session.createCriteria(Npc.class);
-                            npcCriteria.add(Restrictions.eq("location", location));
-                            if (npcName != null) {
-                                npcCriteria.add(Restrictions.ilike("name", npcName));
-                            } else if (npcNameRu != null) {
-                                npcCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
-                            }
-                            Npc currentNpc = null;
-                            List<Npc> npcList = npcCriteria.list();
-                            if (npcList != null && !npcList.isEmpty()) {
-                                currentNpc = npcList.get(0);
-                            } else {
-                                currentNpc = new Npc();
-                                currentNpc.setLocation(location);
-                                if (npcName != null) {
-                                    currentNpc.setName(npcName);
-                                }
-                                if (npcNameRu != null) {
-                                    currentNpc.setNameRu(npcNameRu);
-                                }
-                            }
-                            if (sheetNpc != null) {
-                                currentNpc.setSheetsNpcName(sheetNpc);
-                                currentNpc.setSex(sheetNpc.getSex());
-                            }
-                            if (currentNpc.getId() == null) {
-                                LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
-                                em.persist(currentNpc);
-                            } else {
-                                LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
-                                em.merge(currentNpc);
-                            }
-                            String subtitleText = null;
-                            String subtitleTextRu = null;
-                            if (EsnDecoder.IsMostlyRu(subtitleTextString)) {
-                                subtitleTextRu = subtitleTextString;
-                            } else {
-                                subtitleText = subtitleTextString;
-
-                            }
-                            if ((subtitleText != null && !subtitleText.isEmpty()) || (subtitleTextRu != null && !subtitleTextRu.isEmpty())) {
-                                Criteria subtitleCriteria = session.createCriteria(Subtitle.class
-                                );
-                                subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
-                                if (subtitleText != null) {
-                                    subtitleCriteria.add(Restrictions.ilike("text", subtitleText));
-                                }
-                                if (subtitleTextRu != null) {
-                                    subtitleCriteria.add(Restrictions.ilike("textRu", subtitleTextRu));
-                                }
-                                List<Subtitle> subtitleList = subtitleCriteria.list();
-                                Subtitle subtitle = null;
-                                if (subtitleList == null || subtitleList.isEmpty()) {
-                                    subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
-                                    LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
-                                    em.persist(subtitle);
-
-                                } else {
-                                    subtitle = subtitleList.get(0);
-                                    if (subtitleTextRu != null && subtitle.getTextRu() == null) {
-                                        subtitle.setTextRu(subtitleTextRu);
-                                    }
-                                    if (subtitleText != null && subtitle.getText() == null) {
-                                        subtitle.setText(subtitleText);
-                                    }
-                                    em.merge(subtitle);
-                                }
-                                subtilteArray[currentIndex - 1] = subtitle;
-                            }
-                            for (int i = 1; i < subtilteArray.length; i++) {
-                                Subtitle s = subtilteArray[i];
-                                if (s.getPreviousSubtitle() == null) {
-                                    Subtitle preS = subtilteArray[i - 1];
-                                    preS.setNextSubtitle(s);
-                                    em.merge(preS);
-                                    s.setPreviousSubtitle(preS);
-                                    em.merge(s);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (JSONException ex) {
-
-        }
-    }
-
-    @Transactional
-    public void newFormatImportNpcs(JSONObject source) {
-        Pattern nameCasesPattern = Pattern.compile("(.*)\\((.*)\\)");
-        Session session = (Session) em.getDelegate();
-        JSONObject npcLocationObject = source.getJSONObject("npc");
-        Iterator locationsKeys = npcLocationObject.keys();
-        while (locationsKeys.hasNext()) {
-            String locationKey = (String) locationsKeys.next();
-            String locationName = null;
-            Matcher locationWithCasesMatcher = nameCasesPattern.matcher(locationKey);
-            if (locationWithCasesMatcher.matches()) {
-                String group1 = locationWithCasesMatcher.group(1);
-                String group2 = locationWithCasesMatcher.group(2);
-                if (!EsnDecoder.IsMostlyRu(group1)) {
-                    locationName = group1.trim();
-                } else {
-                    locationName = group2.trim();
-                }
-            } else {
-                locationName = locationKey;
-
-            }
-            Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class
-            );
-            sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
-            List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
-            if (list != null && !list.isEmpty()) {
-                GSpreadSheetsLocationName sheetsLocationName = list.get(0);
-                Criteria locationCrit = session.createCriteria(Location.class
-                );
-                locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
-                List<Location> locations = locationCrit.list();
-                Location location = null;
-                if (locations != null && !locations.isEmpty()) {
-                    location = locations.get(0);
-                    if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
-                        location.setNameRu(sheetsLocationName.getTextRu());
-                    }
-                } else {
-                    location = new Location();
-                    location.setProgress(BigDecimal.ZERO);
-
-                }
-                if (sheetsLocationName != null) {
-                    location.setSheetsLocationName(sheetsLocationName);
-                    location.setName(sheetsLocationName.getTextEn());
-                }
-                if (location.getId() == null) {
-                    LOG.log(Level.INFO, "new location: {0}", location.toString());
-                    em.persist(location);
-                } else {
-                    LOG.log(Level.INFO, "update location: {0}", location.toString());
-                    em.merge(location);
-                }
-
-                JSONObject npcsObject = npcLocationObject.getJSONObject(locationKey);
-                Iterator npcsKeys = npcsObject.keys();
-                while (npcsKeys.hasNext()) {
-                    String npcKey = (String) npcsKeys.next();
-                    String npcName = null;
-                    String npcNameRu = null;
-                    Matcher npcWithCasesMatcher = nameCasesPattern.matcher(npcKey);
-                    if (npcWithCasesMatcher.matches()) {
-                        String group1 = npcWithCasesMatcher.group(1);
-                        String group2 = npcWithCasesMatcher.group(2);
-                        if (!EsnDecoder.IsMostlyRu(group1)) {
-                            npcName = group1.trim();
-                        } else {
-                            npcNameRu = group2.trim();
-                        }
-                    } else {
-                        if (EsnDecoder.IsMostlyRu(npcKey)) {
-                            npcNameRu = npcKey;
-                        } else {
-                            npcName = npcKey;
-                        }
-                    }
-                    GSpreadSheetsNpcName sheetNpc = null;
-                    if (npcName == null) {
-                        Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-                        sheetNpcCrit.add(Restrictions.ilike("textRu", npcNameRu));
-                        List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
-                        if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
-                            sheetNpc = sheetNpcList.get(0);
-                            npcName = sheetNpc.getTextEn();
-                        }
-                    } else {
-                        Criteria sheetNpcCrit = session.createCriteria(GSpreadSheetsNpcName.class);
-                        sheetNpcCrit.add(Restrictions.ilike("textEn", npcName));
-                        List<GSpreadSheetsNpcName> sheetNpcList = sheetNpcCrit.list();
-                        if (sheetNpcList != null && !sheetNpcList.isEmpty()) {
-                            sheetNpc = sheetNpcList.get(0);
-                            if (EsnDecoder.IsMostlyRu(sheetNpc.getTextRu())) {
-                                npcNameRu = sheetNpc.getTextRu();
-
-                            }
-                        }
-                    }
-                    Criteria npcCriteria = session.createCriteria(Npc.class
-                    );
-                    npcCriteria.add(Restrictions.eq("location", location));
-                    if (npcName != null) {
-                        npcCriteria.add(Restrictions.ilike("name", npcName));
-                    } else if (npcNameRu != null) {
-                        npcCriteria.add(Restrictions.ilike("nameRu", npcNameRu));
-                    }
-                    Npc currentNpc = null;
-                    List<Npc> npcList = npcCriteria.list();
-                    if (npcList != null && !npcList.isEmpty()) {
-                        currentNpc = npcList.get(0);
-
-                    } else {
-                        currentNpc = new Npc();
-                        currentNpc.setLocation(location);
-                        if (npcName != null) {
-                            currentNpc.setName(npcName);
-                        }
-                        if (npcNameRu != null) {
-                            currentNpc.setNameRu(npcNameRu);
-                        }
-                    }
-                    if (sheetNpc != null) {
-                        currentNpc.setSheetsNpcName(sheetNpc);
-                        currentNpc.setSex(sheetNpc.getSex());
-                    }
-                    if (currentNpc.getId() == null) {
-                        LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
-                        em.persist(currentNpc);
-                    } else {
-                        LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
-                        em.merge(currentNpc);
-                    }
-                    JSONObject npcContent = npcsObject.getJSONObject(npcKey);
-
-                    List<Topic> npcTopics = new ArrayList<>();
-                    JSONObject greetingsObject = null;
-                    try {
-                        greetingsObject = npcContent.getJSONObject("greetings");
-                    } catch (JSONException ex) {
-
-                    }
-                    if (greetingsObject != null) {
-                        Iterator greetingsKeys = greetingsObject.keys();
-                        while (greetingsKeys.hasNext()) {
-                            String greetingskey = (String) greetingsKeys.next();
-                            String greetingText = null;
-                            String greetingTextRu = null;
-                            if (EsnDecoder.IsMostlyRu(greetingsObject.getString(greetingskey))) {
-                                greetingTextRu = greetingsObject.getString(greetingskey);
-                            } else {
-                                greetingText = greetingsObject.getString(greetingskey);
-                            }
-                            if (greetingText != null && !greetingText.isEmpty()) {
-                                Criteria greetingsCriteria = session.createCriteria(Topic.class);
-                                greetingsCriteria.add(Restrictions.eq("npc", currentNpc));
-                                if (greetingText != null) {
-                                    greetingsCriteria.add(Restrictions.eq("npcText", greetingText));
-                                }
-                                if (greetingTextRu != null) {
-                                    greetingsCriteria.add(Restrictions.eq("npcTextRu", greetingTextRu));
-                                }
-                                List<Topic> greetingList = greetingsCriteria.list();
-                                if (greetingList == null || greetingList.isEmpty()) {
-                                    Topic greeting = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
-                                    LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
-                                    em.persist(greeting);
-                                    npcTopics.add(greeting);
-                                } else {
-                                    Topic greeting = greetingList.get(0);
-                                    if (greeting.getNpcText() == null && greetingText != null) {
-                                        greeting.setNpcText(greetingText);
-                                        em.merge(greeting);
-                                    }
-                                    if (greeting.getNpcTextRu() == null && greetingTextRu != null) {
-                                        greeting.setNpcTextRu(greetingTextRu);
-                                        em.merge(greeting);
-                                    }
-                                    npcTopics.add(greeting);
-                                }
-                            }
-
-                        }
-                    }
-
-                    JSONObject topicsObject = null;
-                    try {
-                        topicsObject = npcContent.getJSONObject("topics");
-                    } catch (JSONException ex) {
-
-                    }
-                    if (topicsObject != null) {
-                        Iterator topicsKeys = topicsObject.keys();
-                        while (topicsKeys.hasNext()) {
-                            String topickey = (String) topicsKeys.next();
-                            String playerText = null;
-                            String playerTextRu = null;
-                            String npcText = null;
-                            String npcTextRu = null;
-                            if (EsnDecoder.IsMostlyRu(topickey)) {
-                                playerTextRu = topickey;
-                            } else {
-                                playerText = topickey;
-                            }
-                            if (EsnDecoder.IsMostlyRu(topicsObject.getString(topickey))) {
-                                npcTextRu = topicsObject.getString(topickey);
-                            } else {
-                                npcText = topicsObject.getString(topickey);
-                            }
-                            if (npcText != null && npcText.isEmpty()) {
-                                npcText = null;
-                            }
-                            if (npcTextRu != null && npcTextRu.isEmpty()) {
-                                npcTextRu = null;
-
-                            }
-                            if ((playerText != null && !playerText.isEmpty()) || (npcText != null && !npcText.isEmpty())) {
-                                Criteria topicCriteria = session.createCriteria(Topic.class
-                                );
-                                topicCriteria.add(Restrictions.eq("npc", currentNpc));
-                                if (playerText != null) {
-                                    topicCriteria.add(Restrictions.ilike("playerText", playerText));
-                                }
-                                if (playerTextRu != null) {
-                                    topicCriteria.add(Restrictions.ilike("playerTextRu", playerTextRu));
-                                }
-                                if (npcText != null) {
-                                    topicCriteria.add(Restrictions.or(Restrictions.ilike("npcText", npcText), Restrictions.isNull("npcText")));
-                                }
-                                if (npcTextRu != null) {
-                                    topicCriteria.add(Restrictions.or(Restrictions.ilike("npcTextRu", npcTextRu), Restrictions.isNull("npcTextRu")));
-                                }
-                                List<Topic> topicList = topicCriteria.list();
-                                if (topicList != null && !topicList.isEmpty()) {
-                                    Topic topic = topicList.get(0);
-                                    if (topic.getNpcText() == null && npcText != null) {
-                                        topic.setNpcText(npcText);
-                                        LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
-                                        em.merge(topic);
-                                    }
-                                    if (topic.getNpcTextRu() == null && npcTextRu != null) {
-                                        topic.setNpcTextRu(npcTextRu);
-                                        LOG.log(Level.INFO, "update topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
-                                        em.merge(topic);
-                                    }
-                                    npcTopics.add(topic);
-                                } else if (playerText != null || npcText != null) {
-                                    Topic topic = new Topic(playerText, npcText, playerTextRu, npcTextRu, currentNpc);
-                                    LOG.log(Level.INFO, "new topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
-                                    em.persist(topic);
-                                    npcTopics.add(topic);
-                                }
-                            }
-
-                        }
-                    }
-
-                    JSONObject topicLinkObject = null;
-
-                    try {
-                        topicLinkObject = npcContent.getJSONObject("links");
-                    } catch (JSONException ex) {
-
-                    }
-
-                    if (topicLinkObject != null) {
-                        Iterator linkKeys = topicLinkObject.keys();
-                        while (linkKeys.hasNext()) {
-                            String npcText = (String) linkKeys.next();
-                            Topic parentTopic = null;
-                            for (Topic npcTopic : npcTopics) {
-                                if ((npcTopic.getNpcText() != null && npcTopic.getNpcText().equals(npcText)) || (npcTopic.getNpcTextRu() != null && npcTopic.getNpcTextRu().equals(npcText))) {
-                                    parentTopic = npcTopic;
-                                    JSONObject nextTopicsObject = null;
-
-                                    try {
-                                        nextTopicsObject = topicLinkObject.getJSONObject(npcText);
-                                    } catch (JSONException ex) {
-
-                                    }
-
-                                    if (nextTopicsObject != null) {
-                                        Iterator nextTopicsIterator = nextTopicsObject.keys();
-                                        while (nextTopicsIterator.hasNext()) {
-                                            String playerText = (String) nextTopicsIterator.next();
-                                            Topic childTopic = null;
-                                            for (Topic npcTopic2 : npcTopics) {
-                                                if ((npcTopic2.getPlayerText() != null && npcTopic2.getPlayerText().equals(playerText)) || (npcTopic2.getPlayerTextRu() != null && npcTopic2.getPlayerTextRu().equals(playerText))) {
-                                                    childTopic = npcTopic2;
-                                                    if (childTopic.getPreviousTopics() == null) {
-                                                        childTopic.setPreviousTopics(new HashSet<Topic>());
-                                                    }
-                                                    childTopic.getPreviousTopics().add(parentTopic);
-                                                    LOG.info("adding previous topic to " + childTopic.getId());
-                                                    em.merge(childTopic);
-                                                }
-                                            }
-
-                                        }
-                                    }
-
-                                }
-                            }
-
-                        }
-                    }
-
-                    JSONObject subtitlesObject = null;
-                    try {
-                        subtitlesObject = npcContent.getJSONObject("subtitle");
-                    } catch (JSONException ex) {
-
-                    }
-                    if (subtitlesObject != null) {
-                        Iterator subtitlesKeys = subtitlesObject.keys();
-                        while (subtitlesKeys.hasNext()) {
-                            String subtitlekey = (String) subtitlesKeys.next();
-                            String subtitleText = null;
-                            String subtitleTextRu = null;
-                            if (EsnDecoder.IsMostlyRu(subtitlekey)) {
-                                subtitleTextRu = subtitlekey;
-                            } else {
-                                subtitleText = subtitlekey;
-
-                            }
-                            if (subtitleText != null && !subtitleText.isEmpty()) {
-                                Criteria subtitleCriteria = session.createCriteria(Subtitle.class
-                                );
-                                subtitleCriteria.add(Restrictions.eq("npc", currentNpc));
-                                if (subtitleText != null) {
-                                    subtitleCriteria.add(Restrictions.ilike("text", subtitleText));
-                                }
-                                if (subtitleTextRu != null) {
-                                    subtitleCriteria.add(Restrictions.ilike("textRu", subtitleTextRu));
-                                }
-                                List<Subtitle> subtitleList = subtitleCriteria.list();
-                                if (subtitleList == null || subtitleList.isEmpty()) {
-                                    Subtitle subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
-                                    LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
-                                    em.persist(subtitle);
-                                }
-                            }
-
-                        }
-                    }
-
-                }
-            }
-
-        }
-
-    }
-
-    @Transactional
     public Npc getNpc(String npcKey, Location subLocation) {
         Session session = (Session) em.getDelegate();
         Npc currentNpc = null;
@@ -7525,7 +7007,9 @@ public class DBService {
                 em.merge(subtitle);
             }
             em.flush();
-            calculateNpcProgress(currentNpc);
+            if (currentNpc.getId() != null) {
+                calculateNpcProgress(currentNpc);
+            }
 
             subtilteArray[currentIndex - 1] = subtitle;
 
@@ -7564,189 +7048,6 @@ public class DBService {
                             newFormatImportSubtitleWithSublocations(subtitleSet, subLocation);
                         }
                     }
-                }
-            }
-        } catch (JSONException ex) {
-
-        }
-    }
-
-    @Transactional
-    public void newFormatImportQuestsWithSublocations(JSONObject source) {
-        Pattern nameCasesPattern = Pattern.compile("(.*)\\((.*)\\)");
-        Session session = (Session) em.getDelegate();
-        JSONObject npcLocationObject = null;
-        try {
-            npcLocationObject = source.getJSONObject("quest");
-            Iterator locationsKeys = npcLocationObject.keys();
-            while (locationsKeys.hasNext()) {
-                String locationName = (String) locationsKeys.next();
-                Criteria sheetLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
-                sheetLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", locationName), Restrictions.ilike("textRu", locationName)));
-                List<GSpreadSheetsLocationName> list = sheetLocationCrit.list();
-                if (list != null && !list.isEmpty()) {
-                    GSpreadSheetsLocationName sheetsLocationName = list.get(0);
-                    Criteria locationCrit = session.createCriteria(Location.class);
-                    locationCrit.add(Restrictions.ilike("name", sheetsLocationName.getTextEn()));
-                    List<Location> locations = locationCrit.list();
-                    Location location = null;
-                    if (locations != null && !locations.isEmpty()) {
-                        location = locations.get(0);
-                        if (EsnDecoder.IsMostlyRu(sheetsLocationName.getTextRu())) {
-                            location.setNameRu(sheetsLocationName.getTextRu());
-                        }
-                    } else {
-                        location = new Location();
-                        location.setProgress(BigDecimal.ZERO);
-
-                    }
-                    if (sheetsLocationName != null) {
-                        location.setSheetsLocationName(sheetsLocationName);
-                        location.setName(sheetsLocationName.getTextEn());
-                    }
-                    if (location.getId() == null) {
-                        LOG.log(Level.INFO, "new location: {0}", location.toString());
-                        em.persist(location);
-                    } else {
-                        LOG.log(Level.INFO, "update location: {0}", location.toString());
-                        em.merge(location);
-                    }
-                    JSONObject subLocationObject = npcLocationObject.getJSONObject(locationName);
-                    Iterator subLocationKeys = subLocationObject.keys();
-                    while (subLocationKeys.hasNext()) {
-                        String subLocationKey = (String) subLocationKeys.next();
-                        String subLocationName = null;
-                        Location subLocation = null;
-                        if (subLocationKey.equals(locationName)) {
-                            subLocation = location;
-                        } else {
-                            Matcher subLocationWithCasesMatcher = nameCasesPattern.matcher(subLocationKey);
-                            if (subLocationWithCasesMatcher.matches()) {
-                                String group1 = subLocationWithCasesMatcher.group(1);
-                                String group2 = subLocationWithCasesMatcher.group(2);
-                                if (!EsnDecoder.IsMostlyRu(group1)) {
-                                    subLocationName = group1.trim();
-                                } else {
-                                    subLocationName = group2.trim();
-                                }
-                            } else {
-                                subLocationName = subLocationKey;
-                            }
-
-                            Criteria sheetSubLocationCrit = session.createCriteria(GSpreadSheetsLocationName.class);
-                            sheetSubLocationCrit.add(Restrictions.or(Restrictions.ilike("textEn", subLocationName), Restrictions.ilike("textRu", subLocationName)));
-                            List<GSpreadSheetsLocationName> sulLocationList = sheetSubLocationCrit.list();
-                            if (sulLocationList != null && !sulLocationList.isEmpty()) {
-                                GSpreadSheetsLocationName sheetsSubLocationName = sulLocationList.get(0);
-                                Criteria subLocationCrit = session.createCriteria(Location.class);
-                                subLocationCrit.add(Restrictions.ilike("name", sheetsSubLocationName.getTextEn()));
-                                List<Location> subLocations = subLocationCrit.list();
-
-                                if (subLocations != null && !subLocations.isEmpty()) {
-                                    subLocation = subLocations.get(0);
-                                    if (EsnDecoder.IsMostlyRu(sheetsSubLocationName.getTextRu())) {
-                                        subLocation.setNameRu(sheetsSubLocationName.getTextRu());
-                                    }
-                                } else {
-                                    subLocation = new Location();
-                                    subLocation.setProgress(BigDecimal.ZERO);
-
-                                }
-                                subLocation.setParentLocation(location);
-                                if (sheetsSubLocationName != null) {
-                                    subLocation.setSheetsLocationName(sheetsSubLocationName);
-                                    subLocation.setName(sheetsSubLocationName.getTextEn());
-                                    if (!sheetsSubLocationName.getTextEn().equals(sheetsSubLocationName.getTextRu())) {
-                                        subLocation.setNameRu(sheetsSubLocationName.getTextRu());
-                                    }
-                                }
-                                if (subLocation.getId() == null) {
-                                    LOG.log(Level.INFO, "new sublocation: " + subLocation.toString() + "/" + location.toString());
-                                    em.persist(subLocation);
-                                } else {
-                                    LOG.log(Level.INFO, "update sublocation: " + subLocation.toString() + "/" + location.toString());
-                                    em.merge(subLocation);
-                                }
-                            }
-                        }
-
-                        JSONObject locationQuestsObject = subLocationObject.getJSONObject(subLocationKey);
-                        Iterator locationQuestsObjectIterator = locationQuestsObject.keys();
-                        while (locationQuestsObjectIterator.hasNext()) {
-                            String questKey = (String) locationQuestsObjectIterator.next();
-                            JSONObject questObject = locationQuestsObject.getJSONObject(questKey);
-                            String questNameEn = null;
-                            String questNameRu = null;
-                            if (EsnDecoder.IsMostlyRu(questKey)) {
-                                questNameRu = questKey;
-                            } else {
-                                questNameEn = questKey;
-                            }
-                            Criteria questNameCrit = session.createCriteria(GSpreadSheetsQuestName.class);
-                            if (questNameEn != null) {
-                                questNameCrit.add(Restrictions.ilike("textEn", questNameEn));
-                            } else {
-                                questNameCrit.add(Restrictions.ilike("textRu", questNameRu));
-                            }
-                            List<GSpreadSheetsQuestName> questNameList = questNameCrit.list();
-                            if (questNameList != null && !questNameList.isEmpty()) {
-                                GSpreadSheetsQuestName sheetsQuestName = questNameList.get(0);
-                                Quest quest = null;
-                                Criteria questBySheetCrit = session.createCriteria(Quest.class);
-                                questBySheetCrit.add(Restrictions.eq("sheetsQuestName", sheetsQuestName));
-                                List<Quest> questBySheet = questBySheetCrit.list();
-                                if (questBySheet != null && !questBySheet.isEmpty()) {
-                                    quest = questBySheet.get(0);
-                                } else {
-                                    Criteria questByNameCrit = session.createCriteria(Quest.class);
-                                    questByNameCrit.add(Restrictions.ilike("name", sheetsQuestName.getTextEn()));
-                                    List<Quest> questByName = questByNameCrit.list();
-                                    if (questByName != null && !questByName.isEmpty()) {
-                                        quest = questByName.get(0);
-                                    }
-                                }
-                                if (quest != null) {
-                                    if (!sheetsQuestName.getTextEn().equals(sheetsQuestName.getTextRu()) && (quest.getNameRu() == null || quest.getNameRu().isEmpty())) {
-                                        quest.setNameRu(sheetsQuestName.getTextRu());
-                                    }
-                                    if (quest.getName() == null || quest.getName().isEmpty()) {
-                                        quest.setName(sheetsQuestName.getTextEn());
-                                    }
-                                    if (quest.getLocation() == null) {
-                                        quest.setLocation(location);
-                                    }
-                                    em.merge(quest);
-
-                                } else {
-                                    quest = new Quest();
-                                    quest.setLocation(location);
-                                    quest.setName(sheetsQuestName.getTextEn());
-                                    if (!sheetsQuestName.getTextEn().equals(sheetsQuestName.getTextRu())) {
-                                        quest.setNameRu(sheetsQuestName.getTextRu());
-                                    }
-                                    quest.setProgress(BigDecimal.ZERO);
-                                    em.persist(quest);
-                                }
-                                JSONObject questStepsObject = null;
-                                try {
-                                    questStepsObject = questObject.getJSONObject("StepText");
-                                } catch (JSONException ex) {
-
-                                }
-                                if (questStepsObject != null) {
-                                    Iterator questStepsIterator = questStepsObject.keys();
-                                    while (questStepsIterator.hasNext()) {
-                                        String questStep = (String) questStepsIterator.next();
-                                        String questStepEn = null;
-                                        String questStepRu = null;
-
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-
                 }
             }
         } catch (JSONException ex) {
@@ -7828,7 +7129,16 @@ public class DBService {
                     Integer stepWeight = Integer.valueOf(stepKey);
                     String description = stepObject.getString("description");
                     if (description != null && !description.isEmpty()) {
-                        Long journalEntryId = searchTableItem("GSpreadSheetsJournalEntry", description);
+                        Long journalEntryId = null;
+                        journalEntryId = searchTableItem("GSpreadSheetsJournalEntry", description);
+                        if (journalEntryId == null && EsnDecoder.IsMostlyRu(description)) {
+                            journalEntryId = searchTableItemRuIndexed("GSpreadSheetsJournalEntry", description);
+                        } else if (journalEntryId == null && !EsnDecoder.IsMostlyRu(description)) {
+                            journalEntryId = searchTableItemIndexed("GSpreadSheetsJournalEntry", description);
+                        }
+                        if (journalEntryId == null) {
+                            journalEntryId = searchTableItemUncertainIndexed("GSpreadSheetsJournalEntry", description);
+                        }
                         if (journalEntryId != null) {
                             GSpreadSheetsJournalEntry journalEntry = em.find(GSpreadSheetsJournalEntry.class, journalEntryId);
                             QuestStep step = null;
@@ -7882,7 +7192,16 @@ public class DBService {
                                             if (goalWithCounterMatcher.find()) {
                                                 goalName = goalWithCounterMatcher.group(1);
                                             }
-                                            Long directionId = searchTableItem("GSpreadSheetsQuestDirection", goalName);
+                                            Long directionId = null;
+                                            directionId = searchTableItem("GSpreadSheetsQuestDirection", goalName);
+                                            if (directionId == null && EsnDecoder.IsMostlyRu(goalName)) {
+                                                directionId = searchTableItemRuIndexed("GSpreadSheetsQuestDirection", goalName);
+                                            } else if (directionId == null && !EsnDecoder.IsMostlyRu(goalName)) {
+                                                directionId = searchTableItemIndexed("GSpreadSheetsQuestDirection", goalName);
+                                            }
+                                            if (directionId == null) {
+                                                directionId = searchTableItemUncertainIndexed("GSpreadSheetsQuestDirection", goalName);
+                                            }
                                             if (directionId != null) {
                                                 GSpreadSheetsQuestDirection direction = em.find(GSpreadSheetsQuestDirection.class, directionId);
                                                 QuestDirection goal = null;
@@ -8179,47 +7498,6 @@ public class DBService {
             }
         } catch (JSONException ex) {
 
-        }
-    }
-
-    @Transactional
-    public void transferGreetingsToTopics() {
-        int counter = 0;
-        Session session = (Session) em.getDelegate();
-        Criteria greetingCrit = session.createCriteria(Greeting.class);
-        greetingCrit.setMaxResults(1000);
-        List<Greeting> greetings = greetingCrit.list();
-        for (Greeting g : greetings) {
-            counter++;
-            LOG.log(Level.INFO, "greeting {0}", Integer.toString(counter));
-            Topic t = null;
-            Criteria topicCrit = session.createCriteria(Topic.class);
-            topicCrit.add(Restrictions.eq("npc", g.getNpc()));
-            if (g.getText() != null) {
-                topicCrit.add(Restrictions.eq("npcText", g.getText()));
-            } else if (g.getTextRu() != null) {
-                topicCrit.add(Restrictions.eq("npcTextRu", g.getTextRu()));
-            }
-            List<Topic> topics = topicCrit.list();
-            if (topics != null && !topics.isEmpty()) {
-                t = topics.get(0);
-                if (t.getExtNpcPhrase() == null) {
-                    t.setExtNpcPhrase(g.getExtNpcPhrase());
-                }
-                em.merge(t);
-            } else {
-                t = new Topic(null, g.getText(), null, g.getTextRu(), g.getNpc());
-                t.setExtNpcPhrase(g.getExtNpcPhrase());
-                em.persist(t);
-            }
-            if (t != null) {
-                for (TranslatedText tt : g.getTranslations()) {
-                    tt.setNpcTopic(t);
-                    tt.setGreeting(null);
-                    em.merge(tt);
-                }
-                em.remove(g);
-            }
         }
     }
 
@@ -8675,17 +7953,36 @@ public class DBService {
 
     @Transactional
     public void generateSearchIndex() {
-        em.createNativeQuery("update gspreadsheetsplayerphrase set tren=regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsplayerphrase set tren=replace(regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g'),'  ',' ') where texten like '%<<%' or texten like '%[%'").executeUpdate();
         em.createNativeQuery("update gspreadsheetsplayerphrase set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsplayerphrase set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsplayerphrase set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsplayerphrase set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
 
-        em.createNativeQuery("update gspreadsheetsnpcphrase set tren=regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsnpcphrase set tren=replace(regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g'),'  ',' ') where texten like '%<<%' or texten like '%[%'").executeUpdate();
         em.createNativeQuery("update gspreadsheetsnpcphrase set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsnpcphrase set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsnpcphrase set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsnpcphrase set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+
+    }
+
+    @Transactional
+    public void generateJournalEntrySearchIndex() {
+        em.createNativeQuery("update gspreadsheetsjournalentry set tren=replace(regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g'),'  ',' ') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsjournalentry set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsjournalentry set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsjournalentry set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsjournalentry set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+    }
+
+    @Transactional
+    public void generateQuestDirectionSearchIndex() {
+        em.createNativeQuery("update gspreadsheetsquestdirection set tren=replace(regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g'),'  ',' ') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdirection set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdirection set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdirection set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdirection set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
     }
 
     @Transactional
@@ -8926,5 +8223,5 @@ public class DBService {
             em.remove(t);
         }
     }
-    
+
 }

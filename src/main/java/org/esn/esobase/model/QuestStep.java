@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,7 +34,7 @@ public class QuestStep extends DAO {
     @Column(length = 1024)
     private String textRu;
     private Integer weight;
-    @OneToMany(mappedBy = "step")
+    @OneToMany(mappedBy = "step",fetch = FetchType.EAGER)
     private Set<QuestDirection> directions;
     @ManyToOne
     private Quest quest;

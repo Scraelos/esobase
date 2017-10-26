@@ -22,7 +22,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.Transient;
 import org.esn.esobase.model.lib.DAO;
 
 /**
@@ -45,8 +44,6 @@ public class Npc extends DAO {
     private Set<Subtitle> subtitles;
     @OneToMany(mappedBy = "npc", cascade = CascadeType.PERSIST)
     private Set<Topic> topics;
-    @OneToMany(mappedBy = "npc", cascade = CascadeType.PERSIST)
-    private Set<Greeting> greetings;
     @Enumerated(EnumType.STRING)
     private NPC_SEX sex;
     @ManyToMany(mappedBy = "npcs")
@@ -64,7 +61,6 @@ public class Npc extends DAO {
         this.location = location;
         this.subtitles = new HashSet<>();
         this.topics = new HashSet<>();
-        this.greetings = new HashSet<>();
     }
 
     @Override
@@ -115,14 +111,6 @@ public class Npc extends DAO {
 
     public void setTopics(Set<Topic> topics) {
         this.topics = topics;
-    }
-
-    public Set<Greeting> getGreetings() {
-        return greetings;
-    }
-
-    public void setGreetings(Set<Greeting> greetings) {
-        this.greetings = greetings;
     }
 
     public NPC_SEX getSex() {

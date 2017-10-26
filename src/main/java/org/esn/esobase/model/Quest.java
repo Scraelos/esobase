@@ -43,15 +43,15 @@ public class Quest extends DAO {
     private BigDecimal progress;
     @ManyToOne
     private Location location;
-    @OneToMany(mappedBy = "quest")
+    @OneToMany(mappedBy = "quest", fetch = FetchType.EAGER)
     private Set<QuestJournalEntry> questJournalEntrys;
-    @OneToMany(mappedBy = "quest")
+    @OneToMany(mappedBy = "quest", fetch = FetchType.LAZY)
     private Set<QuestDirection> questDirections;
     @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestName sheetsQuestName;
     @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsQuestDescription sheetsQuestDescription;
-    @OneToMany(mappedBy = "quest")
+    @OneToMany(mappedBy = "quest", fetch = FetchType.LAZY)
     private Set<QuestStep> steps;
 
     @Override
