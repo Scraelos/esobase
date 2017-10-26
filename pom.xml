@@ -14,8 +14,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>4.1.9.RELEASE</spring.version>
         <spring.security.version>3.2.5.RELEASE</spring.security.version>
-        <vaadin.version>7.7.10</vaadin.version>
-        <vaadin.plugin.version>7.7.10</vaadin.plugin.version>
+        <vaadin.version>7.7.11</vaadin.version>
+        <vaadin.plugin.version>7.7.11</vaadin.plugin.version>
         <spring.vaadin.version>3.2</spring.vaadin.version>
         <hibernate.version>4.3.11.Final</hibernate.version>
     </properties>
