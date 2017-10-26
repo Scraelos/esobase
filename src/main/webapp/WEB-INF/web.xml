@@ -52,6 +52,15 @@
         <servlet-name>search-in-catalogs-servlet</servlet-name>
         <url-pattern>/searchservlet/*</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>get-books-servlet</servlet-name>
+        <servlet-class>org.esn.esobase.service.GetBooksServlet</servlet-class>
+        <load-on-startup>20</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>get-books-servlet</servlet-name>
+        <url-pattern>/getbooks/*</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>SpringLoginDispatcherServlet</servlet-name>
