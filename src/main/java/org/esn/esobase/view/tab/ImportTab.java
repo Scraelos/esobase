@@ -1317,7 +1317,7 @@ public class ImportTab extends VerticalLayout {
         public void uploadSucceeded(Upload.SucceededEvent event) {
             Date startTime = new Date();
             LOG.info("Search index...");
-            //service.generateSearchIndex();
+            service.generateSearchIndex();
             service.generateJournalEntrySearchIndex();
             service.generateQuestDirectionSearchIndex();
             LOG.info("Search index complete");
@@ -1325,10 +1325,10 @@ public class ImportTab extends VerticalLayout {
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
             if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
-                //newFormatImportNpcsWithSublocations(jsonFromLua);
-                //newFormatImportSubtitlesWithSublocations(jsonFromLua);
+                newFormatImportNpcsWithSublocations(jsonFromLua);
+                newFormatImportSubtitlesWithSublocations(jsonFromLua);
                 newFormatImportQuestsWithSteps(jsonFromLua);
-                //importBooksWithSublocations(jsonFromLua);
+                importBooksWithSublocations(jsonFromLua);
             }
             for (;;) {
                 int count = executor.getActiveCount();
