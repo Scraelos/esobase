@@ -5,7 +5,6 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.addon.jpacontainer.EntityItem;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanItemContainer;
@@ -164,7 +163,6 @@ public class DirectTableEditTab extends VerticalLayout {
     private GspreadSheetTable loadscreenTable;
     private GeneratedPropertyListContainer<GSpreadSheetsLoadscreen> loadscreenContainer;
 
-    private LinkedItemColumnGenerator linkedItemColumnGenerator;
     private LinkedItemClickListener linkedItemClickListener;
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
@@ -185,7 +183,6 @@ public class DirectTableEditTab extends VerticalLayout {
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
         this.setSizeFull();
-        linkedItemColumnGenerator = new LinkedItemColumnGenerator();
         linkedItemClickListener = new LinkedItemClickListener();
         searchTabs = new TabSheet();
         searchTabs.setSizeFull();
@@ -788,26 +785,6 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public Class<Component> getType() {
             return Component.class;
-        }
-
-    }
-
-    private class LinkedItemColumnGenerator implements Table.ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            EntityItem item = (EntityItem) source.getContainerDataSource().getItem(itemId);
-            GSpreadSheetEntity entity = (GSpreadSheetEntity) item.getEntity();
-            GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(entity.getaId());
-            if (route != null) {
-                Button b = new Button();
-                b.setIcon(FontAwesome.LINK);
-                b.setDescription("Перейти к связанной записи");
-                b.setData(entity);
-                b.addClickListener(linkedItemClickListener);
-                return b;
-            }
-            return null;
         }
 
     }
