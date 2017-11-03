@@ -9,12 +9,11 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
+import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 import com.vaadin.ui.MenuBar.Command;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import ru.xpoft.vaadin.VaadinView;
-
 import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.InsertExecutor;
@@ -42,7 +41,7 @@ import org.springframework.security.core.userdetails.User;
  */
 @Component
 @Scope("prototype")
-@VaadinView(MainView.NAME)
+@SpringView(name = MainView.NAME)
 public class MainView extends Panel implements View, Command {
 
     @Autowired

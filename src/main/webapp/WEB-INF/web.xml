@@ -4,45 +4,6 @@
          id="WebApp_ID" version="2.5">
     <display-name>ESOBase</display-name>
 
-    <!-- Spring -->
-    <listener>
-        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-    </listener>
-    <listener>
-        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
-    </listener>
-    <context-param>
-        <param-name>contextConfigLocation</param-name>
-        <param-value>/WEB-INF/root-context.xml</param-value>
-    </context-param>
-
-    <!-- Vaadin servlet -->
-    <servlet>
-        <servlet-name>ESOBase</servlet-name>
-        <servlet-class>ru.xpoft.vaadin.SpringVaadinServlet</servlet-class>
-        <init-param>
-            <param-name>beanName</param-name>
-            <param-value>esoBaseUI</param-value>
-        </init-param>
-        <init-param>
-            <param-name>systemMessagesBeanName</param-name>
-            <param-value>DEFAULT</param-value>
-        </init-param>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ESOBase</servlet-name>
-        <url-pattern>/*</url-pattern>
-        <url-pattern>/VAADIN/*</url-pattern>
-    </servlet-mapping>
-
-    
-
-    <context-param>
-        <description>Vaadin production mode</description>
-        <param-name>productionMode</param-name>
-        <param-value>true</param-value>
-    </context-param>
-    
     <servlet>
         <servlet-name>search-in-catalogs-servlet</servlet-name>
         <servlet-class>org.esn.esobase.service.SearchInCatalogsServlet</servlet-class>

@@ -81,9 +81,10 @@
 
         <!-- Spring Vaadin Integration -->
         <dependency>
-            <groupId>ru.xpoft.vaadin</groupId>
-            <artifactId>spring-vaadin-integration</artifactId>
-            <version>${spring.vaadin.version}</version>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring</artifactId>
+            <version>1.2.0</version>
+            <type>jar</type>
         </dependency>
 
         <!-- Logging -->
