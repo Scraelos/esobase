@@ -5,23 +5,24 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.data.Property;
-import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.event.FieldEvents;
+import com.vaadin.data.HasValue;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.v7.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.shared.ui.combobox.FilteringMode;
-import com.vaadin.ui.AbstractTextField;
+import com.vaadin.v7.shared.ui.combobox.FilteringMode;
+import com.vaadin.v7.ui.AbstractTextField;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.ComboBox;
+import com.vaadin.v7.ui.CheckBox;
+import com.vaadin.v7.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.TextArea;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.TextArea;
+import com.vaadin.v7.ui.TextField;
+import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.security.SpringSecurityHelper;
-import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
+import org.vaadin.addons.ComboBoxMultiselect;
 
 /**
  *
@@ -55,7 +56,7 @@ public class QuestTranslateTab extends VerticalLayout {
     private HorizontalLayout questListlayout;
     private ComboBox questTable;
     private BeanItemContainer<Quest> questContainer;
-    
+
     private TabSheet tabSheet;
     private VerticalLayout infoLayout;
     private HorizontalLayout nameHLayout;
@@ -128,7 +129,12 @@ public class QuestTranslateTab extends VerticalLayout {
         questListlayout.addComponent(locationAndQuestLayout);
         translateStatus = new ComboBoxMultiselect("Статус перевода", Arrays.asList(TRANSLATE_STATUS.values()));
         translateStatus.setClearButtonCaption("Очистить");
-        translateStatus.addValueChangeListener(filterChangeListener);
+        translateStatus.addValueChangeListener(new HasValue.ValueChangeListener() {
+            @Override
+            public void valueChange(HasValue.ValueChangeEvent event) {
+                LoadFilters();
+            }
+        });
         noTranslations = new CheckBox("Не переведены полностью");
         noTranslations.setValue(Boolean.FALSE);
         noTranslations.addValueChangeListener(filterChangeListener);

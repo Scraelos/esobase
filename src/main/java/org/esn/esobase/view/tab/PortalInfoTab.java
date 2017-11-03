@@ -5,9 +5,9 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.VerticalLayout;
 import org.esn.esobase.data.DBService;
 
 /**

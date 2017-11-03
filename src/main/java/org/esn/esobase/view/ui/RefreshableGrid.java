@@ -5,7 +5,7 @@
  */
 package org.esn.esobase.view.ui;
 
-import com.vaadin.shared.ui.grid.ScrollDestination;
+import com.vaadin.v7.shared.ui.grid.ScrollDestination;
 
 /**
  *

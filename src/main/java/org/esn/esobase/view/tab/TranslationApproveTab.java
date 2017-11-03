@@ -5,7 +5,7 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 import org.esn.esobase.data.DBService;
 
 /**
