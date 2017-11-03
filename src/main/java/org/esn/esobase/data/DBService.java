@@ -111,6 +111,8 @@ import org.esn.esobase.model.GSpreadSheetsQuestDirection;
 import org.esn.esobase.model.GSpreadSheetsQuestEndTip;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
+import org.esn.esobase.model.ItemSubType;
+import org.esn.esobase.model.ItemType;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.Npc;
@@ -124,7 +126,6 @@ import org.esn.esobase.model.SysAccountRole;
 import org.esn.esobase.model.SystemProperty;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.Topic;
-import org.esn.esobase.model.TranslatedEntity;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -5002,8 +5003,8 @@ public class DBService {
     }
 
     @Transactional
-    public List<TranslatedEntity> searchInCatalogs(String search) {
-        List<TranslatedEntity> result = new ArrayList<>();
+    public List<GSpreadSheetEntity> searchInCatalogs(String search) {
+        List<GSpreadSheetEntity> result = new ArrayList<>();
         List<Criterion> searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
         searchTermitems.add(Restrictions.ilike("textRu", search, MatchMode.ANYWHERE));
@@ -5100,7 +5101,7 @@ public class DBService {
         List<GSpreadSheetsLoadscreen> loadscreenList = loadscreenCrit.list();
         result.addAll(loadscreenList);
 
-        Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
+        /*Criteria esoInterfaceVariableCrit = session.createCriteria(EsoInterfaceVariable.class);
         searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
         searchTermitems.add(Restrictions.ilike("textRu", search, MatchMode.ANYWHERE));
@@ -5108,8 +5109,7 @@ public class DBService {
         searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
         esoInterfaceVariableCrit.add(searchTerms);
         List<EsoInterfaceVariable> esoInterfaceVariableList = esoInterfaceVariableCrit.list();
-        result.addAll(esoInterfaceVariableList);
-
+        result.addAll(esoInterfaceVariableList);*/
         return result;
     }
 
@@ -8161,6 +8161,16 @@ public class DBService {
             result = resultList.get(0);
         }
         return result;
+    }
+
+    @Transactional
+    public List<ItemType> getTypes() {
+        return em.createQuery("select t from ItemType t").getResultList();
+    }
+
+    @Transactional
+    public List<ItemSubType> getSubTypes() {
+        return em.createQuery("select t from ItemSubType t").getResultList();
     }
 
     @Transactional

@@ -35,7 +35,7 @@ import org.esn.esobase.model.lib.DAO;
     @Index(columnList = "translator", unique = false)
     ,
     @Index(columnList = "aId,bId,cId", unique = false)})
-public class GSpreadSheetsQuestName extends DAO implements GSpreadSheetEntity, TranslatedEntity {
+public class GSpreadSheetsQuestName extends DAO implements GSpreadSheetEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

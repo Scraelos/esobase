@@ -15,6 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -35,7 +36,7 @@ import org.esn.esobase.model.lib.DAO;
     @Index(columnList = "translator", unique = false)
     ,
     @Index(columnList = "aId,bId,cId", unique = false)})
-public class GSpreadSheetsItemName extends DAO implements GSpreadSheetEntity, TranslatedEntity {
+public class GSpreadSheetsItemName extends DAO implements GSpreadSheetEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -57,6 +58,11 @@ public class GSpreadSheetsItemName extends DAO implements GSpreadSheetEntity, Tr
     @OneToMany(mappedBy = "spreadSheetsItemName", fetch = FetchType.LAZY)
     private Set<TranslatedText> translatedTexts;
     private Boolean deprecated;
+    @ManyToOne
+    private ItemType itemType;
+    @ManyToOne
+    private ItemSubType itemSubType;
+    private String icon;
 
     public GSpreadSheetsItemName() {
     }
@@ -176,4 +182,29 @@ public class GSpreadSheetsItemName extends DAO implements GSpreadSheetEntity, Tr
     public void setDeprecated(Boolean deprecated) {
         this.deprecated = deprecated;
     }
+
+    public ItemType getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(ItemType itemType) {
+        this.itemType = itemType;
+    }
+
+    public ItemSubType getItemSubType() {
+        return itemSubType;
+    }
+
+    public void setItemSubType(ItemSubType itemSubType) {
+        this.itemSubType = itemSubType;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
 }

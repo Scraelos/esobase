@@ -15,13 +15,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.model.EsoInterfaceVariable;
+import org.esn.esobase.model.GSpreadSheetEntity;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
 import org.esn.esobase.model.GSpreadSheetsAchievement;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.GSpreadSheetsLocationName;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
-import org.esn.esobase.model.TranslatedEntity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,9 +49,9 @@ public class SearchInCatalogsServlet extends HttpServlet {
         String requestString = req.getParameter("searchtext");
         if (requestString != null && requestString.trim().length() > 2) {
             HierarchicalContainer hc = new HierarchicalContainer();
-            List<TranslatedEntity> searchInCatalogs = service.searchInCatalogs(requestString);
+            List<GSpreadSheetEntity> searchInCatalogs = service.searchInCatalogs(requestString);
             JSONArray resultList = new JSONArray();
-            for (TranslatedEntity e : searchInCatalogs) {
+            for (GSpreadSheetEntity e : searchInCatalogs) {
                 JSONObject o = new JSONObject();
                 o.put("textEn", e.getTextEn());
                 o.put("textRu", e.getTextRu());

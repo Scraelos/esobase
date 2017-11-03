@@ -22,7 +22,7 @@ import org.esn.esobase.model.lib.DAO;
  * @author scraelos
  */
 @Entity
-public class EsoInterfaceVariable extends DAO implements TranslatedEntity {
+public class EsoInterfaceVariable extends DAO implements GSpreadSheetEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -109,6 +109,36 @@ public class EsoInterfaceVariable extends DAO implements TranslatedEntity {
 
     public void setChanged(Boolean changed) {
         this.changed = changed;
+    }
+
+    @Override
+    public Long getaId() {
+        return null;
+    }
+
+    @Override
+    public Long getbId() {
+        return null;
+    }
+
+    @Override
+    public Long getcId() {
+        return null;
+    }
+
+    @Override
+    public Long getRowNum() {
+        return null;
+    }
+
+    @Override
+    public Integer getWeight() {
+        return null;
+    }
+
+    @Override
+    public Boolean getDeprecated() {
+        return Boolean.FALSE;
     }
 
 }

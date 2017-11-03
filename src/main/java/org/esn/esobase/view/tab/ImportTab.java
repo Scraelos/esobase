@@ -34,6 +34,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.InsertExecutor;
+import org.esn.esobase.data.ItemInfoImportService;
 import org.esn.esobase.data.TableUpdateService;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
@@ -82,6 +83,8 @@ public class ImportTab extends VerticalLayout {
     private DBService service;
     @Autowired
     private TableUpdateService tableUpdateService;
+    @Autowired
+    private ItemInfoImportService itemInfoImportService;
     private Button updateAbilityDescriptions;
     private Button updateAchievements;
     private Button updateAchievementDescriptions;
@@ -140,6 +143,7 @@ public class ImportTab extends VerticalLayout {
     private Button assignActivatorsWithItems;
     private Button loadAllBooks;
     private Button updateTTCNpcNames;
+    private Upload uploadItemInfo;
     private static final Logger LOG = Logger.getLogger(ImportTab.class.getName());
 
     public ImportTab() {
@@ -148,6 +152,7 @@ public class ImportTab extends VerticalLayout {
 
     public void Init() {
         NewConversationsReceiver newReceiver = new NewConversationsReceiver(service);
+        ItemInfoReceiver itemInfoReceiver = new ItemInfoReceiver();
         uploadNewFormat = new Upload("Загрузите файл ConversationsQQ.lua", newReceiver);
         uploadNewFormat.addSucceededListener(newReceiver);
         uploadNewFormat.setImmediate(true);
@@ -798,6 +803,10 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(updateTTCNpcNames);
+            uploadItemInfo = new Upload("Загрузите файл ItemDump.lua", itemInfoReceiver);
+            uploadItemInfo.addSucceededListener(itemInfoReceiver);
+            uploadItemInfo.setImmediate(true);
+            this.addComponent(uploadItemInfo);
 
         }
     }
@@ -1266,37 +1275,6 @@ public class ImportTab extends VerticalLayout {
         }
     }
 
-    private class ConversationsReceiver implements Receiver, SucceededListener {
-
-        public ConversationsReceiver(DBService service) {
-            this.service = service;
-        }
-
-        private final DBService service;
-
-        private ByteArrayOutputStream baos;
-
-        @Override
-        public OutputStream receiveUpload(String filename, String mimeType) {
-            baos = new ByteArrayOutputStream();
-            return baos;
-        }
-
-        @Override
-        public void uploadSucceeded(Upload.SucceededEvent event) {
-            try {
-                byte[] toByteArray = baos.toByteArray();
-                String text = new String(toByteArray);
-                List<Location> locations = LuaDecoder.decode(text);
-                service.importFromLua(locations);
-            } catch (IOException ex) {
-                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        }
-
-    }
-
     private class NewConversationsReceiver implements Receiver, SucceededListener {
 
         public NewConversationsReceiver(DBService service) {
@@ -1650,6 +1628,93 @@ public class ImportTab extends VerticalLayout {
             @Override
             public void run() {
                 service.newFormatImportSubtitleWithSublocations(subtitleSet, subLocation);
+            }
+
+        }
+
+    }
+
+    private class ItemInfoReceiver implements Receiver, SucceededListener {
+
+        private ByteArrayOutputStream baos;
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            byte[] toByteArray = baos.toByteArray();
+            String text = new String(toByteArray);
+            JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
+            Iterator keys = jsonFromLua.keys();
+            while (keys.hasNext()) {
+                String itemName = (String) keys.next();
+                String itemIcon = null;
+                Long itemType = null;
+                Long itemSubType = null;
+                JSONObject itemObject = jsonFromLua.getJSONObject(itemName);
+                if (itemObject != null) {
+                    try {
+                        itemIcon = itemObject.getString("1");
+                    } catch (JSONException ex) {
+
+                    }
+                    try {
+                        JSONObject itemTypesObject = itemObject.getJSONObject("0");
+                        try {
+                            itemType = itemTypesObject.getLong("0");
+                        } catch (JSONException ex) {
+
+                        }
+                        try {
+                            itemSubType = itemTypesObject.getLong("1");
+                        } catch (JSONException ex) {
+
+                        }
+                    } catch (JSONException ex) {
+
+                    }
+                }
+                executor.execute(new UpdateItemTask(itemName, itemIcon, itemType, itemSubType));
+                LOG.log(Level.INFO, "{0} {1} {2} {3}", new Object[]{itemName, itemIcon, itemType, itemSubType});
+
+            }
+            for (;;) {
+                int count = executor.getActiveCount();
+                LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, executor.getThreadPoolExecutor().getQueue().size()});
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                }
+                if (count == 0) {
+                    break;
+                }
+            }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class UpdateItemTask implements Runnable {
+
+            private final String name;
+            private final String icon;
+            private final Long type;
+            private final Long subType;
+
+            public UpdateItemTask(String name, String icon, Long type, Long subType) {
+                this.name = name;
+                this.icon = icon;
+                this.type = type;
+                this.subType = subType;
+            }
+
+            @Override
+            public void run() {
+                itemInfoImportService.updateItem(name, icon, type, subType);
             }
 
         }

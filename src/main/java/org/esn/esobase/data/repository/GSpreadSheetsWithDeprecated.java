@@ -6,9 +6,11 @@
 package org.esn.esobase.data.repository;
 
 import java.io.Serializable;
+import org.esn.esobase.model.GSpreadSheetEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
 
 /**
@@ -18,7 +20,7 @@ import org.springframework.data.repository.NoRepositoryBean;
  * @param <ID>
  */
 @NoRepositoryBean
-public interface GSpreadSheetsWithDeprecated<T extends Object, ID extends Serializable> extends JpaRepository<T, ID> {
+public interface GSpreadSheetsWithDeprecated<T extends Object, ID extends Serializable> extends JpaRepository<T, ID>, JpaSpecificationExecutor<GSpreadSheetEntity> {
 
     Page<T> findByDeprecated(Boolean deprecated, Pageable pageable);
 
