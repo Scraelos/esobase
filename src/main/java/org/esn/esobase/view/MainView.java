@@ -124,7 +124,8 @@ public class MainView extends Panel implements View, Command {
                 + ".v-caption-darkblue {\n"
                 + "	font-weight:bold;margin-bottom:0.33em;margin-top:0.55em;\n"
                 + "}"
-                + ".my-grid .v-grid-body .v-grid-cell { height: 100px; }");
+                + ".my-grid .v-grid-body .v-grid-cell { height: 100px; }"
+                + ".v-table, .v-table * { overflow-anchor: none; };");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);
         layout.setSpacing(true);
