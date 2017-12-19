@@ -15,5 +15,5 @@ public interface RefreshableGrid {
 
     public void Refresh();
 
-    public void scrollToRow(int row, ScrollDestination destination);
+    public void scrollToRow(int row, Object itemId, ScrollDestination destination);
 }

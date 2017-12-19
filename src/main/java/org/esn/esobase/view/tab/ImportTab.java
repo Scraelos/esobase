@@ -37,26 +37,6 @@ import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.data.ItemInfoImportService;
 import org.esn.esobase.data.TableUpdateService;
 import org.esn.esobase.model.EsoInterfaceVariable;
-import org.esn.esobase.model.GSpreadSheetsAbilityDescription;
-import org.esn.esobase.model.GSpreadSheetsAchievement;
-import org.esn.esobase.model.GSpreadSheetsAchievementDescription;
-import org.esn.esobase.model.GSpreadSheetsActivator;
-import org.esn.esobase.model.GSpreadSheetsCollectible;
-import org.esn.esobase.model.GSpreadSheetsCollectibleDescription;
-import org.esn.esobase.model.GSpreadSheetsItemDescription;
-import org.esn.esobase.model.GSpreadSheetsItemName;
-import org.esn.esobase.model.GSpreadSheetsJournalEntry;
-import org.esn.esobase.model.GSpreadSheetsLoadscreen;
-import org.esn.esobase.model.GSpreadSheetsLocationName;
-import org.esn.esobase.model.GSpreadSheetsNote;
-import org.esn.esobase.model.GSpreadSheetsNpcName;
-import org.esn.esobase.model.GSpreadSheetsNpcPhrase;
-import org.esn.esobase.model.GSpreadSheetsPlayerPhrase;
-import org.esn.esobase.model.GSpreadSheetsQuestDescription;
-import org.esn.esobase.model.GSpreadSheetsQuestDirection;
-import org.esn.esobase.model.GSpreadSheetsQuestEndTip;
-import org.esn.esobase.model.GSpreadSheetsQuestName;
-import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.security.SpringSecurityHelper;
@@ -697,8 +677,22 @@ public class ImportTab extends VerticalLayout {
                 public void buttonClick(Button.ClickEvent event) {
                     BeanItemContainer<Npc> c = new BeanItemContainer<>(Npc.class);
                     c = service.getNpcs(c, null, null, false);
+                    ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                     for (Npc n : c.getItemIds()) {
-                        service.calculateNpcProgress(n);
+                        taskExecutor.execute(new CalculateNpcProgressTask(n));
+                        LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{executor.getActiveCount(), executor.getThreadPoolExecutor().getQueue().size()});
+                    }
+                    for (;;) {
+                        int count = executor.getActiveCount();
+                        LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, executor.getThreadPoolExecutor().getQueue().size()});
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            LOG.log(Level.SEVERE, null, ex);
+                        }
+                        if (count == 0) {
+                            break;
+                        }
                     }
                 }
             });
@@ -1157,6 +1151,7 @@ public class ImportTab extends VerticalLayout {
                         break;
                     }
                 }
+                
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1757,6 +1752,23 @@ public class ImportTab extends VerticalLayout {
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+
+    }
+
+    @Component
+    @Scope("prototype")
+    private class CalculateNpcProgressTask implements Runnable {
+
+        private final Npc npc;
+
+        public CalculateNpcProgressTask(Npc npc) {
+            this.npc = npc;
+        }
+
+        @Override
+        public void run() {
+            service.calculateNpcProgress(npc);
         }
 
     }

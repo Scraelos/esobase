@@ -5,11 +5,8 @@
  */
 package org.esn.esobase.view.tab;
 
-import com.vaadin.data.HasValue;
 import com.vaadin.v7.data.Property;
 import com.vaadin.v7.data.util.BeanItemContainer;
-import com.vaadin.v7.data.util.filter.Compare;
-import com.vaadin.v7.data.util.filter.Or;
 import com.vaadin.v7.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.v7.shared.ui.combobox.FilteringMode;
@@ -34,12 +31,11 @@ import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.BookSpecification;
 import org.esn.esobase.model.Book;
 import org.esn.esobase.model.Location;
-import org.esn.esobase.model.Quest;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.security.SpringSecurityHelper;
-import org.vaadin.addons.ComboBoxMultiselect;
+import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 
 /**
  *
@@ -120,9 +116,9 @@ public class BookTranslateTab extends VerticalLayout {
         bookListlayout.addComponent(locationAndBook);
         translateStatus = new ComboBoxMultiselect("Статус перевода", Arrays.asList(TRANSLATE_STATUS.values()));
         translateStatus.setClearButtonCaption("Очистить");
-        translateStatus.addValueChangeListener(new HasValue.ValueChangeListener() {
+        translateStatus.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
-            public void valueChange(HasValue.ValueChangeEvent event) {
+            public void valueChange(Property.ValueChangeEvent event) {
                 LoadFilters();
             }
         });

@@ -6,27 +6,24 @@
 package org.esn.esobase.view.tab;
 
 import com.vaadin.data.HasValue;
+import com.vaadin.data.ValueProvider;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.v7.data.Property;
 import com.vaadin.v7.data.util.BeanItemContainer;
-import com.vaadin.v7.data.util.filter.Compare;
-import com.vaadin.v7.data.util.filter.Or;
-import com.vaadin.v7.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.v7.shared.ui.combobox.FilteringMode;
-import com.vaadin.v7.ui.AbstractTextField;
 import com.vaadin.ui.Button;
-import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.ComboBox;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.v7.ui.Table;
 import com.vaadin.v7.ui.Table.ColumnGenerator;
-import com.vaadin.v7.ui.TextArea;
-import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.TextArea;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,6 +34,7 @@ import java.util.Set;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.LocationSpecification;
 import org.esn.esobase.data.specification.NpcSpecification;
+import org.esn.esobase.data.specification.SubLocationSpecification;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Quest;
@@ -49,7 +47,7 @@ import org.esn.esobase.security.SpringSecurityHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.vaadin.addons.ComboBoxMultiselect;
+import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 import org.vaadin.viritin.layouts.MMarginInfo;
 
 /**
@@ -64,14 +62,10 @@ public class TranslateTab extends VerticalLayout {
     private DBService service;
     private HorizontalLayout npcListlayout;
     private VerticalLayout npcContentLayout;
-    private ComboBox locationTable;
-    private ComboBox subLocationTable;
+    private ComboBox<Location> locationTable;
+    private ComboBox<Location> subLocationTable;
     private ComboBox questTable;
     private ComboBox npcTable;
-    private BeanItemContainer<Location> locationContainer;
-    private BeanItemContainer<Location> subLocationContainer;
-    private BeanItemContainer<Quest> questContainer;
-    private BeanItemContainer<Npc> npcContainer;
     private TabSheet npcTabSheet;
     private TabSheet.Tab npcTab;
     private VerticalLayout npcTabLayout;
@@ -91,12 +85,18 @@ public class TranslateTab extends VerticalLayout {
     private CheckBox emptyTranslations;
     private TextField searchField;
     private ComboBox translatorBox;
-    private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
     private Label countLabel;
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     private final NpcSpecification npcSpecification = new NpcSpecification();
     private final LocationSpecification locationSpecification = new LocationSpecification();
+    private final SubLocationSpecification subLocationSpecification = new SubLocationSpecification();
+    private List<Location> locations = new ArrayList<>();
+    private List<Location> subLocations = new ArrayList<>();
+    private List<Npc> npcList = new ArrayList<>();
+    private List<Quest> questList = new ArrayList<>();
+    private List<Topic> topicList = new ArrayList<>();
+    private List<Subtitle> subtitleList = new ArrayList<>();
 
     public TranslateTab() {
 
@@ -110,45 +110,42 @@ public class TranslateTab extends VerticalLayout {
         TranslationColumnGenerator translationColumnGenerator = new TranslationColumnGenerator();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
         this.setSizeFull();
+        this.setSpacing(false);
+        this.setMargin(false);
         npcListlayout = new HorizontalLayout();
+        npcListlayout.setSpacing(false);
+        npcListlayout.setMargin(false);
         npcListlayout.setSizeFull();
         npcTable = new ComboBox("NPC");
-        npcTable.setPageLength(20);
-
+        npcTable.setPageLength(30);
+        npcTable.setScrollToSelectedItem(true);
         npcTable.setWidth(100f, Unit.PERCENTAGE);
         npcTable.addValueChangeListener(new NpcSelectListener());
-        npcTable.setFilteringMode(FilteringMode.CONTAINS);
-        locationContainer = new BeanItemContainer<>(Location.class);
         locationTable = new ComboBox("Локация");
-        locationTable.setPageLength(15);
+        locationTable.setPageLength(30);
+        locationTable.setScrollToSelectedItem(true);
 
         locationTable.setWidth(100f, Unit.PERCENTAGE);
         locationTable.addValueChangeListener(filterChangeListener);
-        locationTable.setContainerDataSource(locationContainer);
-        locationTable.setFilteringMode(FilteringMode.CONTAINS);
+        locationTable.setDataProvider(new ListDataProvider<>(locations));
 
-        subLocationContainer = new BeanItemContainer<>(Location.class);
         subLocationTable = new ComboBox("Сублокация");
-        subLocationTable.setPageLength(15);
+        subLocationTable.setPageLength(30);
+        subLocationTable.setScrollToSelectedItem(true);
 
         subLocationTable.setWidth(100f, Unit.PERCENTAGE);
         subLocationTable.addValueChangeListener(filterChangeListener);
-        subLocationTable.setContainerDataSource(subLocationContainer);
-        subLocationTable.setFilteringMode(FilteringMode.CONTAINS);
-        questContainer = new BeanItemContainer<>(Quest.class);
+        subLocationTable.setDataProvider(new ListDataProvider<>(subLocations));
         questTable = new ComboBox("Квест");
-        questTable.setPageLength(15);
+        questTable.setPageLength(30);
+        questTable.setScrollToSelectedItem(true);
 
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.addValueChangeListener(filterChangeListener);
-        questTable.setContainerDataSource(questContainer);
-        questTable.setFilteringMode(FilteringMode.CONTAINS);
+        questList = service.getQuests();
+        questTable.setDataProvider(new ListDataProvider(questList));
 
-        npcContainer = new BeanItemContainer<>(Npc.class);
-        npcTable.setContainerDataSource(npcContainer);
-        npcContainer.addNestedContainerProperty("location.name");
-        npcContainer.addNestedContainerProperty("location.nameRu");
-        npcContainer.addNestedContainerProperty("location.parentLocation");
+        npcTable.setDataProvider(new ListDataProvider(npcList));
 
         FormLayout locationAndNpc = new FormLayout(questTable, locationTable, subLocationTable, npcTable);
         locationAndNpc.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
@@ -158,29 +155,29 @@ public class TranslateTab extends VerticalLayout {
 
         translateStatus = new ComboBoxMultiselect("Статус перевода", Arrays.asList(TRANSLATE_STATUS.values()));
         translateStatus.setClearButtonCaption("Очистить");
-        translateStatus.addValueChangeListener(new HasValue.ValueChangeListener() {
+        translateStatus.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
-            public void valueChange(HasValue.ValueChangeEvent event) {
+            public void valueChange(Property.ValueChangeEvent event) {
                 LoadFilters();
                 LoadNpcContent();
             }
         });
+        translateStatus.setPageLength(20);
         noTranslations = new CheckBox("Не переведены полностью");
         noTranslations.setValue(Boolean.FALSE);
-        noTranslations.addValueChangeListener(new Property.ValueChangeListener() {
-
+        noTranslations.addValueChangeListener(new HasValue.ValueChangeListener<Boolean>() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange(HasValue.ValueChangeEvent<Boolean> event) {
                 LoadFilters();
                 LoadNpcContent();
             }
         });
+
         emptyTranslations = new CheckBox("Не добавлен перевод");
         emptyTranslations.setValue(Boolean.FALSE);
-        emptyTranslations.addValueChangeListener(new Property.ValueChangeListener() {
-
+        emptyTranslations.addValueChangeListener(new HasValue.ValueChangeListener<Boolean>() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange(HasValue.ValueChangeEvent<Boolean> event) {
                 LoadFilters();
                 LoadNpcContent();
             }
@@ -188,13 +185,10 @@ public class TranslateTab extends VerticalLayout {
         HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
-        sysAccountContainer = service.loadBeanItems(sysAccountContainer);
-        translatorBox.setContainerDataSource(sysAccountContainer);
-        translatorBox.setFilteringMode(FilteringMode.CONTAINS);
-        translatorBox.addValueChangeListener(new Property.ValueChangeListener() {
-
+        translatorBox.setDataProvider(new ListDataProvider(service.getSysAccounts()));
+        translatorBox.addValueChangeListener(new HasValue.ValueChangeListener() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange(HasValue.ValueChangeEvent event) {
                 LoadFilters();
                 LoadNpcContent();
             }
@@ -211,11 +205,9 @@ public class TranslateTab extends VerticalLayout {
         countLabel = new Label();
         searchField = new TextField("Искомая строка");
         searchField.setSizeFull();
-        searchField.setNullRepresentation("");
-        searchField.addValueChangeListener(new Property.ValueChangeListener() {
-
+        searchField.addValueChangeListener(new HasValue.ValueChangeListener<String>() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange(HasValue.ValueChangeEvent<String> event) {
                 LoadFilters();
                 LoadNpcContent();
             }
@@ -233,20 +225,18 @@ public class TranslateTab extends VerticalLayout {
         npcListlayout.setExpandRatio(countLabel, 0.1f);
         npcContentLayout = new VerticalLayout();
         npcContentLayout.setSizeFull();
+        npcContentLayout.setSpacing(false);
+        npcContentLayout.setMargin(false);
         npcTabSheet = new TabSheet();
         npcTabSheet.setSizeFull();
         npcTabLayout = new VerticalLayout();
         locationName = new TextField("Название локации");
-        locationName.setNullRepresentation("");
         npcTabLayout.addComponent(locationName);
         locationNameRu = new TextField("Перевод названия локации");
-        locationNameRu.setNullRepresentation("");
         npcTabLayout.addComponent(locationNameRu);
         npcName = new TextField("Имя NPC");
-        npcName.setNullRepresentation("");
         npcTabLayout.addComponent(npcName);
         npcNameRu = new TextField("Перевод имени NPC");
-        npcNameRu.setNullRepresentation("");
         npcTabLayout.addComponent(npcNameRu);
         npcTab = npcTabSheet.addTab(npcTabLayout, "Инфо");
         npcTopicsTable = new Table();
@@ -294,7 +284,6 @@ public class TranslateTab extends VerticalLayout {
     }
 
     private void LoadFilters() {
-        npcContainer.removeAllItems();
         npcSpecification.setNoTranslations(noTranslations.getValue());
         npcSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
         npcSpecification.setTranslator((SysAccount) translatorBox.getValue());
@@ -308,46 +297,62 @@ public class TranslateTab extends VerticalLayout {
         } else {
             npcSpecification.setLocation((Location) locationTable.getValue());
         }
-        npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
+        npcList.clear();
+        npcList.addAll(service.getNpcRepository().findAll(npcSpecification));
         locationSpecification.setNoTranslations(noTranslations.getValue());
         locationSpecification.setEmptyTranslations(emptyTranslations.getValue());
         locationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
         locationSpecification.setTranslator((SysAccount) translatorBox.getValue());
         locationSpecification.setSearchString(searchField.getValue());
-        List<Location> allLocations = service.getLocationRepository().findAll(locationSpecification);
-        List<Location> locations = new ArrayList<>();
-        List<Location> subLocations = new ArrayList<>();
-        for (Location l : allLocations) {
+        locations.clear();
+        for (Location l : service.getLocationRepository().findAll(locationSpecification)) {
             if (l.getParentLocation() == null) {
-                locations.add(l);
-                subLocations.add(l);
+                if (!locations.contains(l)) {
+                    locations.add(l);
+                }
             }
         }
-        for (Location l : allLocations) {
-            if (l.getParentLocation() != null) {
-                locations.add(l.getParentLocation());
-                subLocations.add(l);
-            }
-        }
-        locationContainer.removeAllItems();
-        locationContainer.addAll(locations);
-        locationContainer.sort(new Object[]{"name"}, new boolean[]{true});
-        subLocationContainer.removeAllItems();
-        subLocationContainer.addAll(subLocations);
-        subLocationContainer.sort(new Object[]{"name"}, new boolean[]{true});
-        questContainer = service.loadBeanItems(questContainer);
-        questContainer.sort(new Object[]{"name"}, new boolean[]{true});
+        subLocationSpecification.setNoTranslations(noTranslations.getValue());
+        subLocationSpecification.setEmptyTranslations(emptyTranslations.getValue());
+        subLocationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
+        subLocationSpecification.setTranslator((SysAccount) translatorBox.getValue());
+        subLocationSpecification.setSearchString(searchField.getValue());
+        subLocationSpecification.setParentLocation(locationTable.getValue());
+        subLocations.clear();
+        subLocations.addAll(service.getLocationRepository().findAll(subLocationSpecification));
+        locationTable.getDataProvider().refreshAll();
+        subLocationTable.getDataProvider().refreshAll();
+        npcTable.getDataProvider().refreshAll();
         Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
         countLabel.setCaption(countTranslatedTextFilterResult.toString());
     }
 
     private void LoadNpcContent() {
         if (currentNpc != null) {
-            locationName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "location.name"));
-            locationNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "location.nameRu"));
-            npcName.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "name"));
-            npcNameRu.setPropertyDataSource(npcContainer.getContainerProperty(currentNpc, "nameRu"));
-            topicsContainer = service.getNpcTopics(currentNpc, topicsContainer, (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
+            if (currentNpc.getLocation().getName() != null) {
+                locationName.setValue(currentNpc.getLocation().getName());
+            } else {
+                locationName.clear();
+            }
+            if (currentNpc.getLocation().getNameRu() != null) {
+                locationNameRu.setValue(currentNpc.getLocation().getNameRu());
+            } else {
+                locationNameRu.clear();
+            }
+            if (currentNpc.getName() != null) {
+                npcName.setValue(currentNpc.getName());
+            } else {
+                npcName.clear();
+            }
+            if (currentNpc.getNameRu() != null) {
+                npcNameRu.setValue(currentNpc.getNameRu());
+            } else {
+                npcNameRu.clear();
+            }
+            //topicList.clear();
+            //topicList.addAll(service.getNpcTopics(currentNpc, (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue()));
+            topicsContainer.removeAllItems();
+            topicsContainer.addAll(service.getNpcTopics(currentNpc, (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue()));
             npcTabSheet.getTab(npcTopicsTable).setCaption("Диалоги(" + topicsContainer.size() + ")");
             subtitlesContainer = service.getNpcSubtitles(currentNpc, subtitlesContainer, (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
             npcTabSheet.getTab(npcSubtitlesTable).setCaption("Субтитры(" + subtitlesContainer.size() + ")");
@@ -374,6 +379,63 @@ public class TranslateTab extends VerticalLayout {
 
     }
 
+    private class NpcTopicValueProvider implements ValueProvider<Topic, VerticalLayout> {
+
+        @Override
+        public VerticalLayout apply(Topic source) {
+            VerticalLayout result = new VerticalLayout();
+            result.addStyleName("v-scrollable");
+            result.setSpacing(false);
+            result.setMargin(new MMarginInfo(false, false, false, true));
+            if (source.getNpcText() != null && !source.getNpcText().isEmpty()) {
+                Label textEnAreaLabel = new Label("Текст в игре");
+                textEnAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnAreaLabel);
+                Label textEnArea = new Label();
+                textEnArea.addStyleName("v-textarea");
+                textEnArea.setValue(source.getNpcText());
+                textEnArea.setWidth(100f, Unit.PERCENTAGE);
+                result.addComponent(textEnArea);//, "Текст в игре"
+            }
+            if (source.getNpcTextRu() != null && !source.getNpcTextRu().isEmpty()) {
+                Label textRuAreaLabel = new Label("Перевод в игре");
+                textRuAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textRuAreaLabel);
+                Label textRuArea = new Label();
+                textRuArea.addStyleName("v-textarea");
+                textRuArea.setValue(source.getNpcTextRu());
+                textRuArea.setWidth(100f, Unit.PERCENTAGE);
+                result.addComponent(textRuArea);//, "Перевод в игре"
+            }
+            if (source.getExtNpcPhrase() != null) {
+                Label textEnRawArealabel = new Label("Текст в таблицах");
+                textEnRawArealabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnRawArealabel);
+                Label textEnRawArea = new Label();
+                textEnRawArea.addStyleName("v-textarea");
+                textEnRawArea.setValue(source.getExtNpcPhrase().getTextEn());
+                textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
+                result.addComponent(textEnRawArea);//, "Текст в таблицах"
+                if (source.getExtNpcPhrase().getTextRu() != null && !source.getExtNpcPhrase().getTextRu().equals(source.getExtNpcPhrase().getTextEn())) {
+                    Label textRuRawAreaLabel = new Label("Перевод в таблицах от " + source.getExtNpcPhrase().getTranslator());
+                    textRuRawAreaLabel.addStyleName("v-caption-darkblue");
+                    result.addComponent(textRuRawAreaLabel);
+                    Label textRuRawArea = new Label();
+                    textRuRawArea.addStyleName("v-textarea");
+                    textRuRawArea.setValue(source.getExtNpcPhrase().getTextRu());
+                    textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
+                    result.addComponent(textRuRawArea);//, "Перевод в таблицах"
+                }
+            } else if (source.getNpcText() != null && !source.getNpcText().isEmpty()) {
+                Button getRawButton = new Button("Искать RAW");
+                getRawButton.addClickListener(new AssignClickListener(source));
+                result.addComponent(getRawButton);
+            }
+            return result;
+        }
+
+    }
+
     private class TopicNpcColumnGenerator implements ColumnGenerator {
 
         @Override
@@ -389,7 +451,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textEnArea = new Label();
                 textEnArea.addStyleName("v-textarea");
                 textEnArea.setValue(topic.getNpcText());
-                textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnArea);//, "Текст в игре"
             }
@@ -400,7 +461,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textRuArea = new Label();
                 textRuArea.addStyleName("v-textarea");
                 textRuArea.setValue(topic.getNpcTextRu());
-                textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
@@ -411,7 +471,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textEnRawArea = new Label();
                 textEnRawArea.addStyleName("v-textarea");
                 textEnRawArea.setValue(topic.getExtNpcPhrase().getTextEn());
-                textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtNpcPhrase().getTextRu() != null && !topic.getExtNpcPhrase().getTextRu().equals(topic.getExtNpcPhrase().getTextEn())) {
@@ -421,7 +480,6 @@ public class TranslateTab extends VerticalLayout {
                     Label textRuRawArea = new Label();
                     textRuRawArea.addStyleName("v-textarea");
                     textRuRawArea.setValue(topic.getExtNpcPhrase().getTextRu());
-                    textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
@@ -434,11 +492,69 @@ public class TranslateTab extends VerticalLayout {
         }
     }
 
+    private class PlayerTopicValueProvider implements ValueProvider<Topic, VerticalLayout> {
+
+        @Override
+        public VerticalLayout apply(Topic source) {
+            VerticalLayout result = new VerticalLayout();
+            result.addStyleName("v-scrollable");
+            result.setSpacing(false);
+            if (source.getPlayerText() != null && !source.getPlayerText().isEmpty()) {
+                Label textEnAreaLabel = new Label("Текст в игре");
+                textEnAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnAreaLabel);
+                Label textEnArea = new Label();
+                textEnArea.addStyleName("v-textarea");
+                textEnArea.setValue(source.getPlayerText());
+                textEnArea.setWidth(100f, Unit.PERCENTAGE);
+                result.addComponent(textEnArea);//, "Текст в игре"
+            }
+            if (source.getPlayerTextRu() != null && !source.getPlayerTextRu().isEmpty()) {
+                Label textRuAreaLabel = new Label("Перевод в игре");
+                textRuAreaLabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textRuAreaLabel);
+                Label textRuArea = new Label();
+                textRuArea.addStyleName("v-textarea");
+                textRuArea.setValue(source.getPlayerTextRu());
+                textRuArea.setWidth(100f, Unit.PERCENTAGE);
+                result.addComponent(textRuArea);//, "Перевод в игре"
+            }
+            if (source.getExtPlayerPhrase() != null) {
+                Label textEnRawArealabel = new Label("Текст в таблицах");
+                textEnRawArealabel.addStyleName("v-caption-darkblue");
+                result.addComponent(textEnRawArealabel);
+                Label textEnRawArea = new Label();
+                textEnRawArea.addStyleName("v-textarea");
+                textEnRawArea.setValue(source.getExtPlayerPhrase().getTextEn());
+                textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
+                result.addComponent(textEnRawArea);//, "Текст в таблицах"
+                if (source.getExtPlayerPhrase().getTextRu() != null && !source.getExtPlayerPhrase().getTextRu().equals(source.getExtPlayerPhrase().getTextEn())) {
+                    Label textRuRawAreaLabel = new Label("Перевод в таблицах от " + source.getExtPlayerPhrase().getTranslator());
+                    textRuRawAreaLabel.addStyleName("v-caption-darkblue");
+                    result.addComponent(textRuRawAreaLabel);
+                    Label textRuRawArea = new Label();
+                    textRuRawArea.addStyleName("v-textarea");
+                    textRuRawArea.setValue(source.getExtPlayerPhrase().getTextRu());
+                    textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
+                    result.addComponent(textRuRawArea);//, "Перевод в таблицах"
+                }
+            } else if (source.getPlayerText() != null && !source.getPlayerText().isEmpty()) {
+                Button getRawButton = new Button("Искать RAW");
+                getRawButton.addClickListener(new AssignClickListener(source));
+                result.addComponent(getRawButton);
+            }
+
+            return result;
+        }
+
+    }
+
     private class TopicPlayerColumnGenerator implements ColumnGenerator {
 
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
             VerticalLayout result = new VerticalLayout();
+            result.setMargin(new MMarginInfo(false, false, false, true));
             Topic topic = (Topic) itemId;
             if (topic.getPlayerText() != null && !topic.getPlayerText().isEmpty()) {
                 Label textEnAreaLabel = new Label("Текст в игре");
@@ -447,7 +563,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textEnArea = new Label();
                 textEnArea.addStyleName("v-textarea");
                 textEnArea.setValue(topic.getPlayerText());
-                textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnArea);//, "Текст в игре"
             }
@@ -458,7 +573,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textRuArea = new Label();
                 textRuArea.addStyleName("v-textarea");
                 textRuArea.setValue(topic.getPlayerTextRu());
-                textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
@@ -469,7 +583,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textEnRawArea = new Label();
                 textEnRawArea.addStyleName("v-textarea");
                 textEnRawArea.setValue(topic.getExtPlayerPhrase().getTextEn());
-                textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (topic.getExtPlayerPhrase().getTextRu() != null && !topic.getExtPlayerPhrase().getTextRu().equals(topic.getExtPlayerPhrase().getTextEn())) {
@@ -479,7 +592,6 @@ public class TranslateTab extends VerticalLayout {
                     Label textRuRawArea = new Label();
                     textRuRawArea.addStyleName("v-textarea");
                     textRuRawArea.setValue(topic.getExtPlayerPhrase().getTextRu());
-                    textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
@@ -520,7 +632,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textEnArea = new Label();
                 textEnArea.addStyleName("v-textarea");
                 textEnArea.setValue(subtitle.getText());
-                textEnArea.setReadOnly(true);
                 textEnArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnArea);//, "Текст в игре"
             }
@@ -531,7 +642,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textRuArea = new Label();
                 textRuArea.addStyleName("v-textarea");
                 textRuArea.setValue(subtitle.getTextRu());
-                textRuArea.setReadOnly(true);
                 textRuArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textRuArea);//, "Перевод в игре"
             }
@@ -543,7 +653,6 @@ public class TranslateTab extends VerticalLayout {
                 Label textEnRawArea = new Label();
                 textEnRawArea.addStyleName("v-textarea");
                 textEnRawArea.setValue(subtitle.getExtNpcPhrase().getTextEn());
-                textEnRawArea.setReadOnly(true);
                 textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
                 result.addComponent(textEnRawArea);//, "Текст в таблицах"
                 if (subtitle.getExtNpcPhrase().getTextRu() != null && !subtitle.getExtNpcPhrase().getTextRu().equals(subtitle.getExtNpcPhrase().getTextEn())) {
@@ -553,7 +662,6 @@ public class TranslateTab extends VerticalLayout {
                     Label textRuRawArea = new Label();
                     textRuRawArea.addStyleName("v-textarea");
                     textRuRawArea.setValue(subtitle.getExtNpcPhrase().getTextRu());
-                    textRuRawArea.setReadOnly(true);
                     textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
                     result.addComponent(textRuRawArea);//, "Перевод в таблицах"
                 }
@@ -569,7 +677,7 @@ public class TranslateTab extends VerticalLayout {
 
     }
 
-    private class NpcSelectListener implements Property.ValueChangeListener {
+    private class NpcSelectListener implements Property.ValueChangeListener, HasValue.ValueChangeListener {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
@@ -577,21 +685,28 @@ public class TranslateTab extends VerticalLayout {
             LoadNpcContent();
         }
 
+        @Override
+        public void valueChange(HasValue.ValueChangeEvent event) {
+            currentNpc = (Npc) npcTable.getValue();
+            LoadNpcContent();
+        }
+
     }
 
-    private class FilterChangeListener implements Property.ValueChangeListener {
+    private class FilterChangeListener implements Property.ValueChangeListener, HasValue.ValueChangeListener {
 
         @Override
         public void valueChange(Property.ValueChangeEvent event) {
-            subLocationContainer.removeAllContainerFilters();
-            if (locationTable.getValue() != null) {
-                subLocationContainer.addContainerFilter(new Or(
-                        new Compare.Equal("parentLocation", locationTable.getValue()),
-                        new Compare.Equal("id", ((Location) locationTable.getValue()).getId())
-                )
-                );
-            }
-            npcContainer.removeAllItems();
+            subLocationSpecification.setNoTranslations(noTranslations.getValue());
+            subLocationSpecification.setEmptyTranslations(emptyTranslations.getValue());
+            subLocationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
+            subLocationSpecification.setTranslator((SysAccount) translatorBox.getValue());
+            subLocationSpecification.setSearchString(searchField.getValue());
+            subLocationSpecification.setParentLocation(locationTable.getValue());
+            subLocations.clear();
+            subLocations.addAll(service.getLocationRepository().findAll(subLocationSpecification));
+            subLocationTable.getDataProvider().refreshAll();
+            npcList.clear();
             npcSpecification.setNoTranslations(noTranslations.getValue());
             npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
             npcSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
@@ -600,7 +715,34 @@ public class TranslateTab extends VerticalLayout {
             npcSpecification.setLocation((Location) locationTable.getValue());
             npcSpecification.setSubLocation((Location) subLocationTable.getValue());
             npcSpecification.setSearchString(searchField.getValue());
-            npcContainer.addAll(service.getNpcRepository().findAll(npcSpecification));
+            npcList.addAll(service.getNpcRepository().findAll(npcSpecification));
+            npcTable.getDataProvider().refreshAll();
+            Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
+            countLabel.setCaption(countTranslatedTextFilterResult.toString());
+        }
+
+        @Override
+        public void valueChange(HasValue.ValueChangeEvent event) {
+            subLocationSpecification.setNoTranslations(noTranslations.getValue());
+            subLocationSpecification.setEmptyTranslations(emptyTranslations.getValue());
+            subLocationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
+            subLocationSpecification.setTranslator((SysAccount) translatorBox.getValue());
+            subLocationSpecification.setSearchString(searchField.getValue());
+            subLocationSpecification.setParentLocation(locationTable.getValue());
+            subLocations.clear();
+            subLocations.addAll(service.getLocationRepository().findAll(subLocationSpecification));
+            subLocationTable.getDataProvider().refreshAll();
+            npcList.clear();
+            npcSpecification.setNoTranslations(noTranslations.getValue());
+            npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
+            npcSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
+            npcSpecification.setTranslator((SysAccount) translatorBox.getValue());
+            npcSpecification.setQuest((Quest) questTable.getValue());
+            npcSpecification.setLocation((Location) locationTable.getValue());
+            npcSpecification.setSubLocation((Location) subLocationTable.getValue());
+            npcSpecification.setSearchString(searchField.getValue());
+            npcList.addAll(service.getNpcRepository().findAll(npcSpecification));
+            npcTable.getDataProvider().refreshAll();
             Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
             countLabel.setCaption(countTranslatedTextFilterResult.toString());
         }
@@ -613,6 +755,8 @@ public class TranslateTab extends VerticalLayout {
         public Object generateCell(Table source, Object itemId, Object columnId) {
             final VerticalLayout vl = new VerticalLayout();
             vl.setSizeFull();
+            vl.setSpacing(false);
+            vl.setMargin(false);
             Set<TranslatedText> list = new HashSet<>();
             Set<TranslatedText> list1 = (Set<TranslatedText>) source.getItem(itemId).getItemProperty(columnId).getValue();
             list.addAll(list1);
@@ -621,6 +765,9 @@ public class TranslateTab extends VerticalLayout {
             String text = null;
             if (itemId instanceof Subtitle) {
                 text = ((Subtitle) itemId).getText();
+                if (text == null) {
+                    text = ((Subtitle) itemId).getTextRu();
+                }
                 Subtitle s = (Subtitle) itemId;
                 if (s.getExtNpcPhrase() != null && s.getExtNpcPhrase().getTranslatedTexts() != null) {
                     list.addAll(s.getExtNpcPhrase().getTranslatedTexts());
@@ -628,12 +775,18 @@ public class TranslateTab extends VerticalLayout {
             } else if (itemId instanceof Topic) {
                 if (columnId.equals("playerTranslations")) {
                     text = ((Topic) itemId).getPlayerText();
+                    if (text == null) {
+                        text = ((Topic) itemId).getPlayerTextRu();
+                    }
                     Topic t = (Topic) itemId;
                     if (t.getExtPlayerPhrase() != null && t.getExtPlayerPhrase().getTranslatedTexts() != null) {
                         list.addAll(t.getExtPlayerPhrase().getTranslatedTexts());
                     }
                 } else if (columnId.equals("npcTranslations")) {
                     text = ((Topic) itemId).getNpcText();
+                    if (text == null) {
+                        text = ((Topic) itemId).getNpcTextRu();
+                    }
                     Topic t = (Topic) itemId;
                     if (t.getExtNpcPhrase() != null && t.getExtNpcPhrase().getTranslatedTexts() != null) {
                         list.addAll(t.getExtNpcPhrase().getTranslatedTexts());
@@ -698,6 +851,114 @@ public class TranslateTab extends VerticalLayout {
 
     }
 
+    private class PlayerTopicTranslationsValueProvider implements ValueProvider<Topic, VerticalLayout> {
+
+        @Override
+        public VerticalLayout apply(Topic source) {
+            final VerticalLayout vl = new VerticalLayout();
+            vl.setSpacing(false);
+            vl.setMargin(false);
+            vl.setSizeFull();
+            Set<TranslatedText> list = new HashSet<>();
+            if (source.getPlayerTranslations() != null) {
+                list.addAll(source.getPlayerTranslations());
+            }
+            if (source.getExtPlayerPhrase() != null && source.getExtPlayerPhrase().getTranslatedTexts() != null) {
+                for (TranslatedText t : source.getExtPlayerPhrase().getTranslatedTexts()) {
+                    if (!list.contains(t)) {
+                        list.add(t);
+                    }
+                }
+            }
+            String text = source.getPlayerText();
+            if (text == null) {
+                text = source.getPlayerTextRu();
+            }
+
+            List<SysAccount> accounts = new ArrayList<>();
+            if (list != null) {
+                for (TranslatedText t : list) {
+                    vl.addComponent(new TranslationCell(t));
+                    accounts.add(t.getAuthor());
+                }
+            }
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+                final TranslatedText translatedText = new TranslatedText();
+                translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
+                translatedText.setPlayerTopic(source);
+                if (source.getExtPlayerPhrase() != null) {
+                    translatedText.setSpreadSheetsPlayerPhrase(source.getExtPlayerPhrase());
+                }
+
+                Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
+                addTranslation.addClickListener(new Button.ClickListener() {
+
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        translatedText.getPlayerTopic().getPlayerTranslations().add(translatedText);
+                        vl.addComponent(new TranslationCell(translatedText));
+                        event.getButton().setVisible(false);
+                    }
+                });
+                vl.addComponent(addTranslation);
+            }
+            return vl;
+        }
+    }
+
+    private class NpcTopicTranslationsValueProvider implements ValueProvider<Topic, VerticalLayout> {
+
+        @Override
+        public VerticalLayout apply(Topic source) {
+            final VerticalLayout vl = new VerticalLayout();
+            vl.setSpacing(false);
+            vl.setMargin(false);
+            vl.setSizeFull();
+
+            Set<TranslatedText> list = new HashSet<>();
+            if (source.getNpcTranslations() != null) {
+                list.addAll(source.getNpcTranslations());
+            }
+            if (source.getExtNpcPhrase() != null && source.getExtNpcPhrase().getTranslatedTexts() != null) {
+                for (TranslatedText t : source.getExtNpcPhrase().getTranslatedTexts()) {
+                    if (!list.contains(t)) {
+                        list.add(t);
+                    }
+                }
+            }
+            String text = source.getNpcText();
+            if (text == null) {
+                text = source.getNpcTextRu();
+            }
+            List<SysAccount> accounts = new ArrayList<>();
+            for (TranslatedText t : list) {
+                vl.addComponent(new TranslationCell(t));
+                accounts.add(t.getAuthor());
+            }
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+                final TranslatedText translatedText = new TranslatedText();
+                translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
+                translatedText.setNpcTopic(source);
+                if (source.getExtNpcPhrase() != null) {
+                    translatedText.setSpreadSheetsNpcPhrase(source.getExtNpcPhrase());
+                }
+
+                Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
+                addTranslation.addClickListener(new Button.ClickListener() {
+
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        translatedText.getNpcTopic().getNpcTranslations().add(translatedText);
+                        vl.addComponent(new TranslationCell(translatedText));
+                        event.getButton().setVisible(false);
+                    }
+                });
+                vl.addComponent(addTranslation);
+            }
+            return vl;
+        }
+    }
+
     private class TranslationCell extends VerticalLayout {
 
         private TextArea translation;
@@ -710,42 +971,45 @@ public class TranslateTab extends VerticalLayout {
 
         public TranslationCell(TranslatedText translatedText_) {
             this.setSizeFull();
+            this.setSpacing(false);
+            this.setMargin(false);
             this.translatedText = translatedText_;
             String translatedStatus = "нет";
             if (translatedText.getStatus() != null) {
                 translatedStatus = translatedText.getStatus().toString();
             }
             StringBuilder caption = new StringBuilder();
+            StringBuilder description = new StringBuilder();
             caption.append("Статус: ").append(translatedStatus).append(", автор: ").append(translatedText.getAuthor().getLogin());
+            description.append("Статус: ").append(translatedStatus).append(", автор: ").append(translatedText.getAuthor().getLogin());
             if (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED && (translatedText.getApprovedBy() != null) && (translatedText.getApptovedTime() != null)) {
-                caption.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
+                description.append(", кто принял: ").append(translatedText.getApprovedBy().getLogin());
             }
             if (translatedText.getCreateTime() != null) {
-                caption.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
+                description.append(", создано: ").append(sdf.format(translatedText.getCreateTime()));
             }
             if (translatedText.getChangeTime() != null) {
-                caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
+                description.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
-            translation = new TextArea(caption.toString());
+            translation = new TextArea("");
+            translation.setDescription(description.toString());
+            translation.setCaption(caption.toString());
             translation.setRows(7);
             translation.setSizeFull();
-            translation.setNullRepresentation("");
-            translation.setImmediate(true);
-            translation.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.TIMEOUT);
-            translation.setTextChangeTimeout(5000);
-            translation.setValue(translatedText_.getText());
+            if (translatedText_.getText() != null) {
+                translation.setValue(translatedText_.getText());
+            }
 
-            translation.addTextChangeListener(new FieldEvents.TextChangeListener() {
-
+            translation.addValueChangeListener(new HasValue.ValueChangeListener<String>() {
                 @Override
-                public void textChange(FieldEvents.TextChangeEvent event) {
+                public void valueChange(HasValue.ValueChangeEvent<String> event) {
                     save.setVisible(true);
 
-                    if (event.getText() == null || event.getText().isEmpty()) {
+                    if (event.getValue() == null || event.getValue().isEmpty()) {
                         save.setCaption("Удалить");
                         save.setIcon(FontAwesome.RECYCLE);
                     } else {
-                        translatedText.setText(event.getText());
+                        translatedText.setText(event.getValue());
                         service.saveTranslatedTextDirty(translatedText);
                         save.setCaption("Сохранить");
                         save.setIcon(FontAwesome.SAVE);

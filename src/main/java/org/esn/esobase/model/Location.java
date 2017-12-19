@@ -43,7 +43,7 @@ public class Location extends DAO {
     private BigDecimal progress;
     @ManyToOne(fetch = FetchType.LAZY)
     private GSpreadSheetsLocationName sheetsLocationName;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Location parentLocation;
     @OneToMany(mappedBy = "parentLocation")
     private List<Location> subLocations;

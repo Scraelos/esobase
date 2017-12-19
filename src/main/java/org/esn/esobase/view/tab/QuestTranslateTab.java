@@ -43,7 +43,7 @@ import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.esn.esobase.model.TranslatedText;
 import org.esn.esobase.security.SpringSecurityHelper;
-import org.vaadin.addons.ComboBoxMultiselect;
+import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 
 /**
  *
@@ -129,9 +129,9 @@ public class QuestTranslateTab extends VerticalLayout {
         questListlayout.addComponent(locationAndQuestLayout);
         translateStatus = new ComboBoxMultiselect("Статус перевода", Arrays.asList(TRANSLATE_STATUS.values()));
         translateStatus.setClearButtonCaption("Очистить");
-        translateStatus.addValueChangeListener(new HasValue.ValueChangeListener() {
+        translateStatus.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
-            public void valueChange(HasValue.ValueChangeEvent event) {
+            public void valueChange(Property.ValueChangeEvent event) {
                 LoadFilters();
             }
         });

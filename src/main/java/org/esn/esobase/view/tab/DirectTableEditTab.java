@@ -78,6 +78,8 @@ import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.GSpreadSheetLinkRouter;
 import org.esn.esobase.view.ui.GspreadSheetTable;
 import org.esn.esobase.view.ui.RefreshableGrid;
+import org.hibernate.Hibernate;
+import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.vaadin.viritin.v7.SortableLazyList;
@@ -178,7 +180,7 @@ public class DirectTableEditTab extends VerticalLayout {
     private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
 
     private final GSpreadSheetEntitySpecification specification = new GSpreadSheetEntitySpecification();
-    private final GSpreadSheetItemNameSpecification itemNameSpecification=new GSpreadSheetItemNameSpecification();
+    private final GSpreadSheetItemNameSpecification itemNameSpecification = new GSpreadSheetItemNameSpecification();
 
     public DirectTableEditTab(DBService service_) {
         this.service = service_;
@@ -918,113 +920,99 @@ public class DirectTableEditTab extends VerticalLayout {
         Component targetTabId = null;
         RefreshableGrid targetTable = null;
         Integer rowNum = 1;
-        Long itemId = null;
+        Object itemId = entity;
         if (entity instanceof GSpreadSheetsNpcName) {
             targetTabId = npcNameTable;
             targetTable = npcNameTable;
             rowNum = ((GSpreadSheetsNpcName) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsNpcName) entity).getId();
         } else if (entity instanceof GSpreadSheetsLocationName) {
             targetTabId = locationNameTable;
             targetTable = locationNameTable;
             rowNum = ((GSpreadSheetsLocationName) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsLocationName) entity).getId();
         } else if (entity instanceof GSpreadSheetsPlayerPhrase) {
             targetTabId = playerPhraseTable;
             targetTable = playerPhraseTable;
             rowNum = ((GSpreadSheetsPlayerPhrase) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsPlayerPhrase) entity).getId();
         } else if (entity instanceof GSpreadSheetsNpcPhrase) {
             targetTabId = npcPhraseTable;
             targetTable = npcPhraseTable;
             rowNum = ((GSpreadSheetsNpcPhrase) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsNpcPhrase) entity).getId();
         } else if (entity instanceof GSpreadSheetsQuestName) {
             targetTabId = questNameTable;
             targetTable = questNameTable;
             rowNum = ((GSpreadSheetsQuestName) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsQuestName) entity).getId();
         } else if (entity instanceof GSpreadSheetsQuestDescription) {
             targetTabId = questDescriptionTable;
             targetTable = questDescriptionTable;
             rowNum = ((GSpreadSheetsQuestDescription) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsQuestDescription) entity).getId();
         } else if (entity instanceof GSpreadSheetsQuestDirection) {
             targetTabId = questDirectionTable;
             targetTable = questDirectionTable;
             rowNum = ((GSpreadSheetsQuestDirection) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsQuestDirection) entity).getId();
         } else if (entity instanceof GSpreadSheetsActivator) {
             targetTabId = activatorTable;
             targetTable = activatorTable;
             rowNum = ((GSpreadSheetsActivator) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsActivator) entity).getId();
         } else if (entity instanceof GSpreadSheetsAchievement) {
             targetTabId = achievementTable;
             targetTable = achievementTable;
             rowNum = ((GSpreadSheetsAchievement) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsAchievement) entity).getId();
         } else if (entity instanceof GSpreadSheetsAchievementDescription) {
             targetTabId = achievementDescriptionTable;
             targetTable = achievementDescriptionTable;
             rowNum = ((GSpreadSheetsAchievementDescription) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsAchievementDescription) entity).getId();
         } else if (entity instanceof GSpreadSheetsNote) {
             targetTabId = noteTable;
             targetTable = noteTable;
             rowNum = ((GSpreadSheetsNote) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsNote) entity).getId();
         } else if (entity instanceof GSpreadSheetsJournalEntry) {
             targetTabId = journalEntryTable;
             targetTable = journalEntryTable;
             rowNum = ((GSpreadSheetsJournalEntry) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsJournalEntry) entity).getId();
         } else if (entity instanceof GSpreadSheetsItemName) {
             targetTabId = itemNameLayout;
             targetTable = itemNameTable;
             rowNum = ((GSpreadSheetsItemName) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsItemName) entity).getId();
         } else if (entity instanceof GSpreadSheetsItemDescription) {
             targetTabId = itemDescriptionTable;
             targetTable = itemDescriptionTable;
             rowNum = ((GSpreadSheetsItemDescription) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsItemDescription) entity).getId();
         } else if (entity instanceof GSpreadSheetsAbilityDescription) {
             targetTabId = abilityDescriptionTable;
             targetTable = abilityDescriptionTable;
             rowNum = ((GSpreadSheetsAbilityDescription) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsAbilityDescription) entity).getId();
         } else if (entity instanceof GSpreadSheetsCollectible) {
             targetTabId = collectibleTable;
             targetTable = collectibleTable;
             rowNum = ((GSpreadSheetsCollectible) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsCollectible) entity).getId();
         } else if (entity instanceof GSpreadSheetsCollectibleDescription) {
             targetTabId = collectibleDescriptionTable;
             targetTable = collectibleDescriptionTable;
             rowNum = ((GSpreadSheetsCollectibleDescription) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsCollectibleDescription) entity).getId();
         } else if (entity instanceof GSpreadSheetsLoadscreen) {
             targetTabId = loadscreenTable;
             targetTable = loadscreenTable;
             rowNum = ((GSpreadSheetsLoadscreen) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsLoadscreen) entity).getId();
         } else if (entity instanceof GSpreadSheetsQuestStartTip) {
             targetTabId = questStartTipTable;
             targetTable = questStartTipTable;
             rowNum = ((GSpreadSheetsQuestStartTip) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsQuestStartTip) entity).getId();
         } else if (entity instanceof GSpreadSheetsQuestEndTip) {
             targetTabId = questEndTipTable;
             targetTable = questEndTipTable;
             rowNum = ((GSpreadSheetsQuestEndTip) entity).getRowNum().intValue();
-            itemId = ((GSpreadSheetsQuestEndTip) entity).getId();
         }
         if (rowNum != null) {
-            rowNum--;
+            rowNum = rowNum - 2;
+            if (rowNum < 1) {
+                rowNum = 1;
+            }
             if (targetTabId != null) {
                 tableTabs.setSelectedTab(targetTabId);
-                targetTable.scrollToRow(rowNum, ScrollDestination.START);
+                if (entity instanceof HibernateProxy) {
+                    itemId = ((HibernateProxy) itemId).getHibernateLazyInitializer().getImplementation();
+                }
+                targetTable.scrollToRow(rowNum, itemId, ScrollDestination.MIDDLE);
             }
         }
     }
@@ -1044,120 +1032,50 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public void itemClick(ItemClickEvent event) {
             TranslatedText tt = (TranslatedText) event.getItemId();
-            Component targetTabId = null;
-            RefreshableGrid targetTable = null;
-            Integer rowNum = 1;
-            Long itemId = null;
+            DAO itemId = null;
             if (tt.getSpreadSheetsNpcName() != null) {
-                targetTabId = npcNameTable;
-                targetTable = npcNameTable;
-                rowNum = tt.getSpreadSheetsNpcName().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsNpcName().getId();
+                itemId = tt.getSpreadSheetsNpcName();
             } else if (tt.getSpreadSheetsLocationName() != null) {
-                targetTabId = locationNameTable;
-                targetTable = locationNameTable;
-                rowNum = tt.getSpreadSheetsLocationName().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsLocationName().getId();
+                itemId = tt.getSpreadSheetsLocationName();
             } else if (tt.getSpreadSheetsPlayerPhrase() != null) {
-                targetTabId = playerPhraseTable;
-                targetTable = playerPhraseTable;
-                rowNum = tt.getSpreadSheetsPlayerPhrase().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsPlayerPhrase().getId();
+                itemId = tt.getSpreadSheetsPlayerPhrase();
             } else if (tt.getSpreadSheetsNpcPhrase() != null) {
-                targetTabId = npcPhraseTable;
-                targetTable = npcPhraseTable;
-                rowNum = tt.getSpreadSheetsNpcPhrase().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsNpcPhrase().getId();
+                itemId = tt.getSpreadSheetsNpcPhrase();
             } else if (tt.getSpreadSheetsQuestName() != null) {
-                targetTabId = questNameTable;
-                targetTable = questNameTable;
-                rowNum = tt.getSpreadSheetsQuestName().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsQuestName().getId();
+                itemId = tt.getSpreadSheetsQuestName();
             } else if (tt.getSpreadSheetsQuestDescription() != null) {
-                targetTabId = questDescriptionTable;
-                targetTable = questDescriptionTable;
-                rowNum = tt.getSpreadSheetsQuestDescription().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsQuestDescription().getId();
+                itemId = tt.getSpreadSheetsQuestDescription();
             } else if (tt.getSpreadSheetsQuestDirection() != null) {
-                targetTabId = questDirectionTable;
-                targetTable = questDirectionTable;
-                rowNum = tt.getSpreadSheetsQuestDirection().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsQuestDirection().getId();
+                itemId = tt.getSpreadSheetsQuestDirection();
             } else if (tt.getSpreadSheetsActivator() != null) {
-                targetTabId = activatorTable;
-                targetTable = activatorTable;
-                rowNum = tt.getSpreadSheetsActivator().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsActivator().getId();
+                itemId = tt.getSpreadSheetsActivator();
             } else if (tt.getSpreadSheetsAchievement() != null) {
-                targetTabId = achievementTable;
-                targetTable = achievementTable;
-                rowNum = tt.getSpreadSheetsAchievement().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsAchievement().getId();
+                itemId = tt.getSpreadSheetsAchievement();
             } else if (tt.getSpreadSheetsAchievementDescription() != null) {
-                targetTabId = achievementDescriptionTable;
-                targetTable = achievementDescriptionTable;
-                rowNum = tt.getSpreadSheetsAchievementDescription().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsAchievementDescription().getId();
+                itemId = tt.getSpreadSheetsAchievementDescription();
             } else if (tt.getSpreadSheetsNote() != null) {
-                targetTabId = noteTable;
-                targetTable = noteTable;
-                rowNum = tt.getSpreadSheetsNote().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsNote().getId();
+                itemId = tt.getSpreadSheetsNote();
             } else if (tt.getSpreadSheetsJournalEntry() != null) {
-                targetTabId = journalEntryTable;
-                targetTable = journalEntryTable;
-                rowNum = tt.getSpreadSheetsJournalEntry().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsJournalEntry().getId();
+                itemId = tt.getSpreadSheetsJournalEntry();
             } else if (tt.getSpreadSheetsItemName() != null) {
-                targetTabId = itemNameLayout;
-                targetTable = itemNameTable;
-                rowNum = tt.getSpreadSheetsItemName().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsItemName().getId();
+                itemId = tt.getSpreadSheetsItemName();
             } else if (tt.getSpreadSheetsItemDescription() != null) {
-                targetTabId = itemDescriptionTable;
-                targetTable = itemDescriptionTable;
-                rowNum = tt.getSpreadSheetsItemDescription().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsItemDescription().getId();
+                itemId = tt.getSpreadSheetsItemDescription();
             } else if (tt.getSheetsAbilityDescription() != null) {
-                targetTabId = abilityDescriptionTable;
-                targetTable = abilityDescriptionTable;
-                rowNum = tt.getSheetsAbilityDescription().getRowNum().intValue();
-                itemId = tt.getSheetsAbilityDescription().getId();
+                itemId = tt.getSheetsAbilityDescription();
             } else if (tt.getSheetsCollectible() != null) {
-                targetTabId = collectibleTable;
-                targetTable = collectibleTable;
-                rowNum = tt.getSheetsCollectible().getRowNum().intValue();
-                itemId = tt.getSheetsCollectible().getId();
+                itemId = tt.getSheetsCollectible();
             } else if (tt.getSheetsCollectibleDescription() != null) {
-                targetTabId = collectibleDescriptionTable;
-                targetTable = collectibleDescriptionTable;
-                rowNum = tt.getSheetsCollectibleDescription().getRowNum().intValue();
-                itemId = tt.getSheetsCollectibleDescription().getId();
+                itemId = tt.getSheetsCollectibleDescription();
             } else if (tt.getSheetsLoadscreen() != null) {
-                targetTabId = loadscreenTable;
-                targetTable = loadscreenTable;
-                rowNum = tt.getSheetsLoadscreen().getRowNum().intValue();
-                itemId = tt.getSheetsLoadscreen().getId();
+                itemId = tt.getSheetsLoadscreen();
             } else if (tt.getSpreadSheetsQuestStartTip() != null) {
-                targetTabId = questStartTipTable;
-                targetTable = questStartTipTable;
-                rowNum = tt.getSpreadSheetsQuestStartTip().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsQuestStartTip().getId();
+                itemId = tt.getSpreadSheetsQuestStartTip();
             } else if (tt.getSpreadSheetsQuestEndTip() != null) {
-                targetTabId = questEndTipTable;
-                targetTable = questEndTipTable;
-                rowNum = tt.getSpreadSheetsQuestStartTip().getRowNum().intValue();
-                itemId = tt.getSpreadSheetsQuestStartTip().getId();
+                itemId = tt.getSpreadSheetsQuestStartTip();
             }
-            if (rowNum != null) {
-                rowNum--;
-                if (targetTabId != null && targetTable != null) {
-                    tableTabs.setSelectedTab(targetTabId);
-                    targetTable.scrollToRow(rowNum, ScrollDestination.START);
-                }
-            }
+            goToItem(itemId);
         }
-
     }
 
     private class GridTranslationCell extends HorizontalLayout {

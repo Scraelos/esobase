@@ -33,11 +33,11 @@ public class GspreadSheetTable extends MTable implements RefreshableGrid {
     private final GSpreadSheetsWithDeprecated repository;
     private final Specification<GSpreadSheetEntity> specification;
 
-    public GspreadSheetTable(GeneratedPropertyListContainer container_, int pageSize_, GSpreadSheetsWithDeprecated repository_,Specification<GSpreadSheetEntity> specification_) {
+    public GspreadSheetTable(GeneratedPropertyListContainer container_, int pageSize_, GSpreadSheetsWithDeprecated repository_, Specification<GSpreadSheetEntity> specification_) {
         this.container = container_;
         this.pageSize = pageSize_;
         this.repository = repository_;
-        this.specification=specification_;
+        this.specification = specification_;
 
     }
 
@@ -64,9 +64,9 @@ public class GspreadSheetTable extends MTable implements RefreshableGrid {
         setEditable(true);
 
     }
-    
+
     public void Load() {
-        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> repository.findAll(specification,new PageRequest(
+        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> repository.findAll(specification, new PageRequest(
                 firstRow / pageSize,
                 pageSize,
                 sortAscending ? Sort.Direction.ASC : Sort.Direction.DESC,
@@ -82,12 +82,10 @@ public class GspreadSheetTable extends MTable implements RefreshableGrid {
         Load();
     }
 
-    
-    
-
     @Override
-    public void scrollToRow(int row, ScrollDestination destination) {
+    public void scrollToRow(int row, Object itemId, ScrollDestination destination) {
         setCurrentPageFirstItemIndex(row);
+        select(itemId);
     }
 
     private class TranslateTableFieldFactory implements TableFieldFactory {

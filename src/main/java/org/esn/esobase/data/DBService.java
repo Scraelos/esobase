@@ -3243,25 +3243,22 @@ public class DBService {
     }
 
     @Transactional
-    public BeanItemContainer<Topic> getNpcTopics(Npc npc, BeanItemContainer<Topic> container, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
-        container.removeAllItems();
+    public List<Topic> getNpcTopics(Npc npc, Set<TRANSLATE_STATUS> translateStatus, SysAccount translator, boolean noTranslations, boolean emptyTranslations, String searchString) {
+        List<Topic> orderedList = new ArrayList<>();
         List<Topic> list = topicRepository.findAll(new TopicSpecification(npc, translateStatus, translator, noTranslations, emptyTranslations, searchString));
         if (searchString != null && searchString.length() > 2) {
-            container.addAll(list);
+            orderedList.addAll(list);
         } else {
-            List<Topic> orderedList = new ArrayList<>();
             for (Topic t : list) {
                 if (t.getPreviousTopics() == null || t.getPreviousTopics().isEmpty()) {
                     addNextTopics(t, orderedList);
                 }
-
             }
             for (Topic t : list) {
                 addNextTopics(t, orderedList);
             }
-            container.addAll(orderedList);
         }
-        return container;
+        return orderedList;
     }
 
     public void addNextTopics(Topic t, List<Topic> topics) {
@@ -3773,7 +3770,19 @@ public class DBService {
         container.addAll(crit.list());
         return container;
     }
-
+    
+    @Transactional
+    public List getQuests() {
+        Query q =em.createQuery("select q from Quest q order by q.name,q.nameRu");
+        return q.getResultList();
+    }
+    
+    @Transactional
+    public List getSysAccounts() {
+        Query q =em.createQuery("select s from SysAccount s order by s.login");
+        return q.getResultList();
+    }
+    
     @Transactional
     public void saveEntity(DAO entity) {
         if (entity.getId() != null) {
@@ -6642,13 +6651,13 @@ public class DBService {
                 if (topic == null) {
                     if (EsnDecoder.IsRu(topickey)) {
                         playerTextRu = topickey;
-                        playerExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsPlayerPhrase", playerTextRu);
+                        playerExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsPlayerPhrase", playerTextRu.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
                     } else if (EsnDecoder.IsEn(topickey)) {
                         playerText = topickey;
-                        playerExtPhraseId = searchTableItemIndexed("GSpreadSheetsPlayerPhrase", playerText);
+                        playerExtPhraseId = searchTableItemIndexed("GSpreadSheetsPlayerPhrase", playerText.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
                     } else {
                         playerText = topickey;
-                        playerExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsPlayerPhrase", playerText);
+                        playerExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsPlayerPhrase", playerText.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
                     }
                     if (EsnDecoder.IsRu(topicsObject.getString(topickey))) {
                         npcTextRu = topicsObject.getString(topickey);
@@ -7558,7 +7567,9 @@ public class DBService {
                     }
 
                 }
-                subLocation.setParentLocation(location);
+                if (location.getId() != null && subLocation.getId() != null && !location.getId().equals(subLocation.getId())) {
+                    subLocation.setParentLocation(location);
+                }
                 subLocation.setSheetsLocationName(sheetsSubLocationName);
                 if (subLocation.getName() == null) {
                     subLocation.setName(sheetsSubLocationName.getTextEn());
@@ -7710,6 +7721,11 @@ public class DBService {
                     if (r.getTextRu() != null && !r.getTextEn().equals(r.getTextRu())) {
                         bookText.setTextRu(r.getTextRu());
                     }
+                    em.merge(bookText);
+                }
+                if(r.getTextEn()!=null&&(book.getBookText().getTextEn()==null||!book.getBookText().getTextEn().equals(r.getTextEn()))) {
+                    BookText bookText = book.getBookText();
+                    bookText.setTextEn(r.getTextEn());
                     em.merge(bookText);
                 }
                 Criteria rawBookNameCrit = session.createCriteria(EsoRawString.class);
