@@ -1185,7 +1185,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 save.setVisible(false);
             }
 
-            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW) && SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
+            if (translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) && SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
                 translation.setReadOnly(false);
                 preaccept = new Button();
                 preaccept.setIcon(FontAwesome.CHECK);
@@ -1200,7 +1200,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 });
                 actionLayout.addComponent(preaccept);
             }
-            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) && SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) {
+            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED) && SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) {
                 translation.setReadOnly(false);
                 correct = new Button();
                 correct.setIcon(FontAwesome.PENCIL);
@@ -1215,7 +1215,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 });
                 actionLayout.addComponent(correct);
             }
-            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) && SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
+            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED) && SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
                 translation.setReadOnly(false);
                 accept = new Button();
                 accept.setIcon(FontAwesome.THUMBS_UP);
@@ -1230,7 +1230,7 @@ public class DirectTableEditTab extends VerticalLayout {
                 });
                 actionLayout.addComponent(accept);
             }
-            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR"))) {
+            if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED) && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR"))) {
                 reject = new Button();
                 reject.setIcon(FontAwesome.THUMBS_DOWN);
                 reject.setDescription("Отклонить");
