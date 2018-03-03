@@ -28,7 +28,8 @@ import org.esn.esobase.model.lib.DAO;
 @Entity
 @Table(indexes = {
     @Index(columnList = "spreadSheetsNpcPhrase_id", unique = false)
-    ,@Index(columnList = "spreadSheetsPlayerPhrase_id", unique = false)})
+    ,@Index(columnList = "spreadSheetsPlayerPhrase_id", unique = false)
+    ,@Index(columnList = "status", unique = false)})
 public class TranslatedText extends DAO {
 
     @Id
