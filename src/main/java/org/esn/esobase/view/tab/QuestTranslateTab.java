@@ -675,7 +675,9 @@ public class QuestTranslateTab extends VerticalLayout {
             translation = new TextArea(caption.toString());
             translation.setSizeFull();
 
-            translation.setValue(translatedText_.getText());
+            if(translatedText_.getText()!=null) {
+               translation.setValue(translatedText_.getText()); 
+            }
 
             translation.addValueChangeListener(new HasValue.ValueChangeListener<String>() {
 
