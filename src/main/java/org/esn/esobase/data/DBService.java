@@ -3770,19 +3770,19 @@ public class DBService {
         container.addAll(crit.list());
         return container;
     }
-    
+
     @Transactional
     public List getQuests() {
-        Query q =em.createQuery("select q from Quest q order by q.name,q.nameRu");
+        Query q = em.createQuery("select q from Quest q order by q.name,q.nameRu");
         return q.getResultList();
     }
-    
+
     @Transactional
     public List getSysAccounts() {
-        Query q =em.createQuery("select s from SysAccount s order by s.login");
+        Query q = em.createQuery("select s from SysAccount s order by s.login");
         return q.getResultList();
     }
-    
+
     @Transactional
     public void saveEntity(DAO entity) {
         if (entity.getId() != null) {
@@ -4378,6 +4378,7 @@ public class DBService {
         } else if (entity.getBookName() != null) {
             Book gs = em.find(Book.class, entity.getBookName().getId());
             gs.setNameRu(entity.getText());
+            gs.setChangeTime(new Date());
             em.merge(gs);
             Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class);
             activatorCrit.add(Restrictions.eq("textEn", gs.getNameEn()));
@@ -5469,32 +5470,13 @@ public class DBService {
     @Transactional
     public void insertEnRawStrings(List<Object[]> rows) {
         for (Object[] row : rows) {
-            Query selectQ = em.createNativeQuery("select id,texten from esorawstring where aid=:aid and bid=:bid and cid=:cid");
-            selectQ.setParameter("aid", row[0]);
-            selectQ.setParameter("bid", row[1]);
-            selectQ.setParameter("cid", row[2]);
-            List resultList = selectQ.getResultList();
-            if (resultList != null && !resultList.isEmpty()) {
-                Object[] foundRow = (Object[]) resultList.get(0);
-                BigInteger foundId = (BigInteger) foundRow[0];
-                String foundText = (String) foundRow[1];
-                if (foundText == null || !foundText.equals(row[3])) {
-                    LOG.log(Level.INFO, "text changed, old:{0} new:{1}", new Object[]{foundText, row[3]});
-                    Query updateQ = em.createNativeQuery("update esorawstring set texten=:texten where id=:id");
-                    updateQ.setParameter("texten", row[3]);
-                    updateQ.setParameter("id", foundId);
-                    updateQ.executeUpdate();
-                }
-
-            } else {
-                Query insertQ = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten)");
+            
+                Query insertQ = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten) ON CONFLICT(aid,bid,cid) DO UPDATE SET texten=:texten");
                 insertQ.setParameter("aid", row[0]);
                 insertQ.setParameter("bid", row[1]);
                 insertQ.setParameter("cid", row[2]);
                 insertQ.setParameter("texten", row[3]);
                 insertQ.executeUpdate();
-            }
-
         }
     }
 
@@ -6647,34 +6629,34 @@ public class DBService {
                 Long npcExtPhraseId = null;
                 GSpreadSheetsPlayerPhrase playerExtPhrase = null;
                 Long playerExtPhraseId = null;
-
+                if (EsnDecoder.IsRu(topickey)) {
+                    playerTextRu = topickey;
+                    playerExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsPlayerPhrase", playerTextRu.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
+                } else if (EsnDecoder.IsEn(topickey)) {
+                    playerText = topickey;
+                    playerExtPhraseId = searchTableItemIndexed("GSpreadSheetsPlayerPhrase", playerText.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
+                } else {
+                    playerText = topickey;
+                    playerExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsPlayerPhrase", playerText.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
+                }
+                if (playerExtPhraseId != null) {
+                    playerExtPhrase = em.find(GSpreadSheetsPlayerPhrase.class, playerExtPhraseId);
+                }
+                if (EsnDecoder.IsRu(topicsObject.getString(topickey))) {
+                    npcTextRu = topicsObject.getString(topickey);
+                    npcExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", npcTextRu);
+                } else if (EsnDecoder.IsEn(topicsObject.getString(topickey))) {
+                    npcText = topicsObject.getString(topickey);
+                    npcExtPhraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", npcText);
+                } else {
+                    npcText = topicsObject.getString(topickey);
+                    npcExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsNpcPhrase", npcText);
+                }
+                if (npcExtPhraseId != null) {
+                    npcExtPhrase = em.find(GSpreadSheetsNpcPhrase.class, npcExtPhraseId);
+                }
                 if (topic == null) {
-                    if (EsnDecoder.IsRu(topickey)) {
-                        playerTextRu = topickey;
-                        playerExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsPlayerPhrase", playerTextRu.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
-                    } else if (EsnDecoder.IsEn(topickey)) {
-                        playerText = topickey;
-                        playerExtPhraseId = searchTableItemIndexed("GSpreadSheetsPlayerPhrase", playerText.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
-                    } else {
-                        playerText = topickey;
-                        playerExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsPlayerPhrase", playerText.replaceFirst("^Intimidate ", "").replaceFirst("^Persuade ", "").replaceFirst("^Угроза ", "").replaceFirst("^Ложь ", "").replaceFirst("^Убеждение ", "").replace("|cFF0000Угроза|r ", "").replace("|cFF0000Убеждение|r ", "").replace("|cFF0000Intimidate|r ", "").replace("|cFF0000Persuade|r ", "").replace("|cFF0000Óàeæäeîèe|r ", "").replace("|cFF0000Ïoíèìoáaîèe|r ", ""));
-                    }
-                    if (EsnDecoder.IsRu(topicsObject.getString(topickey))) {
-                        npcTextRu = topicsObject.getString(topickey);
-                        npcExtPhraseId = searchTableItemRuIndexed("GSpreadSheetsNpcPhrase", npcTextRu);
-                    } else if (EsnDecoder.IsEn(topicsObject.getString(topickey))) {
-                        npcText = topicsObject.getString(topickey);
-                        npcExtPhraseId = searchTableItemIndexed("GSpreadSheetsNpcPhrase", npcText);
-                    } else {
-                        npcText = topicsObject.getString(topickey);
-                        npcExtPhraseId = searchTableItemUncertainIndexed("GSpreadSheetsNpcPhrase", npcText);
-                    }
-                    if (npcExtPhraseId != null) {
-                        npcExtPhrase = em.find(GSpreadSheetsNpcPhrase.class, npcExtPhraseId);
-                    }
-                    if (playerExtPhraseId != null) {
-                        playerExtPhrase = em.find(GSpreadSheetsPlayerPhrase.class, playerExtPhraseId);
-                    }
+
                     if (npcText != null && npcText.isEmpty()) {
                         npcText = null;
                     }
@@ -6704,6 +6686,18 @@ public class DBService {
 
                 }
                 if (topic != null) {
+                    if (topic.getPlayerText() == null && playerText != null) {
+                        topic.setPlayerText(playerText);
+                    }
+                    if (topic.getNpcText() == null && npcText != null) {
+                        topic.setNpcText(npcText);
+                    }
+                    if (topic.getPlayerTextRu() == null && playerTextRu != null) {
+                        topic.setPlayerTextRu(playerTextRu);
+                    }
+                    if (topic.getNpcTextRu() == null && npcTextRu != null) {
+                        topic.setNpcTextRu(npcTextRu);
+                    }
                     if (playerExtPhrase != null) {
                         topic.setExtPlayerPhrase(playerExtPhrase);
                         em.merge(topic);
@@ -7723,7 +7717,7 @@ public class DBService {
                     }
                     em.merge(bookText);
                 }
-                if(r.getTextEn()!=null&&(book.getBookText().getTextEn()==null||!book.getBookText().getTextEn().equals(r.getTextEn()))) {
+                if (r.getTextEn() != null && (book.getBookText().getTextEn() == null || !book.getBookText().getTextEn().equals(r.getTextEn()))) {
                     BookText bookText = book.getBookText();
                     bookText.setTextEn(r.getTextEn());
                     em.merge(bookText);
@@ -7899,7 +7893,7 @@ public class DBService {
             if (resultList1 != null && !resultList1.isEmpty()) {
                 result = resultList1.get(0).longValue();
             } else {
-                Query q2 = em.createNativeQuery("select id from " + tableName + " where (:searchString ilike tren or :searchString ilike trrumm or :searchString ilike trruff or :searchString ilike trrufm or :searchString ilike trrumf) and char_length(trrumm)>6 order by char_length(trrumm) desc");
+                Query q2 = em.createNativeQuery("select id from " + tableName + " where (:searchString ilike tren or :searchString ilike trrumm or :searchString ilike trruff or :searchString ilike trrufm or :searchString ilike trrumf) and (char_length(trrumm)>6 or char_length(tren)>6) order by char_length(trrumm),char_length(tren) desc");
                 q2.setParameter("searchString", searchString);
                 List<BigInteger> resultList2 = q2.getResultList();
                 if (resultList2 != null && !resultList2.isEmpty()) {
