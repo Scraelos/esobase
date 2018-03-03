@@ -6,6 +6,7 @@
 package org.esn.esobase.config;
 
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.DictionaryService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.data.ItemInfoImportService;
@@ -43,5 +44,10 @@ public class DataContext {
     @Bean
     public ItemInfoImportService itemInfoImportService() {
         return new ItemInfoImportService();
+    }
+
+    @Bean
+    public DictionaryService dictionaryService() {
+        return new DictionaryService();
     }
 }

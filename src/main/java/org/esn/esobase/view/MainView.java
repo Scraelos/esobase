@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.DictionaryService;
 import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.view.tab.BookTranslateTab;
@@ -46,6 +47,8 @@ public class MainView extends Panel implements View, Command {
 
     @Autowired
     private DBService service;
+    @Autowired
+    private DictionaryService dictionaryService;
     @Autowired
     private InsertExecutor insertExecutor;
 
@@ -194,7 +197,7 @@ public class MainView extends Panel implements View, Command {
 
     private void openSearchInCatalogs() {
         if (searchInCatalogsTabContent == null) {
-            searchInCatalogsTabContent = new SearchInCatalogsTab(service);
+            searchInCatalogsTabContent = new SearchInCatalogsTab(service, dictionaryService);
         }
         Window subWindow = new Window(searchInCatalogsMenuItem.getText());
         subWindow.setModal(true);

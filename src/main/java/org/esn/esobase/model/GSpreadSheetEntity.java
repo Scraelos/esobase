@@ -11,7 +11,7 @@ import java.util.Date;
  *
  * @author scraelos
  */
-public interface GSpreadSheetEntity {
+public interface GSpreadSheetEntity extends TranslatedEntity {
 
     public Long getaId();
 
@@ -24,10 +24,6 @@ public interface GSpreadSheetEntity {
     public Integer getWeight();
 
     public Boolean getDeprecated();
-
-    public String getTextEn();
-
-    public String getTextRu();
 
     public Date getChangeTime();
 

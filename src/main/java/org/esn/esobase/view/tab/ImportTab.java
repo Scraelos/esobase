@@ -32,6 +32,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.DictionaryService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.data.ItemInfoImportService;
@@ -61,6 +62,8 @@ public class ImportTab extends VerticalLayout {
     private InsertExecutor executor;
     @Autowired
     private DBService service;
+    @Autowired
+    private DictionaryService dictionaryService;
     @Autowired
     private TableUpdateService tableUpdateService;
     @Autowired
@@ -119,11 +122,13 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadXlsRu;
     private Upload uploadInterfaceLua;
     private Upload uploadRuInterfaceLua;
+    private Upload uploadDictionary;
     private Button updateGspreadSheetsWithRawText;
     private Button assignActivatorsWithItems;
     private Button loadAllBooks;
     private Button updateTTCNpcNames;
     private Upload uploadItemInfo;
+    private Button updateIndexes;
     private static final Logger LOG = Logger.getLogger(ImportTab.class.getName());
 
     public ImportTab() {
@@ -138,6 +143,17 @@ public class ImportTab extends VerticalLayout {
         uploadNewFormat.setImmediate(true);
         this.addComponent(uploadNewFormat);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
+            updateIndexes=new Button("Обновить индексы", new Button.ClickListener() {
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    LOG.info("Search index...");
+                    service.generateSearchIndex();
+                    service.generateJournalEntrySearchIndex();
+                    service.generateQuestDirectionSearchIndex();
+                    LOG.info("Search index complete");
+                }
+            });
+            this.addComponent(updateIndexes);
             updateAbilityDescriptions = new Button("Обновить описания способностей");
             updateAbilityDescriptions.addClickListener(new Button.ClickListener() {
 
@@ -736,6 +752,11 @@ public class ImportTab extends VerticalLayout {
             uploadXlsRu.addSucceededListener(raswStringReceiverRu);
             uploadXlsRu.setImmediate(true);
             this.addComponent(uploadXlsRu);
+            DictionaryReceiver dictionaryReceiver = new DictionaryReceiver();
+            uploadDictionary = new Upload("Загрузка словаря TES", dictionaryReceiver);
+            uploadDictionary.addSucceededListener(dictionaryReceiver);
+            uploadDictionary.setImmediate(true);
+            this.addComponent(uploadDictionary);
             assignTablesToRaw = new Button("Привязать строки таблиц к строкам raw");
             assignTablesToRaw.addClickListener(new Button.ClickListener() {
 
@@ -919,6 +940,90 @@ public class ImportTab extends VerticalLayout {
 
     }
 
+    private class DictionaryReceiver implements Receiver, SucceededListener {
+
+        private ByteArrayOutputStream baos;
+
+        public DictionaryReceiver() {
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                dictionaryService.cleanupDictionaryStrings();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell textEnCell = r.getCell(0);
+                        Cell textRuCell = r.getCell(1);
+                        Cell descriptionCell = r.getCell(2);
+                        Cell gameCell = r.getCell(3);
+                        Object[] row = new Object[]{getStringFromCell(textEnCell), getStringFromCell(textRuCell), getStringFromCell(descriptionCell), getStringFromCell(gameCell)};
+                        rows.add(row);
+                        if (rows.size() > 5000) {
+                            DictionaryInsertTask task = new DictionaryInsertTask(rows, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
+                        }
+
+                    }
+                }
+                if (rows.size() > 0) {
+                    DictionaryInsertTask task = new DictionaryInsertTask(rows, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
+                }
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
+                }
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class DictionaryInsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+
+            public DictionaryInsertTask(List<Object[]> rows, DBService service) {
+                this.rows = rows;
+            }
+
+            @Override
+            public void run() {
+                dictionaryService.insertDictionaryStrings(rows);
+            }
+
+        }
+
+    }
+
     private class RaswStringReceiverFr implements Receiver, SucceededListener {
 
         private final DBService service;
@@ -954,7 +1059,7 @@ public class ImportTab extends VerticalLayout {
                         Cell textCell = r.getCell(3);
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
-                        if (rows.size() > 5000) {
+                        if (rows.size() > 500) {
                             InsertTask task = new InsertTask(rows, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -1151,7 +1256,7 @@ public class ImportTab extends VerticalLayout {
                         break;
                     }
                 }
-                
+
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1286,23 +1391,7 @@ public class ImportTab extends VerticalLayout {
             return baos;
         }
 
-        @Override
-        public void uploadSucceeded(Upload.SucceededEvent event) {
-            Date startTime = new Date();
-            LOG.info("Search index...");
-            service.generateSearchIndex();
-            service.generateJournalEntrySearchIndex();
-            service.generateQuestDirectionSearchIndex();
-            LOG.info("Search index complete");
-            byte[] toByteArray = baos.toByteArray();
-            String text = new String(toByteArray);
-            JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
-            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
-                newFormatImportNpcsWithSublocations(jsonFromLua);
-                newFormatImportSubtitlesWithSublocations(jsonFromLua);
-                newFormatImportQuestsWithSteps(jsonFromLua);
-                importBooksWithSublocations(jsonFromLua);
-            }
+        private void waitExecutorToComplete() {
             for (;;) {
                 int count = executor.getActiveCount();
                 LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, executor.getThreadPoolExecutor().getQueue().size()});
@@ -1315,6 +1404,24 @@ public class ImportTab extends VerticalLayout {
                     break;
                 }
             }
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            Date startTime = new Date();
+            byte[] toByteArray = baos.toByteArray();
+            String text = new String(toByteArray);
+            JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
+            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
+                newFormatImportNpcsWithSublocations(jsonFromLua);
+                waitExecutorToComplete();
+                newFormatImportSubtitlesWithSublocations(jsonFromLua);
+                waitExecutorToComplete();
+                newFormatImportQuestsWithSteps(jsonFromLua);
+                waitExecutorToComplete();
+                importBooksWithSublocations(jsonFromLua);
+            }
+            waitExecutorToComplete();
             Date endTime = new Date();
             long totalTime = endTime.getTime() - startTime.getTime();
             Date completeTime = new Date(totalTime);
