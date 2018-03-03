@@ -14,8 +14,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class InsertExecutor extends ThreadPoolTaskExecutor{
 
     public InsertExecutor() {
-        this.setCorePoolSize(4);
-        this.setMaxPoolSize(50);
+        this.setCorePoolSize(12);
+        this.setMaxPoolSize(100);
         this.setWaitForTasksToCompleteOnShutdown(true);
     }
     
