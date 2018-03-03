@@ -447,7 +447,7 @@ public class BookTranslateTab extends VerticalLayout {
             } else {
                 save.setVisible(false);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
                 preAccept = new Button("Перевод верен", FontAwesome.CHECK);
                 preAccept.addClickListener(new Button.ClickListener() {
@@ -462,7 +462,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(preAccept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -478,7 +478,7 @@ public class BookTranslateTab extends VerticalLayout {
                 this.addComponent(correct);
             }
 
-            if ((SpringSecurityHelper.hasRole("ROLE_APPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_APPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 translation.setReadOnly(false);
                 accept = new Button("Принять эту версию", FontAwesome.THUMBS_UP);
                 accept.addClickListener(new Button.ClickListener() {
@@ -493,7 +493,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(accept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
                 reject.addClickListener(new Button.ClickListener() {
 
@@ -610,7 +610,7 @@ public class BookTranslateTab extends VerticalLayout {
             } else {
                 save.setVisible(false);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 translation.setReadOnly(false);
                 preAccept = new Button("Перевод верен", FontAwesome.CHECK);
                 preAccept.addClickListener(new Button.ClickListener() {
@@ -625,7 +625,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(preAccept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED|| translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -656,7 +656,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(accept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
                 reject.addClickListener(new Button.ClickListener() {
 
