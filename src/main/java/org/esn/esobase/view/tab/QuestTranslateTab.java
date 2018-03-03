@@ -6,23 +6,27 @@
 package org.esn.esobase.view.tab;
 
 import com.vaadin.data.HasValue;
+import com.vaadin.data.TreeData;
+import com.vaadin.data.ValueProvider;
+import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.v7.data.Property;
-import com.vaadin.v7.data.util.BeanItemContainer;
-import com.vaadin.v7.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.v7.shared.ui.combobox.FilteringMode;
-import com.vaadin.v7.ui.AbstractTextField;
 import com.vaadin.ui.Button;
-import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.ComboBox;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.ItemCollapseAllowedProvider;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.StyleGenerator;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.v7.ui.Table;
-import com.vaadin.v7.ui.TextArea;
-import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.TextArea;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
-import org.esn.esobase.data.specification.QuestDirectionSpecification;
 import org.esn.esobase.data.specification.QuestLocationSpecification;
 import org.esn.esobase.data.specification.QuestSpecification;
 import org.esn.esobase.data.specification.QuestStepSpecification;
@@ -54,8 +57,7 @@ public class QuestTranslateTab extends VerticalLayout {
     private final DBService service;
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     private HorizontalLayout questListlayout;
-    private ComboBox questTable;
-    private BeanItemContainer<Quest> questContainer;
+    private ComboBox<Quest> questTable;
 
     private TabSheet tabSheet;
     private VerticalLayout infoLayout;
@@ -66,14 +68,12 @@ public class QuestTranslateTab extends VerticalLayout {
     private VerticalLayout descriptionLayout;
     private VerticalLayout descriptionTranslateLayout;
 
-    private ComboBox locationTable;
-    private BeanItemContainer<Location> locationContainer;
+    private ComboBox<Location> locationTable;
     private ComboBoxMultiselect translateStatus;
     private CheckBox noTranslations;
     private CheckBox emptyTranslations;
     private TextField searchField;
     private ComboBox translatorBox;
-    private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
     private Label countLabel;
 
@@ -86,11 +86,13 @@ public class QuestTranslateTab extends VerticalLayout {
     private TextArea questDescriptionRawEnArea;
     private TextArea questDescriptionRawRuArea;
     private VerticalLayout stepsLayout;
-    private Table stepsTable;
-    private BeanItemContainer<QuestStep> stepContainer;
+    private TreeGrid stepsGrid;
+    private TreeData stepsData;
     private Quest currentQuest;
-    private StepDirectionNameColumnGenerator stepDirectionNameColumnGenerator;
-    private DirectionTranslationColumnGenerator directionTranslationColumnGenerator;
+    private RowStyleGenerator rowStyleGenerator = new RowStyleGenerator();
+
+    private List<Location> locations = new ArrayList<>();
+    private List<Quest> questList = new ArrayList<>();
 
     private final QuestSpecification questSpecification = new QuestSpecification();
     private final QuestLocationSpecification locationSpecification = new QuestLocationSpecification();
@@ -98,30 +100,28 @@ public class QuestTranslateTab extends VerticalLayout {
 
     public QuestTranslateTab(DBService service_) {
         this.setSizeFull();
+        this.setSpacing(false);
+        this.setMargin(false);
         this.service = service_;
         QuestChangeListener questChangeListener = new QuestChangeListener();
         FilterChangeListener filterChangeListener = new FilterChangeListener();
-        stepDirectionNameColumnGenerator = new StepDirectionNameColumnGenerator();
-        directionTranslationColumnGenerator = new DirectionTranslationColumnGenerator();
         questListlayout = new HorizontalLayout();
         questListlayout.setWidth(100f, Unit.PERCENTAGE);
-        locationContainer = new BeanItemContainer<>(Location.class);
+        questListlayout.setSpacing(false);
+        questListlayout.setMargin(false);
         locationTable = new ComboBox("Локация");
-        locationTable.setPageLength(15);
-
+        locationTable.setPageLength(30);
+        locationTable.setScrollToSelectedItem(true);
         locationTable.setWidth(100f, Unit.PERCENTAGE);
         locationTable.addValueChangeListener(filterChangeListener);
-        locationTable.setContainerDataSource(locationContainer);
-        locationTable.setFilteringMode(FilteringMode.CONTAINS);
-        questContainer = new BeanItemContainer<>(Quest.class);
+        locationTable.setDataProvider(new ListDataProvider<>(locations));
         questTable = new ComboBox("Квест");
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.setPageLength(15);
 
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.addValueChangeListener(questChangeListener);
-        questTable.setContainerDataSource(questContainer);
-        questTable.setFilteringMode(FilteringMode.CONTAINS);
+        questTable.setDataProvider(new ListDataProvider<>(questList));
         questListlayout.addComponent(questTable);
         FormLayout locationAndQuestLayout = new FormLayout(locationTable, questTable);
         locationAndQuestLayout.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
@@ -133,6 +133,7 @@ public class QuestTranslateTab extends VerticalLayout {
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
                 LoadFilters();
+                LoadContent();
             }
         });
         noTranslations = new CheckBox("Не переведены полностью");
@@ -142,11 +143,11 @@ public class QuestTranslateTab extends VerticalLayout {
         emptyTranslations.setValue(Boolean.FALSE);
         emptyTranslations.addValueChangeListener(filterChangeListener);
         HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
+        checkBoxlayout.setSpacing(false);
+        checkBoxlayout.setMargin(false);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
-        sysAccountContainer = service.loadBeanItems(sysAccountContainer);
-        translatorBox.setContainerDataSource(sysAccountContainer);
-        translatorBox.setFilteringMode(FilteringMode.CONTAINS);
+        translatorBox.setDataProvider(new ListDataProvider(service.getSysAccounts()));
         translatorBox.addValueChangeListener(filterChangeListener);
         refreshButton = new Button("Обновить");
         refreshButton.addClickListener(new Button.ClickListener() {
@@ -160,7 +161,6 @@ public class QuestTranslateTab extends VerticalLayout {
         countLabel = new Label();
         searchField = new TextField("Искомая строка");
         searchField.setSizeFull();
-        searchField.setNullRepresentation("");
         searchField.addValueChangeListener(filterChangeListener);
 
         FormLayout filtersLayout = new FormLayout(translateStatus, translatorBox, checkBoxlayout, searchField);
@@ -177,14 +177,20 @@ public class QuestTranslateTab extends VerticalLayout {
         this.addComponent(questListlayout);
         infoLayout = new VerticalLayout();
         infoLayout.setSizeFull();
+        infoLayout.setSpacing(false);
+        infoLayout.setMargin(false);
         tabSheet = new TabSheet();
         tabSheet.setSizeFull();
         nameLayout = new VerticalLayout();
         nameLayout.setSizeFull();
         nameHLayout = new HorizontalLayout();
         nameHLayout.setSizeFull();
+        nameHLayout.setSpacing(false);
+        nameHLayout.setMargin(false);
         nameLayout = new VerticalLayout();
         nameLayout.setSizeFull();
+        nameLayout.setSpacing(false);
+        nameLayout.setMargin(false);
         questNameEnArea = new TextArea("Название");
         questNameEnArea.setSizeFull();
         questNameEnArea.setRows(1);
@@ -205,14 +211,20 @@ public class QuestTranslateTab extends VerticalLayout {
         nameHLayout.addComponent(nameLayout);
         nameTranslateLayout = new VerticalLayout();
         nameTranslateLayout.setSizeFull();
+        nameTranslateLayout.setSpacing(false);
+        nameTranslateLayout.setMargin(false);
         nameHLayout.addComponent(nameTranslateLayout);
         infoLayout.addComponent(nameHLayout);
         descriptionLayout = new VerticalLayout();
         descriptionLayout.setSizeFull();
         descriptionHLayout = new HorizontalLayout();
         descriptionHLayout.setSizeFull();
+        descriptionHLayout.setSpacing(false);
+        descriptionHLayout.setMargin(false);
         descriptionLayout = new VerticalLayout();
         descriptionLayout.setSizeFull();
+        descriptionLayout.setSpacing(false);
+        descriptionLayout.setMargin(false);
         questDescriptionEnArea = new TextArea("Описание");
         questDescriptionEnArea.setSizeFull();
         questDescriptionEnArea.setRows(4);
@@ -233,36 +245,239 @@ public class QuestTranslateTab extends VerticalLayout {
         descriptionHLayout.addComponent(descriptionLayout);
         descriptionTranslateLayout = new VerticalLayout();
         descriptionTranslateLayout.setSizeFull();
+        descriptionTranslateLayout.setSpacing(false);
+        descriptionTranslateLayout.setMargin(false);
         descriptionHLayout.addComponent(descriptionTranslateLayout);
         infoLayout.addComponent(descriptionHLayout);
         tabSheet.addTab(infoLayout, "Квест");
         stepsLayout = new VerticalLayout();
         stepsLayout.setSizeFull();
-        stepsTable = new Table();
-        stepsTable.addStyleName(ValoTheme.TABLE_COMPACT);
-        stepsTable.setSizeFull();
-        stepContainer = new BeanItemContainer<>(QuestStep.class);
-        stepsTable.setContainerDataSource(stepContainer);
-        //stepsTable.setPageLength(0);
-        //stepsTable.setCacheRate(0);
-        stepsTable.addGeneratedColumn("stepDescription", new StepDescriptionColumnGenerator());
-        stepsTable.addGeneratedColumn("stepDescriptionTranslation", new StepTranslationColumnGenerator());
-        stepsTable.addGeneratedColumn("stepDirections", new StepDirectionsColumnGenerator());
-        stepsTable.setColumnExpandRatio("stepDescription", 1f);
-        stepsTable.setColumnExpandRatio("stepDescriptionTranslation", 1f);
-        stepsTable.setColumnExpandRatio("stepDirections", 2f);
-        stepsTable.setVisibleColumns("stepDescription", "stepDescriptionTranslation", "stepDirections");
-        stepsTable.setColumnHeaders("", "", "");
-        stepsLayout.addComponent(stepsTable);
+        stepsLayout.setSpacing(false);
+        stepsLayout.setMargin(false);
+        stepsData = new TreeData();
+        stepsGrid = new TreeGrid(new TreeDataProvider(stepsData));
+        stepsGrid.setSelectionMode(Grid.SelectionMode.NONE);
+        stepsGrid.setRowHeight(250);
+        stepsGrid.setHeaderVisible(false);
+        stepsGrid.setSizeFull();
+        stepsGrid.setItemCollapseAllowedProvider(new ItemCollapseAllowedProvider() {
+            @Override
+            public boolean test(Object item) {
+                return false;
+            }
+        });
+        stepsGrid.addColumn(new ValueProvider() {
+            @Override
+            public Object apply(Object source) {
+                if (source instanceof QuestStep) {
+                    return "Стадия";
+                }
+                if (source instanceof QuestDirection) {
+                    return "Цель - " + ((QuestDirection) source).getDirectionType().name();
+                }
+                return null;
+            }
+        }).setId("rowType").setCaption("Тип").setWidth(132).setStyleGenerator(rowStyleGenerator);
+        stepsGrid.addComponentColumn(new ValueProvider() {
+            @Override
+            public Object apply(Object source) {
+                VerticalLayout result = new VerticalLayout();
+                result.setSpacing(false);
+                result.setMargin(false);
+                if (source instanceof QuestStep) {
+
+                    QuestStep step = (QuestStep) source;
+                    if (step.getTextEn() != null && !step.getTextEn().isEmpty()) {
+                        TextArea textEnArea = new TextArea("Текст в игре");
+                        textEnArea.setValue(step.getTextEn());
+                        textEnArea.setReadOnly(true);
+                        textEnArea.setWidth(100f, Unit.PERCENTAGE);
+                        result.addComponent(textEnArea);
+                    }
+                    if (step.getTextRu() != null && !step.getTextRu().isEmpty()) {
+                        TextArea textRuArea = new TextArea("Перевод в игре");
+                        textRuArea.setValue(step.getTextRu());
+                        textRuArea.setReadOnly(true);
+                        textRuArea.setWidth(100f, Unit.PERCENTAGE);
+                        result.addComponent(textRuArea);
+                    }
+                } else if (source instanceof QuestDirection) {
+                    QuestDirection d = (QuestDirection) source;
+                    if (d.getTextEn() != null && !d.getTextEn().isEmpty()) {
+                        TextArea textEnArea = new TextArea("Текст в игре");
+                        textEnArea.setValue(d.getTextEn());
+                        textEnArea.setRows(2);
+                        textEnArea.setReadOnly(true);
+                        textEnArea.setWidth(100f, Unit.PERCENTAGE);
+                        result.addComponent(textEnArea);
+                    }
+                    if (d.getTextRu() != null && !d.getTextRu().isEmpty()) {
+                        TextArea textRuArea = new TextArea("Перевод в игре");
+                        textRuArea.setValue(d.getTextRu());
+                        textRuArea.setRows(2);
+                        textRuArea.setReadOnly(true);
+                        textRuArea.setWidth(100f, Unit.PERCENTAGE);
+                        result.addComponent(textRuArea);
+                    }
+
+                }
+                return result;
+            }
+        }).setId("ingameText").setStyleGenerator(rowStyleGenerator);
+        stepsGrid.addComponentColumn(new ValueProvider() {
+            @Override
+            public Object apply(Object source) {
+                VerticalLayout result = new VerticalLayout();
+                result.setSpacing(false);
+                result.setMargin(false);
+                if (source instanceof QuestStep) {
+
+                    QuestStep step = (QuestStep) source;
+                    if (step.getSheetsJournalEntry() != null) {
+                        TextArea textEnRawArea = new TextArea("Текст в таблицах");
+                        textEnRawArea.setValue(step.getSheetsJournalEntry().getTextEn());
+                        textEnRawArea.setReadOnly(true);
+                        textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
+                        result.addComponent(textEnRawArea);
+                        if (step.getSheetsJournalEntry().getTextRu() != null && !step.getSheetsJournalEntry().getTextRu().equals(step.getSheetsJournalEntry().getTextEn())) {
+                            TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + step.getSheetsJournalEntry().getTranslator());
+                            textRuRawArea.setValue(step.getSheetsJournalEntry().getTextRu());
+                            textRuRawArea.setReadOnly(true);
+                            textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
+                            result.addComponent(textRuRawArea);//, "Перевод в таблицах" 
+                        }
+                    }
+
+                } else if (source instanceof QuestDirection) {
+                    QuestDirection d = (QuestDirection) source;
+                    if (d.getSheetsQuestDirection() != null) {
+                        TextArea textEnRawArea = new TextArea("Текст в таблицах");
+                        textEnRawArea.setValue(d.getSheetsQuestDirection().getTextEn());
+                        textEnRawArea.setRows(2);
+                        textEnRawArea.setReadOnly(true);
+                        textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
+                        result.addComponent(textEnRawArea);
+                        if (d.getSheetsQuestDirection().getTextRu() != null && !d.getSheetsQuestDirection().getTextRu().equals(d.getSheetsQuestDirection().getTextEn())) {
+                            TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + d.getSheetsQuestDirection().getTranslator());
+                            textRuRawArea.setValue(d.getSheetsQuestDirection().getTextRu());
+                            textRuRawArea.setRows(2);
+                            textRuRawArea.setReadOnly(true);
+                            textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
+                            result.addComponent(textRuRawArea);
+                        }
+                    }
+                }
+                return result;
+            }
+        }).setId("rawText").setStyleGenerator(rowStyleGenerator);
+        stepsGrid.addComponentColumn(new ValueProvider() {
+            @Override
+            public Object apply(Object source) {
+                Panel panel = new Panel();
+                panel.addStyleName(ValoTheme.PANEL_BORDERLESS);
+                panel.setWidth(100f, Unit.PERCENTAGE);
+                panel.setHeight(245f, Unit.PIXELS);
+                final VerticalLayout result = new VerticalLayout();
+                result.setSpacing(false);
+                result.setMargin(false);
+                if (source instanceof QuestStep) {
+
+                    Set<TranslatedText> list = new HashSet<>();
+                    List<SysAccount> accounts = new ArrayList<>();
+
+                    QuestStep step = (QuestStep) source;
+                    String text = step.getTextEn();
+                    list.addAll(step.getSheetsJournalEntry().getTranslatedTexts());
+
+                    if (list != null) {
+                        for (TranslatedText t : list) {
+                            result.addComponent(new TranslationCell(t));
+                            accounts.add(t.getAuthor());
+                        }
+                    }
+                    if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+                        final TranslatedText translatedText = new TranslatedText();
+                        translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
+                        translatedText.setSpreadSheetsJournalEntry(step.getSheetsJournalEntry());
+                        Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
+                        addTranslation.addClickListener(new Button.ClickListener() {
+
+                            @Override
+                            public void buttonClick(Button.ClickEvent event) {
+
+                                if (translatedText.getSpreadSheetsJournalEntry() != null) {
+                                    translatedText.getSpreadSheetsJournalEntry().getTranslatedTexts().add(translatedText);
+                                }
+                                result.addComponent(new TranslationCell(translatedText));
+                                event.getButton().setVisible(false);
+                            }
+                        });
+                        result.addComponent(addTranslation);
+                    }
+                } else if (source instanceof QuestDirection) {
+                    Set<TranslatedText> list = new HashSet<>();
+                    List<SysAccount> accounts = new ArrayList<>();
+
+                    QuestDirection d = (QuestDirection) source;
+                    String text = d.getTextEn();
+                    list.addAll(d.getSheetsQuestDirection().getTranslatedTexts());
+
+                    if (list != null) {
+                        for (TranslatedText t : list) {
+                            result.addComponent(new TranslationCell(t));
+                            accounts.add(t.getAuthor());
+                        }
+                    }
+                    if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+                        final TranslatedText translatedText = new TranslatedText();
+                        translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
+                        translatedText.setSpreadSheetsQuestDirection(d.getSheetsQuestDirection());
+                        Button addTranslation = new Button("Добавить перевод");
+                        addTranslation.addClickListener(new Button.ClickListener() {
+
+                            @Override
+                            public void buttonClick(Button.ClickEvent event) {
+
+                                if (translatedText.getSpreadSheetsQuestDirection() != null) {
+                                    translatedText.getSpreadSheetsQuestDirection().getTranslatedTexts().add(translatedText);
+                                }
+                                result.addComponent(new TranslationCell(translatedText));
+                                event.getButton().setVisible(false);
+                            }
+                        });
+                        result.addComponent(addTranslation);
+                    }
+                }
+                panel.setContent(result);
+                return panel;
+            }
+        }).setId("translation").setStyleGenerator(rowStyleGenerator);
+        stepsGrid.setColumns("rowType", "ingameText", "rawText", "translation");
+        stepsLayout.addComponent(stepsGrid);
         tabSheet.addTab(stepsLayout, "Стадии");
         this.addComponent(tabSheet);
         this.setExpandRatio(tabSheet, 1f);
         LoadFilters();
     }
 
+    private class RowStyleGenerator implements StyleGenerator {
+
+        @Override
+        public String apply(Object item) {
+            if (item instanceof QuestStep) {
+                return "step_row";
+            }
+            if (item instanceof QuestDirection) {
+                return "direction_row";
+            }
+            return null;
+        }
+
+    }
+
     private void LoadContent() {
         Quest q = (Quest) questTable.getValue();
-        stepContainer.removeAllItems();
+        stepsData.clear();
         if (q != null) {
             currentQuest = service.getQuest(q);
             questStepSpecification.setQuest(currentQuest);
@@ -279,12 +494,12 @@ public class QuestTranslateTab extends VerticalLayout {
             if (currentQuest.getName() != null) {
                 questNameEnArea.setValue(currentQuest.getName());
             } else {
-                questNameEnArea.setValue(null);
+                questNameEnArea.setValue("");
             }
             if (currentQuest.getNameRu() != null) {
                 questNameRuArea.setValue(currentQuest.getNameRu());
             } else {
-                questNameRuArea.setValue(null);
+                questNameRuArea.setValue("");
             }
             if (currentQuest.getSheetsQuestName() != null) {
                 questNameRawEnArea.setValue(currentQuest.getSheetsQuestName().getTextEn());
@@ -316,8 +531,8 @@ public class QuestTranslateTab extends VerticalLayout {
                     nameTranslateLayout.addComponent(addTranslation);
                 }
             } else {
-                questNameRawEnArea.setValue(null);
-                questNameRawRuArea.setValue(null);
+                questNameRawEnArea.setValue("");
+                questNameRawRuArea.setValue("");
             }
             questNameEnArea.setReadOnly(true);
             questNameRuArea.setReadOnly(true);
@@ -331,12 +546,12 @@ public class QuestTranslateTab extends VerticalLayout {
             if (currentQuest.getDescriptionEn() != null) {
                 questDescriptionEnArea.setValue(currentQuest.getDescriptionEn());
             } else {
-                questDescriptionEnArea.setValue(null);
+                questDescriptionEnArea.setValue("");
             }
             if (currentQuest.getDescriptionRu() != null) {
                 questDescriptionRuArea.setValue(currentQuest.getDescriptionRu());
             } else {
-                questDescriptionRuArea.setValue(null);
+                questDescriptionRuArea.setValue("");
             }
             if (currentQuest.getSheetsQuestDescription() != null) {
                 questDescriptionRawEnArea.setValue(currentQuest.getSheetsQuestDescription().getTextEn());
@@ -367,263 +582,64 @@ public class QuestTranslateTab extends VerticalLayout {
                     descriptionTranslateLayout.addComponent(addTranslation);
                 }
             } else {
-                questDescriptionRawEnArea.setValue(null);
-                questDescriptionRawRuArea.setValue(null);
+                questDescriptionRawEnArea.setValue("");
+                questDescriptionRawRuArea.setValue("");
             }
             questDescriptionEnArea.setReadOnly(true);
             questDescriptionRuArea.setReadOnly(true);
             questDescriptionRawEnArea.setReadOnly(true);
             questDescriptionRawRuArea.setReadOnly(true);
-            stepContainer.addAll(service.getQuestStepRepository().findAll(questStepSpecification));
-            stepsTable.setPageLength(4);
+            List<QuestStep> steps = service.getQuestStepRepository().findAll(questStepSpecification);
+            for (QuestStep qs : steps) {
+                stepsData.addItem(null, qs);
+                for (QuestDirection qd : qs.getDirections()) {
+                    stepsData.addItem(qs, qd);
+                }
+            }
+            stepsGrid.getDataProvider().refreshAll();
+            stepsGrid.expand(stepsData.getRootItems());
         }
     }
 
     private void LoadFilters() {
-        locationContainer.removeAllItems();
-        questContainer.removeAllItems();
+        locations.clear();
+        questList.clear();
         questSpecification.setNoTranslations(noTranslations.getValue());
         questSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
         questSpecification.setTranslator((SysAccount) translatorBox.getValue());
         questSpecification.setLocation((Location) locationTable.getValue());
         questSpecification.setEmptyTranslations(emptyTranslations.getValue());
         questSpecification.setSearchString(searchField.getValue());
-        questContainer.addAll(service.getQuestRepository().findAll(questSpecification));
+        questList.addAll(service.getQuestRepository().findAll(questSpecification));
+        questTable.getDataProvider().refreshAll();
         locationSpecification.setNoTranslations(noTranslations.getValue());
         locationSpecification.setEmptyTranslations(emptyTranslations.getValue());
         locationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
         locationSpecification.setTranslator((SysAccount) translatorBox.getValue());
         locationSpecification.setSearchString(searchField.getValue());
-        locationContainer.addAll(service.getLocationRepository().findAll(locationSpecification));
+        locations.addAll(service.getLocationRepository().findAll(locationSpecification));
+        locationTable.getDataProvider().refreshAll();
         Long countTranslatedTextFilterResult = service.countTranslatedQuestTextFilterResult((Location) locationTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
         countLabel.setCaption(countTranslatedTextFilterResult.toString());
     }
 
-    private class QuestChangeListener implements Property.ValueChangeListener {
+    private class QuestChangeListener implements HasValue.ValueChangeListener {
 
         @Override
-        public void valueChange(Property.ValueChangeEvent event) {
+        public void valueChange(HasValue.ValueChangeEvent event) {
             if (questTable.getValue() != null) {
                 LoadContent();
             }
         }
     }
 
-    private class FilterChangeListener implements Property.ValueChangeListener {
+    private class FilterChangeListener implements HasValue.ValueChangeListener {
 
         @Override
-        public void valueChange(Property.ValueChangeEvent event) {
+        public void valueChange(HasValue.ValueChangeEvent event) {
             LoadFilters();
             LoadContent();
         }
-    }
-
-    private class StepDescriptionColumnGenerator implements Table.ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            VerticalLayout result = new VerticalLayout();
-            QuestStep topic = (QuestStep) itemId;
-            if (topic.getTextEn() != null && !topic.getTextEn().isEmpty()) {
-                TextArea textEnArea = new TextArea("Текст в игре");
-                textEnArea.setValue(topic.getTextEn());
-                textEnArea.setReadOnly(true);
-                textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.setNullRepresentation("");
-                result.addComponent(textEnArea);
-            }
-            if (topic.getTextRu() != null && !topic.getTextRu().isEmpty()) {
-                TextArea textRuArea = new TextArea("Перевод в игре");
-                textRuArea.setValue(topic.getTextRu());
-                textRuArea.setReadOnly(true);
-                textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.setNullRepresentation("");
-                result.addComponent(textRuArea);
-            }
-            if (topic.getSheetsJournalEntry() != null) {
-                TextArea textEnRawArea = new TextArea("Текст в таблицах");
-                textEnRawArea.setValue(topic.getSheetsJournalEntry().getTextEn());
-                textEnRawArea.setReadOnly(true);
-                textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.setNullRepresentation("");
-                result.addComponent(textEnRawArea);
-                if (topic.getSheetsJournalEntry().getTextRu() != null && !topic.getSheetsJournalEntry().getTextRu().equals(topic.getSheetsJournalEntry().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + topic.getSheetsJournalEntry().getTranslator());
-                    textRuRawArea.setValue(topic.getSheetsJournalEntry().getTextRu());
-                    textRuRawArea.setReadOnly(true);
-                    textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.setNullRepresentation("");
-                    result.addComponent(textRuRawArea);//, "Перевод в таблицах" 
-                }
-            }
-
-            return result;
-        }
-
-    }
-
-    private class StepDirectionNameColumnGenerator implements Table.ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            VerticalLayout result = new VerticalLayout();
-            QuestDirection d = (QuestDirection) itemId;
-            if (d.getDirectionType() != null) {
-                Label l = new Label(d.getDirectionType().name());
-                result.addComponent(l);
-            }
-            if (d.getTextEn() != null && !d.getTextEn().isEmpty()) {
-                TextArea textEnArea = new TextArea("Текст в игре");
-                textEnArea.setValue(d.getTextEn());
-                textEnArea.setRows(2);
-                textEnArea.setReadOnly(true);
-                textEnArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnArea.setNullRepresentation("");
-                result.addComponent(textEnArea);
-            }
-            if (d.getTextRu() != null && !d.getTextRu().isEmpty()) {
-                TextArea textRuArea = new TextArea("Перевод в игре");
-                textRuArea.setValue(d.getTextRu());
-                textRuArea.setRows(2);
-                textRuArea.setReadOnly(true);
-                textRuArea.setWidth(100f, Unit.PERCENTAGE);
-                textRuArea.setNullRepresentation("");
-                result.addComponent(textRuArea);
-            }
-            if (d.getSheetsQuestDirection() != null) {
-                TextArea textEnRawArea = new TextArea("Текст в таблицах");
-                textEnRawArea.setValue(d.getSheetsQuestDirection().getTextEn());
-                textEnRawArea.setRows(2);
-                textEnRawArea.setReadOnly(true);
-                textEnRawArea.setWidth(100f, Unit.PERCENTAGE);
-                textEnRawArea.setNullRepresentation("");
-                result.addComponent(textEnRawArea);
-                if (d.getSheetsQuestDirection().getTextRu() != null && !d.getSheetsQuestDirection().getTextRu().equals(d.getSheetsQuestDirection().getTextEn())) {
-                    TextArea textRuRawArea = new TextArea("Перевод в таблицах от " + d.getSheetsQuestDirection().getTranslator());
-                    textRuRawArea.setValue(d.getSheetsQuestDirection().getTextRu());
-                    textRuRawArea.setRows(2);
-                    textRuRawArea.setReadOnly(true);
-                    textRuRawArea.setWidth(100f, Unit.PERCENTAGE);
-                    textRuRawArea.setNullRepresentation("");
-                    result.addComponent(textRuRawArea);
-                }
-            }
-
-            return result;
-        }
-
-    }
-
-    private class StepDirectionsColumnGenerator implements Table.ColumnGenerator {
-
-        private Table directionsTable;
-        private BeanItemContainer<QuestDirection> directionsContainer;
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            QuestStep step = (QuestStep) itemId;
-            directionsTable = new Table();
-            //directionsTable.setSizeFull();
-            directionsTable.setWidth(100f, Unit.PERCENTAGE);
-            directionsTable.setPageLength(0);
-            directionsContainer = new BeanItemContainer<>(QuestDirection.class);
-            directionsContainer.addAll(service.getQuestDirectionRepository().findAll(new QuestDirectionSpecification(step, (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue())));
-            directionsTable.setContainerDataSource(directionsContainer);
-            directionsTable.addGeneratedColumn("stepDirectionName", stepDirectionNameColumnGenerator);
-            directionsTable.addGeneratedColumn("directionTranslation", directionTranslationColumnGenerator);
-            directionsTable.setColumnExpandRatio("stepDirectionName", 1f);
-            directionsTable.setColumnExpandRatio("directionTranslation", 1f);
-            directionsTable.setVisibleColumns("stepDirectionName", "directionTranslation");
-            directionsTable.setColumnHeaders("", "");
-            return directionsTable;
-        }
-
-    }
-
-    private class StepTranslationColumnGenerator implements Table.ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            final VerticalLayout vl = new VerticalLayout();
-            vl.setSizeFull();
-            Set<TranslatedText> list = new HashSet<>();
-            List<SysAccount> accounts = new ArrayList<>();
-
-            QuestStep step = (QuestStep) itemId;
-            String text = step.getTextEn();
-            list.addAll(step.getSheetsJournalEntry().getTranslatedTexts());
-
-            if (list != null) {
-                for (TranslatedText t : list) {
-                    vl.addComponent(new TranslationCell(t));
-                    accounts.add(t.getAuthor());
-                }
-            }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-                final TranslatedText translatedText = new TranslatedText();
-                translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
-                translatedText.setSpreadSheetsJournalEntry(step.getSheetsJournalEntry());
-                Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
-                addTranslation.addClickListener(new Button.ClickListener() {
-
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
-
-                        if (translatedText.getSpreadSheetsJournalEntry() != null) {
-                            translatedText.getSpreadSheetsJournalEntry().getTranslatedTexts().add(translatedText);
-                        }
-                        vl.addComponent(new TranslationCell(translatedText));
-                        event.getButton().setVisible(false);
-                    }
-                });
-                vl.addComponent(addTranslation);
-            }
-            return vl;
-        }
-
-    }
-
-    private class DirectionTranslationColumnGenerator implements Table.ColumnGenerator {
-
-        @Override
-        public Object generateCell(Table source, Object itemId, Object columnId) {
-            final VerticalLayout vl = new VerticalLayout();
-            vl.setSizeFull();
-            Set<TranslatedText> list = new HashSet<>();
-            List<SysAccount> accounts = new ArrayList<>();
-
-            QuestDirection d = (QuestDirection) itemId;
-            String text = d.getTextEn();
-            list.addAll(d.getSheetsQuestDirection().getTranslatedTexts());
-
-            if (list != null) {
-                for (TranslatedText t : list) {
-                    vl.addComponent(new TranslationCell(t));
-                    accounts.add(t.getAuthor());
-                }
-            }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-                final TranslatedText translatedText = new TranslatedText();
-                translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
-                translatedText.setSpreadSheetsQuestDirection(d.getSheetsQuestDirection());
-                Button addTranslation = new Button("Добавить перевод");
-                addTranslation.addClickListener(new Button.ClickListener() {
-
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
-
-                        if (translatedText.getSpreadSheetsQuestDirection() != null) {
-                            translatedText.getSpreadSheetsQuestDirection().getTranslatedTexts().add(translatedText);
-                        }
-                        vl.addComponent(new TranslationCell(translatedText));
-                        event.getButton().setVisible(false);
-                    }
-                });
-                vl.addComponent(addTranslation);
-            }
-            return vl;
-        }
-
     }
 
     private class TranslationCell extends VerticalLayout {
@@ -638,6 +654,8 @@ public class QuestTranslateTab extends VerticalLayout {
 
         public TranslationCell(TranslatedText translatedText_) {
             this.setSizeFull();
+            this.setSpacing(false);
+            this.setMargin(false);
             this.translatedText = translatedText_;
             String translatedStatus = "нет";
             if (translatedText.getStatus() != null) {
@@ -656,23 +674,20 @@ public class QuestTranslateTab extends VerticalLayout {
             }
             translation = new TextArea(caption.toString());
             translation.setSizeFull();
-            translation.setNullRepresentation("");
-            translation.setImmediate(true);
-            translation.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.TIMEOUT);
-            translation.setTextChangeTimeout(5000);
+
             translation.setValue(translatedText_.getText());
 
-            translation.addTextChangeListener(new FieldEvents.TextChangeListener() {
+            translation.addValueChangeListener(new HasValue.ValueChangeListener<String>() {
 
                 @Override
-                public void textChange(FieldEvents.TextChangeEvent event) {
+                public void valueChange(HasValue.ValueChangeEvent<String> event) {
                     save.setVisible(true);
 
-                    if (event.getText() == null || event.getText().isEmpty()) {
+                    if (event.getValue() == null || event.getValue().isEmpty()) {
                         save.setCaption("Удалить");
                         save.setIcon(FontAwesome.RECYCLE);
                     } else {
-                        translatedText.setText(event.getText());
+                        translatedText.setText(event.getValue());
                         service.saveTranslatedTextDirty(translatedText);
                         save.setCaption("Сохранить");
                         save.setIcon(FontAwesome.SAVE);

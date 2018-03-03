@@ -128,6 +128,8 @@ public class MainView extends Panel implements View, Command {
                 + "	font-weight:bold;margin-bottom:0.33em;margin-top:0.55em;\n"
                 + "}"
                 + ".my-grid .v-grid-body .v-grid-cell { height: 100px; }"
+                + ".v-treegrid-cell.step_row {background-color: #d7e7d5 !important;}"
+                + ".v-treegrid-cell.direction_row {background-color: #ffffff !important;}"
                 + ".v-table, .v-table * { overflow-anchor: none; };");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);
