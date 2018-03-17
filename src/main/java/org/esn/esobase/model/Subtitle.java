@@ -14,10 +14,12 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import org.esn.esobase.model.lib.DAO;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -27,6 +29,8 @@ import org.hibernate.annotations.FetchMode;
  * @author scraelos
  */
 @Entity
+@Table(indexes = {
+    @Index(columnList = "nextSubtitle_id", unique = true)})
 public class Subtitle extends DAO {
 
     @Id
