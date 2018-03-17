@@ -22,6 +22,15 @@
         <servlet-name>get-books-servlet</servlet-name>
         <url-pattern>/getbooks/*</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>translate-api-servlet</servlet-name>
+        <servlet-class>org.esn.esobase.service.TranslateApiServlet</servlet-class>
+        <load-on-startup>25</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>translate-api-servlet</servlet-name>
+        <url-pattern>/translateapi/*</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>SpringLoginDispatcherServlet</servlet-name>

@@ -7,6 +7,7 @@ package org.esn.esobase.data;
 
 import java.util.UUID;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -48,7 +49,7 @@ public class SysAccountService {
     }
 
     @Transactional(readOnly = true)
-    public SysAccount getAccountByApi(String apiKey) {
+    public SysAccount getAccountByApi(String apiKey) throws NoResultException {
         TypedQuery<SysAccount> q = em.createQuery("select a from SysAccount a where a.apiKey=:apiKey", SysAccount.class);
         q.setParameter("apiKey", apiKey);
         return q.getSingleResult();
