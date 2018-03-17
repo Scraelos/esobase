@@ -10,6 +10,7 @@ import org.esn.esobase.data.DictionaryService;
 import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.data.ItemInfoImportService;
+import org.esn.esobase.data.SysAccountService;
 import org.esn.esobase.data.TableUpdateService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,5 +50,10 @@ public class DataContext {
     @Bean
     public DictionaryService dictionaryService() {
         return new DictionaryService();
+    }
+    
+    @Bean
+    public SysAccountService sysAccountService() {
+        return new SysAccountService();
     }
 }

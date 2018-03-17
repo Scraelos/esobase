@@ -34,6 +34,8 @@ public class SysAccount extends DAO {
     private Boolean isBlocked;
     @ManyToMany(fetch = FetchType.LAZY)
     private Set<SysAccountRole> roles;
+    @Column(length = 64,unique = true)
+    private String apiKey;
 
     @Override
     public Long getId() {
@@ -77,11 +79,17 @@ public class SysAccount extends DAO {
         this.roles = roles;
     }
 
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
     @Override
     public String toString() {
         return this.login;
     }
-    
-    
 
 }

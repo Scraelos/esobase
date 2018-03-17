@@ -11,27 +11,40 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
 import com.vaadin.v7.ui.PasswordField;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.VerticalLayout;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.SysAccountService;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.security.SpringSecurityHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
 
 /**
  *
  * @author scraelos
  */
+@Component
+@Scope(value = "prototype")
 public class ChangePasswordTab extends VerticalLayout {
 
     private PasswordField oldPassword;
     private PasswordField password;
     private PasswordField passwordRepeat;
     private Button changePassword;
+    private TextField apiKeyField;
+    private Button newApiKeyButton;
 
-    private final DBService service;
+    @Autowired
+    private SysAccountService sysAccountService;
 
-    public ChangePasswordTab(DBService service_) {
-        this.service = service_;
+    public ChangePasswordTab() {
+    }
+
+    public void Init() {
+        this.removeAllComponents();
         oldPassword = new PasswordField("Старый пароль");
         oldPassword.setImmediate(true);
         oldPassword.setRequired(true);
@@ -61,16 +74,37 @@ public class ChangePasswordTab extends VerticalLayout {
         this.addComponent(password);
         this.addComponent(passwordRepeat);
         this.addComponent(changePassword);
+        apiKeyField = new TextField("Ключ API");
+        apiKeyField.setWidth(300f, Unit.PIXELS);
+        String apiKey = sysAccountService.getApiKey(SpringSecurityHelper.getSysAccount());
+        if (apiKey != null) {
+            apiKeyField.setReadOnly(false);
+            apiKeyField.setValue(apiKey);
+            apiKeyField.setReadOnly(true);
+        }
+
+        newApiKeyButton = new Button("Сменить ключ API");
+        newApiKeyButton.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                String apiKey=sysAccountService.newApiKey(SpringSecurityHelper.getSysAccount());
+                apiKeyField.setReadOnly(false);
+                apiKeyField.setValue(apiKey);
+                apiKeyField.setReadOnly(true);
+            }
+        });
+        this.addComponent(apiKeyField);
+        this.addComponent(newApiKeyButton);
     }
 
     private void changePasswordAction() {
-        service.updateUserPassword(SpringSecurityHelper.getSysAccount(), password.getValue());
+        sysAccountService.updateUserPassword(SpringSecurityHelper.getSysAccount(), password.getValue());
         Notification n = new Notification("Смена пароля", "Пароль успешно изменён", Notification.Type.HUMANIZED_MESSAGE);
         n.setDelayMsec(2000);
         n.show(getUI().getPage());
-        TabSheet tabs=(TabSheet) this.getParent();
+        TabSheet tabs = (TabSheet) this.getParent();
         tabs.removeTab(tabs.getTab(this));
-        
+
     }
 
     private class DoublePasswordValidator implements Validator {

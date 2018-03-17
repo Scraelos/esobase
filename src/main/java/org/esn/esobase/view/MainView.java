@@ -85,6 +85,7 @@ public class MainView extends Panel implements View, Command {
     private SynchronizationTab synchronizationTabContent;
     private QuestsTab questsTabContent;
     private SearchInCatalogsTab searchInCatalogsTabContent;
+    @Autowired
     private ChangePasswordTab changePasswordTabContent;
     private DirectTableEditTab directTableEditTabContent;
     private PortalInfoTab portalInfoTabContent;
@@ -307,14 +308,11 @@ public class MainView extends Panel implements View, Command {
         } else if (selectedItem == searchInRawStringsMenuItem) {
             openSearchInRaw();
         } else if (selectedItem == changePasswordMenuItem) {
-            if (changePasswordTabContent != null) {
-                TabSheet.Tab tab = tabs.getTab(changePasswordTabContent);
-                if (tab != null) {
-                    tabs.removeTab(tabs.getTab(changePasswordTabContent));
-                }
+            TabSheet.Tab tab = tabs.getTab(changePasswordTabContent);
+            if (tab == null) {
+                changePasswordTabContent.Init();
+                tab = tabs.addTab(changePasswordTabContent, selectedItem.getText());
             }
-            changePasswordTabContent = new ChangePasswordTab(service);
-            TabSheet.Tab tab = tabs.addTab(changePasswordTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == portalInfoMenuItem) {
