@@ -150,6 +150,7 @@ public class ImportTab extends VerticalLayout {
                     service.generateSearchIndex();
                     service.generateJournalEntrySearchIndex();
                     service.generateQuestDirectionSearchIndex();
+                    service.generateQuestDescriptionSearchIndex();
                     LOG.info("Search index complete");
                 }
             });

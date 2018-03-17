@@ -72,29 +72,39 @@ public class QuestSpecification implements Specification<Quest> {
         if (searchString != null && (searchString.length() > 2)) {
             SetJoin<Object, Object> stepsJoin = root.joinSet("steps", JoinType.LEFT);
             SetJoin<Object, Object> stepsDirectionsJoin = stepsJoin.joinSet("directions", JoinType.LEFT);
+            SetJoin<Object, Object> itemsJoin = root.joinSet("items", JoinType.LEFT);
             Join<Object, Object> join = root.join("sheetsQuestName", JoinType.LEFT);
             Join<Object, Object> join1 = root.join("sheetsQuestDescription", JoinType.LEFT);
             Join<Object, Object> join2 = stepsJoin.join("sheetsJournalEntry", JoinType.LEFT);
             Join<Object, Object> join3 = stepsDirectionsJoin.join("sheetsQuestDirection", JoinType.LEFT);
+            Join<Object, Object> join4 = itemsJoin.join("name", JoinType.LEFT);
+            Join<Object, Object> join5 = itemsJoin.join("description", JoinType.LEFT);
             String searchPattern = "%" + searchString.toLowerCase() + "%";
             predicates.add(cb.or(
                     cb.like(cb.lower(join.get("textEn")), searchPattern),
                     cb.like(cb.lower(join1.get("textEn")), searchPattern),
                     cb.like(cb.lower(join2.get("textEn")), searchPattern),
                     cb.like(cb.lower(join3.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join4.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join5.get("textEn")), searchPattern),
                     cb.like(cb.lower(join.get("textRu")), searchPattern),
                     cb.like(cb.lower(join1.get("textRu")), searchPattern),
                     cb.like(cb.lower(join2.get("textRu")), searchPattern),
-                    cb.like(cb.lower(join3.get("textRu")), searchPattern)
+                    cb.like(cb.lower(join3.get("textRu")), searchPattern),
+                    cb.like(cb.lower(join4.get("textRu")), searchPattern),
+                    cb.like(cb.lower(join5.get("textRu")), searchPattern)
             ));
         } else {
             if (noTranslations || emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                 SetJoin<Object, Object> stepsJoin = root.joinSet("steps", JoinType.LEFT);
                 SetJoin<Object, Object> stepsDirectionsJoin = stepsJoin.joinSet("directions", JoinType.LEFT);
+                SetJoin<Object, Object> itemsJoin = root.joinSet("items", JoinType.LEFT);
                 Join<Object, Object> join = root.join("sheetsQuestName", JoinType.LEFT);
                 Join<Object, Object> join1 = root.join("sheetsQuestDescription", JoinType.LEFT);
                 Join<Object, Object> join2 = stepsJoin.join("sheetsJournalEntry", JoinType.LEFT);
                 Join<Object, Object> join3 = stepsDirectionsJoin.join("sheetsQuestDirection", JoinType.LEFT);
+                Join<Object, Object> join8 = itemsJoin.join("name", JoinType.LEFT);
+                Join<Object, Object> join9 = itemsJoin.join("description", JoinType.LEFT);
                 if (noTranslations) {
                     predicates.add(cb.or(
                             cb.and(
@@ -112,6 +122,14 @@ public class QuestSpecification implements Specification<Quest> {
                             cb.and(
                                     cb.isNull(join3.get("translator")),
                                     cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection"))
+                            ),
+                            cb.and(
+                                    cb.isNull(join8.get("translator")),
+                                    cb.isNotNull(itemsJoin.get("name"))
+                            ),
+                            cb.and(
+                                    cb.isNull(join9.get("translator")),
+                                    cb.isNotNull(itemsJoin.get("description"))
                             )
                     ));
                 }
@@ -136,6 +154,16 @@ public class QuestSpecification implements Specification<Quest> {
                                     cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                                     cb.isEmpty(join3.get("translatedTexts")),
                                     cb.isNull(join3.get("translator"))
+                            ),
+                            cb.and(
+                                    cb.isNotNull(itemsJoin.get("name")),
+                                    cb.isEmpty(join8.get("translatedTexts")),
+                                    cb.isNull(join8.get("translator"))
+                            ),
+                            cb.and(
+                                    cb.isNotNull(itemsJoin.get("description")),
+                                    cb.isEmpty(join9.get("translatedTexts")),
+                                    cb.isNull(join9.get("translator"))
                             )
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
@@ -143,6 +171,8 @@ public class QuestSpecification implements Specification<Quest> {
                     Join<Object, Object> join5 = join1.join("translatedTexts", JoinType.LEFT);
                     Join<Object, Object> join6 = join2.join("translatedTexts", JoinType.LEFT);
                     Join<Object, Object> join7 = join3.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join10 = join8.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join11 = join9.join("translatedTexts", JoinType.LEFT);
                     if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
 
                         predicates.add(cb.or(
@@ -161,6 +191,14 @@ public class QuestSpecification implements Specification<Quest> {
                                 cb.and(
                                         join7.get("status").in(translateStatus),
                                         cb.equal(join7.get("author"), translator)
+                                ),
+                                cb.and(
+                                        join10.get("status").in(translateStatus),
+                                        cb.equal(join10.get("author"), translator)
+                                ),
+                                cb.and(
+                                        join11.get("status").in(translateStatus),
+                                        cb.equal(join11.get("author"), translator)
                                 )
                         ));
                     } else if (translator != null) {
@@ -168,14 +206,18 @@ public class QuestSpecification implements Specification<Quest> {
                                 cb.equal(join4.get("author"), translator),
                                 cb.equal(join5.get("author"), translator),
                                 cb.equal(join6.get("author"), translator),
-                                cb.equal(join7.get("author"), translator)
+                                cb.equal(join7.get("author"), translator),
+                                cb.equal(join10.get("author"), translator),
+                                cb.equal(join11.get("author"), translator)
                         ));
                     } else if (translateStatus != null && !translateStatus.isEmpty()) {
                         predicates.add(cb.or(
                                 join4.get("status").in(translateStatus),
                                 join5.get("status").in(translateStatus),
                                 join6.get("status").in(translateStatus),
-                                join7.get("status").in(translateStatus)
+                                join7.get("status").in(translateStatus),
+                                join10.get("status").in(translateStatus),
+                                join11.get("status").in(translateStatus)
                         ));
                     }
                 }

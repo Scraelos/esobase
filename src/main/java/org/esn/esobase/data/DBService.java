@@ -76,6 +76,7 @@ import org.esn.esobase.data.repository.GSpreadSheetsQuestStartTipRepository;
 import org.esn.esobase.data.repository.LocationRepository;
 import org.esn.esobase.data.repository.NpcRepository;
 import org.esn.esobase.data.repository.QuestDirectionRepository;
+import org.esn.esobase.data.repository.QuestItemRepository;
 import org.esn.esobase.data.repository.QuestRepository;
 import org.esn.esobase.data.repository.QuestStepRepository;
 import org.esn.esobase.data.repository.SubtitleRepository;
@@ -115,6 +116,7 @@ import org.esn.esobase.model.NPC_SEX;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Quest;
 import org.esn.esobase.model.QuestDirection;
+import org.esn.esobase.model.QuestItem;
 import org.esn.esobase.model.QuestStep;
 import org.esn.esobase.model.SpellerWord;
 import org.esn.esobase.model.Subtitle;
@@ -207,6 +209,8 @@ public class DBService {
     private QuestStepRepository questStepRepository;
     @Autowired
     private QuestDirectionRepository questDirectionRepository;
+    @Autowired
+    private QuestItemRepository questItemRepository;
 
     public NpcRepository getNpcRepository() {
         return npcRepository;
@@ -314,6 +318,10 @@ public class DBService {
 
     public GSpreadSheetsQuestEndTipRepository getgSpreadSheetsQuestEndTipRepository() {
         return gSpreadSheetsQuestEndTipRepository;
+    }
+
+    public QuestItemRepository getQuestItemRepository() {
+        return questItemRepository;
     }
 
     @PersistenceContext
@@ -880,17 +888,6 @@ public class DBService {
         for (GSpreadSheetsQuestStartTip location : items) {
             spreadSheetItemMap.put(location.getTextEn(), location);
         }
-        for (GSpreadSheetsQuestStartTip item : allItems) {
-            GSpreadSheetsQuestStartTip result = spreadSheetItemMap.get(item.getTextEn());
-            if (result == null) {
-                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest start tip rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
-                for (TranslatedText t : item.getTranslatedTexts()) {
-                    t.setSpreadSheetsQuestDescription(null);
-                    em.merge(t);
-                }
-                em.remove(item);
-            }
-        }
     }
 
     @Transactional
@@ -935,17 +932,6 @@ public class DBService {
         Map<String, GSpreadSheetsQuestEndTip> spreadSheetItemMap = new HashMap<>();
         for (GSpreadSheetsQuestEndTip location : items) {
             spreadSheetItemMap.put(location.getTextEn(), location);
-        }
-        for (GSpreadSheetsQuestEndTip item : allItems) {
-            GSpreadSheetsQuestEndTip result = spreadSheetItemMap.get(item.getTextEn());
-            if (result == null) {
-                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "removing quest end tip rownum={0} :{1}", new Object[]{item.getRowNum(), item.getTextEn()});
-                for (TranslatedText t : item.getTranslatedTexts()) {
-                    t.setSpreadSheetsQuestDescription(null);
-                    em.merge(t);
-                }
-                em.remove(item);
-            }
         }
     }
 
@@ -3494,28 +3480,48 @@ public class DBService {
         CriteriaQuery<Long> cq1 = cb.createQuery(Long.class);
         CriteriaQuery<Long> cq2 = cb.createQuery(Long.class);
         CriteriaQuery<Long> cq3 = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq4 = cb.createQuery(Long.class);
+        CriteriaQuery<Long> cq5 = cb.createQuery(Long.class);
         Root<Quest> root = cq.from(Quest.class);
         Root<Quest> root1 = cq1.from(Quest.class);
         Root<Quest> root2 = cq2.from(Quest.class);
         Root<Quest> root3 = cq3.from(Quest.class);
+        Root<Quest> root4 = cq4.from(Quest.class);
+        Root<Quest> root5 = cq5.from(Quest.class);
         Predicate result = null;
         Predicate result1 = null;
         Predicate result2 = null;
         Predicate result3 = null;
+        Predicate result4 = null;
+        Predicate result5 = null;
         List<Predicate> predicates = new ArrayList<>();
         List<Predicate> predicates1 = new ArrayList<>();
         List<Predicate> predicates2 = new ArrayList<>();
         List<Predicate> predicates3 = new ArrayList<>();
+        List<Predicate> predicates4 = new ArrayList<>();
+        List<Predicate> predicates5 = new ArrayList<>();
         Join<Object, Object> stepsJoin = root2.join("steps", JoinType.LEFT);
         Join<Object, Object> stepsDirectionsJoin = root3.join("steps", JoinType.LEFT).join("directions", JoinType.LEFT);
         Join<Object, Object> join = root.join("sheetsQuestName", JoinType.LEFT);
         Join<Object, Object> join1 = root1.join("sheetsQuestDescription", JoinType.LEFT);
         Join<Object, Object> join2 = stepsJoin.join("sheetsJournalEntry", JoinType.LEFT);
         Join<Object, Object> join3 = stepsDirectionsJoin.join("sheetsQuestDirection", JoinType.LEFT);
+        Join<Object, Object> itemsJoin1 = root4.join("items", JoinType.LEFT);
+        Join<Object, Object> itemsJoin2 = root5.join("items", JoinType.LEFT);
+        Join<Object, Object> join8 = itemsJoin1.join("name", JoinType.LEFT);
+        Join<Object, Object> join9 = itemsJoin2.join("description", JoinType.LEFT);
         cq.groupBy(join.get("id"));
         cq1.groupBy(join1.get("id"));
         cq2.groupBy(join2.get("id"));
         cq3.groupBy(join3.get("id"));
+        cq4.groupBy(join8.get("id"));
+        cq5.groupBy(join9.get("id"));
+        predicates.add(cb.isNotNull(join.get("id")));
+        predicates1.add(cb.isNotNull(join1.get("id")));
+        predicates2.add(cb.isNotNull(join2.get("id")));
+        predicates3.add(cb.isNotNull(join3.get("id")));
+        predicates4.add(cb.isNotNull(join8.get("id")));
+        predicates5.add(cb.isNotNull(join9.get("id")));
         if (location != null) {
             predicates.add(cb.or(
                     cb.equal(root.get("location"), location),
@@ -3532,6 +3538,14 @@ public class DBService {
             predicates3.add(cb.or(
                     cb.equal(root3.get("location"), location),
                     cb.equal(root3.get("location").get("parentLocation"), location)
+            ));
+            predicates4.add(cb.or(
+                    cb.equal(root4.get("location"), location),
+                    cb.equal(root4.get("location").get("parentLocation"), location)
+            ));
+            predicates5.add(cb.or(
+                    cb.equal(root5.get("location"), location),
+                    cb.equal(root5.get("location").get("parentLocation"), location)
             ));
         }
         if (searchString != null && (searchString.length() > 2)) {
@@ -3553,6 +3567,14 @@ public class DBService {
                     cb.like(cb.lower(join3.get("textEn")), searchPattern),
                     cb.like(cb.lower(join3.get("textRu")), searchPattern)
             ));
+            predicates4.add(cb.or(
+                    cb.like(cb.lower(join8.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join8.get("textRu")), searchPattern)
+            ));
+            predicates5.add(cb.or(
+                    cb.like(cb.lower(join9.get("textEn")), searchPattern),
+                    cb.like(cb.lower(join9.get("textRu")), searchPattern)
+            ));
         } else {
             if (noTranslations) {
                 predicates.add(cb.isNull(join.get("translator")));
@@ -3563,6 +3585,10 @@ public class DBService {
                 predicates2.add(cb.isNotNull(stepsJoin.get("sheetsJournalEntry")));
                 predicates3.add(cb.isNull(join3.get("translator")));
                 predicates3.add(cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")));
+                predicates4.add(cb.isNull(join8.get("translator")));
+                predicates4.add(cb.isNotNull(itemsJoin1.get("name")));
+                predicates5.add(cb.isNull(join9.get("translator")));
+                predicates5.add(cb.isNotNull(itemsJoin2.get("description")));
 
             }
             if (emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
@@ -3589,11 +3615,23 @@ public class DBService {
                             cb.isEmpty(join3.get("translatedTexts")),
                             cb.isNull(join3.get("translator"))
                     ));
+                    predicates4.add(cb.and(
+                            cb.isNotNull(itemsJoin1.get("name")),
+                            cb.isEmpty(join8.get("translatedTexts")),
+                            cb.isNull(join8.get("translator"))
+                    ));
+                    predicates5.add(cb.and(
+                            cb.isNotNull(itemsJoin2.get("description")),
+                            cb.isEmpty(join9.get("translatedTexts")),
+                            cb.isNull(join9.get("translator"))
+                    ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join4 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
                     Join<Object, Object> join5 = join1.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
                     Join<Object, Object> join6 = join2.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
                     Join<Object, Object> join7 = join3.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join10 = join8.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join11 = join9.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
                     if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
 
                         predicates.add(cb.and(
@@ -3612,16 +3650,28 @@ public class DBService {
                                 join7.get("status").in(translateStatus),
                                 cb.equal(join7.get("author"), translator)
                         ));
+                        predicates4.add(cb.and(
+                                join10.get("status").in(translateStatus),
+                                cb.equal(join10.get("author"), translator)
+                        ));
+                        predicates5.add(cb.and(
+                                join11.get("status").in(translateStatus),
+                                cb.equal(join11.get("author"), translator)
+                        ));
                     } else if (translator != null) {
                         predicates.add(cb.equal(join4.get("author"), translator));
                         predicates1.add(cb.equal(join5.get("author"), translator));
                         predicates2.add(cb.equal(join6.get("author"), translator));
                         predicates3.add(cb.equal(join7.get("author"), translator));
+                        predicates4.add(cb.equal(join10.get("author"), translator));
+                        predicates5.add(cb.equal(join11.get("author"), translator));
                     } else if (translateStatus != null) {
                         predicates.add(join4.get("status").in(translateStatus));
                         predicates1.add(join5.get("status").in(translateStatus));
                         predicates2.add(join6.get("status").in(translateStatus));
                         predicates3.add(join7.get("status").in(translateStatus));
+                        predicates4.add(join10.get("status").in(translateStatus));
+                        predicates5.add(join11.get("status").in(translateStatus));
                     }
                 }
 
@@ -3648,11 +3698,23 @@ public class DBService {
         } else if (!predicates3.isEmpty()) {
             result3 = predicates3.get(0);
         }
+        if (!predicates4.isEmpty() && predicates4.size() > 1) {
+            result4 = cb.and(predicates4.toArray(new Predicate[predicates4.size()]));
+        } else if (!predicates4.isEmpty()) {
+            result4 = predicates4.get(0);
+        }
+        if (!predicates5.isEmpty() && predicates5.size() > 1) {
+            result5 = cb.and(predicates5.toArray(new Predicate[predicates5.size()]));
+        } else if (!predicates5.isEmpty()) {
+            result5 = predicates5.get(0);
+        }
 
         cq.select(cb.count(root));
         cq1.select(cb.count(root1));
         cq2.select(cb.count(root2));
         cq3.select(cb.count(root3));
+        cq4.select(cb.count(root4));
+        cq5.select(cb.count(root5));
         if (result != null) {
             cq.where(result);
         }
@@ -3665,11 +3727,19 @@ public class DBService {
         if (result3 != null) {
             cq3.where(result3);
         }
+        if (result4 != null) {
+            cq4.where(result4);
+        }
+        if (result5 != null) {
+            cq5.where(result5);
+        }
         Long count = 0L;
         List<Long> countList = em.createQuery(cq).getResultList();
         List<Long> countList1 = em.createQuery(cq1).getResultList();
         List<Long> countList2 = em.createQuery(cq2).getResultList();
         List<Long> countList3 = em.createQuery(cq3).getResultList();
+        List<Long> countList4 = em.createQuery(cq4).getResultList();
+        List<Long> countList5 = em.createQuery(cq5).getResultList();
         for (Long c : countList) {
             if (c > 0) {
                 count++;
@@ -3686,6 +3756,16 @@ public class DBService {
             }
         }
         for (Long c : countList3) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList4) {
+            if (c > 0) {
+                count++;
+            }
+        }
+        for (Long c : countList5) {
             if (c > 0) {
                 count++;
             }
@@ -5236,15 +5316,6 @@ public class DBService {
     }
 
     @Transactional
-    public void updateUserPassword(SysAccount account, String newPassword) {
-        SysAccount a = em.find(SysAccount.class, account.getId());
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String hashedPassword = passwordEncoder.encode(newPassword);
-        a.setPassword(hashedPassword);
-        em.merge(a);
-    }
-
-    @Transactional
     public void commitTableEntityItem(Object itemId, String textRu) {
         if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote) || (itemId instanceof GSpreadSheetsAbilityDescription) || (itemId instanceof GSpreadSheetsQuestStartTip) || (itemId instanceof GSpreadSheetsQuestEndTip)) {
             if (itemId instanceof GSpreadSheetsNpcName) {
@@ -5470,13 +5541,13 @@ public class DBService {
     @Transactional
     public void insertEnRawStrings(List<Object[]> rows) {
         for (Object[] row : rows) {
-            
-                Query insertQ = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten) ON CONFLICT(aid,bid,cid) DO UPDATE SET texten=:texten");
-                insertQ.setParameter("aid", row[0]);
-                insertQ.setParameter("bid", row[1]);
-                insertQ.setParameter("cid", row[2]);
-                insertQ.setParameter("texten", row[3]);
-                insertQ.executeUpdate();
+
+            Query insertQ = em.createNativeQuery("insert into esorawstring (id,aid,bid,cid,texten) values (nextval('hibernate_sequence'),:aid,:bid,:cid,:texten) ON CONFLICT(aid,bid,cid) DO UPDATE SET texten=:texten");
+            insertQ.setParameter("aid", row[0]);
+            insertQ.setParameter("bid", row[1]);
+            insertQ.setParameter("cid", row[2]);
+            insertQ.setParameter("texten", row[3]);
+            insertQ.executeUpdate();
         }
     }
 
@@ -7061,6 +7132,7 @@ public class DBService {
                 quest.setSheetsQuestName(sheetsQuestName);
                 em.persist(quest);
             }
+            em.flush();
             JSONObject questStepsObject = null;
             try {
                 questStepsObject = questObject.getJSONObject("steps");
@@ -7212,10 +7284,83 @@ public class DBService {
             }
             if (questInfoObject != null) {
                 try {
-                    JSONObject questDescription = questInfoObject.getJSONObject("description");
-                    if (questDescription != null) {
-                        String descriptionString = questDescription.getString("1");
+                    JSONObject questDescriptionObject = questInfoObject.getJSONObject("description");
+                    if (questDescriptionObject != null) {
+                        String description = questDescriptionObject.getString("1");
+                        if (description != null && !description.isEmpty()) {
+                            Long descriptionEntryId = null;
 
+                            descriptionEntryId = searchTableItem("GSpreadSheetsQuestDescription", description);
+                            if (descriptionEntryId == null && EsnDecoder.IsMostlyRu(description)) {
+                                descriptionEntryId = searchTableItemRuIndexed("GSpreadSheetsQuestDescription", description);
+
+                            } else if (descriptionEntryId == null && !EsnDecoder.IsMostlyRu(description)) {
+                                descriptionEntryId = searchTableItemIndexed("GSpreadSheetsQuestDescription", description);
+                            }
+                            if (descriptionEntryId == null) {
+                                descriptionEntryId = searchTableItemUncertainIndexed("GSpreadSheetsQuestDescription", description);
+                            }
+                            if (descriptionEntryId != null) {
+                                GSpreadSheetsQuestDescription questDescription = em.find(GSpreadSheetsQuestDescription.class, descriptionEntryId);
+                                quest.setSheetsQuestDescription(questDescription);
+                                if (EsnDecoder.IsMostlyRu(description)) {
+                                    quest.setDescriptionRu(description);
+                                } else {
+                                    quest.setDescriptionEn(description);
+                                }
+                                em.merge(quest);
+                            }
+                        }
+                    }
+
+                } catch (JSONException ex) {
+
+                }
+                try {
+                    JSONObject questItemsObject = questInfoObject.getJSONObject("items");
+                    if (questItemsObject != null) {
+                        for (Object itemKey : questItemsObject.keySet()) {
+                            String itemName = questItemsObject.getString((String) itemKey);
+                            Long itemNameId = null;
+                            if (EsnDecoder.IsMostlyRu(itemName)) {
+                                itemNameId = searchTableItemRu("GSpreadSheetsItemName", itemName);
+                            } else {
+                                itemNameId = searchTableItem("GSpreadSheetsItemName", itemName);
+                            }
+                            if (itemNameId != null) {
+                                GSpreadSheetsItemName gItemName = em.find(GSpreadSheetsItemName.class, itemNameId);
+                                TypedQuery<QuestItem> itemQuery = em.createQuery("select qi from QuestItem qi where qi.name=:name", QuestItem.class);
+                                itemQuery.setParameter("name", gItemName);
+                                QuestItem questItem = null;
+                                try {
+                                    questItem = itemQuery.getSingleResult();
+                                } catch (javax.persistence.NoResultException ex) {
+                                    questItem = new QuestItem();
+                                    questItem.setQuests(new HashSet<>());
+                                    questItem.setName(gItemName);
+                                }
+                                GSpreadSheetLinkRouter.RouteEntry aId = GSpreadSheetLinkRouter.getRoute(gItemName.getaId());
+                                try {
+                                    TypedQuery<GSpreadSheetsItemDescription> descriptionQuery = em.createQuery("select d from GSpreadSheetsItemDescription d where d.aId=:aid and d.bId=:bid and d.cId=:cid", GSpreadSheetsItemDescription.class);
+                                    descriptionQuery.setParameter("aid", aId.getTargetId());
+                                    descriptionQuery.setParameter("bid", gItemName.getbId());
+                                    descriptionQuery.setParameter("cid", gItemName.getcId());
+                                    GSpreadSheetsItemDescription itemDescription = descriptionQuery.getSingleResult();
+                                    questItem.setDescription(itemDescription);
+                                } catch (javax.persistence.NoResultException ex) {
+
+                                }
+                                if (quest.getItems() == null) {
+                                    quest.setItems(new HashSet<>());
+                                }
+                                if (!quest.getItems().contains(questItem)) {
+                                    quest.getItems().add(questItem);
+                                    em.merge(quest);
+                                    em.flush();
+                                }
+
+                            }
+                        }
                     }
                 } catch (JSONException ex) {
 
@@ -7936,6 +8081,15 @@ public class DBService {
         em.createNativeQuery("update gspreadsheetsquestdirection set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsquestdirection set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
         em.createNativeQuery("update gspreadsheetsquestdirection set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+    }
+
+    @Transactional
+    public void generateQuestDescriptionSearchIndex() {
+        em.createNativeQuery("update gspreadsheetsquestdescription set tren=replace(regexp_replace(regexp_replace(texten, '<<((player|npc|\\d){[a-z,A-Z\\s]*\\/[a-z,A-Z\\s]*})*\\w*:*\\d*>>', '%','g'),'[\\[\\]]','','g'),'  ',' ') where texten like '%<<%' or texten like '%[%'").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdescription set trrumm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdescription set trruff=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdescription set trrumf=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\1','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\2','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
+        em.createNativeQuery("update gspreadsheetsquestdescription set trrufm=replace(replace(replace(replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(textru, '<<player{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>', '\\2','g'),'<<npc{([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)\\/([a-z,A-Z,а-я,А-ЯёЁ\\s«»\\-!\\.—\\?;]*)}>>','\\1','g'),'<<(\\d{[a-z,A-Z,а-я,А-ЯёЁ\\s\\/«»\\-!\\.—\\?;]*})*\\w*:*\\d*>>','%','g'),'[\\[\\]]','','g'),'ё','е'),' — ','%'),'«','\"'),'»','\"') where (textru like '%<<%' or textru like '%[%' or textru like '%ё%' or textru like '% — %' or textru like '%«%') and texten!=textru").executeUpdate();
     }
 
     @Transactional

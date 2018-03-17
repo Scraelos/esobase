@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Set;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -53,6 +54,8 @@ public class Quest extends DAO {
     private GSpreadSheetsQuestDescription sheetsQuestDescription;
     @OneToMany(mappedBy = "quest", fetch = FetchType.LAZY)
     private Set<QuestStep> steps;
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<QuestItem> items;
 
     @Override
     public Long getId() {
@@ -158,6 +161,14 @@ public class Quest extends DAO {
 
     public void setSteps(Set<QuestStep> steps) {
         this.steps = steps;
+    }
+
+    public Set<QuestItem> getItems() {
+        return items;
+    }
+
+    public void setItems(Set<QuestItem> items) {
+        this.items = items;
     }
 
     @Override
