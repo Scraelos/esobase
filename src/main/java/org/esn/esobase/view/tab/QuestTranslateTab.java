@@ -638,7 +638,7 @@ public class QuestTranslateTab extends VerticalLayout {
                 if (source instanceof QuestItem) {
                     GSpreadSheetsItemName name = ((QuestItem) source).getName();
                     if (name.getIcon() != null) {
-                        Image image = new Image(null, new ExternalResource("http://esoicons.uesp.net" + name.getIcon().replaceAll(".dds", ".png")));
+                        Image image = new Image(null, new ExternalResource("https://elderscrolls.net" + name.getIcon().replaceAll(".dds", ".png")));
                         result.addComponent(image);
                         return result;
                     }
