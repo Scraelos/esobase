@@ -28,9 +28,12 @@ import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.esn.esncomboextension.NoAutcompleteComboBoxExtension;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.LocationSpecification;
 import org.esn.esobase.data.specification.NpcSpecification;
@@ -49,6 +52,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 import org.vaadin.viritin.layouts.MMarginInfo;
+import org.vaadin.viritin.util.HtmlElementPropertySetter;
 
 /**
  *
@@ -121,21 +125,23 @@ public class TranslateTab extends VerticalLayout {
         npcTable.setScrollToSelectedItem(true);
         npcTable.setWidth(100f, Unit.PERCENTAGE);
         npcTable.addValueChangeListener(new NpcSelectListener());
+        npcTable.setScrollToSelectedItem(true);
+        npcTable.setEmptySelectionAllowed(true);
         locationTable = new ComboBox("Локация");
         locationTable.setPageLength(30);
         locationTable.setScrollToSelectedItem(true);
-
         locationTable.setWidth(100f, Unit.PERCENTAGE);
         locationTable.addValueChangeListener(filterChangeListener);
         locationTable.setDataProvider(new ListDataProvider<>(locations));
+        locationTable.setEmptySelectionAllowed(true);
 
         subLocationTable = new ComboBox("Сублокация");
         subLocationTable.setPageLength(30);
         subLocationTable.setScrollToSelectedItem(true);
-
         subLocationTable.setWidth(100f, Unit.PERCENTAGE);
         subLocationTable.addValueChangeListener(filterChangeListener);
         subLocationTable.setDataProvider(new ListDataProvider<>(subLocations));
+        subLocationTable.setEmptySelectionAllowed(true);
         questTable = new ComboBox("Квест");
         questTable.setPageLength(30);
         questTable.setScrollToSelectedItem(true);
@@ -281,6 +287,11 @@ public class TranslateTab extends VerticalLayout {
         this.npcListlayout.setHeight(105f, Unit.PIXELS);
         this.setExpandRatio(npcContentLayout, 1f);
         LoadFilters();
+        new NoAutcompleteComboBoxExtension(questTable);
+        new NoAutcompleteComboBoxExtension(locationTable);
+        new NoAutcompleteComboBoxExtension(subLocationTable);
+        new NoAutcompleteComboBoxExtension(npcTable);
+        new NoAutcompleteComboBoxExtension(translatorBox);
     }
 
     private void LoadFilters() {
@@ -310,8 +321,30 @@ public class TranslateTab extends VerticalLayout {
                 if (!locations.contains(l)) {
                     locations.add(l);
                 }
+            } else {
+                if (!locations.contains(l.getParentLocation())) {
+                    locations.add(l.getParentLocation());
+                }
             }
         }
+        Collections.sort(locations, new Comparator<Location>() {
+            @Override
+            public int compare(Location t, Location t1) {
+                String name = t.getName();
+                String name1 = t1.getName();
+                if (name == null) {
+                    name = t.getNameRu();
+                }
+                if (name1 == null) {
+                    name1 = t1.getNameRu();
+                }
+                if (name1 == null || name == null) {
+                    return 0;
+                }
+                return name.compareTo(name1);
+            }
+
+        });
         subLocationSpecification.setNoTranslations(noTranslations.getValue());
         subLocationSpecification.setEmptyTranslations(emptyTranslations.getValue());
         subLocationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
@@ -800,25 +833,22 @@ public class TranslateTab extends VerticalLayout {
                     accounts.add(t.getAuthor());
                 }
             }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && (SpringSecurityHelper.hasRole("ROLE_TRANSLATE") || SpringSecurityHelper.hasRole("ROLE_SANDBOX"))) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Subtitle) {
                     Subtitle s = (Subtitle) itemId;
-                    translatedText.setSubtitle((Subtitle) itemId);
                     if (s.getExtNpcPhrase() != null) {
                         translatedText.setSpreadSheetsNpcPhrase(s.getExtNpcPhrase());
                     }
                 } else if (itemId instanceof Topic) {
                     if (columnId.equals("playerTranslations")) {
                         Topic t = (Topic) itemId;
-                        translatedText.setPlayerTopic((Topic) itemId);
                         if (t.getExtPlayerPhrase() != null) {
                             translatedText.setSpreadSheetsPlayerPhrase(t.getExtPlayerPhrase());
                         }
                     } else if (columnId.equals("npcTranslations")) {
                         Topic t = (Topic) itemId;
-                        translatedText.setNpcTopic((Topic) itemId);
                         if (t.getExtNpcPhrase() != null) {
                             translatedText.setSpreadSheetsNpcPhrase(t.getExtNpcPhrase());
                         }
@@ -849,114 +879,6 @@ public class TranslateTab extends VerticalLayout {
             return vl;
         }
 
-    }
-
-    private class PlayerTopicTranslationsValueProvider implements ValueProvider<Topic, VerticalLayout> {
-
-        @Override
-        public VerticalLayout apply(Topic source) {
-            final VerticalLayout vl = new VerticalLayout();
-            vl.setSpacing(false);
-            vl.setMargin(false);
-            vl.setSizeFull();
-            Set<TranslatedText> list = new HashSet<>();
-            if (source.getPlayerTranslations() != null) {
-                list.addAll(source.getPlayerTranslations());
-            }
-            if (source.getExtPlayerPhrase() != null && source.getExtPlayerPhrase().getTranslatedTexts() != null) {
-                for (TranslatedText t : source.getExtPlayerPhrase().getTranslatedTexts()) {
-                    if (!list.contains(t)) {
-                        list.add(t);
-                    }
-                }
-            }
-            String text = source.getPlayerText();
-            if (text == null) {
-                text = source.getPlayerTextRu();
-            }
-
-            List<SysAccount> accounts = new ArrayList<>();
-            if (list != null) {
-                for (TranslatedText t : list) {
-                    vl.addComponent(new TranslationCell(t));
-                    accounts.add(t.getAuthor());
-                }
-            }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-                final TranslatedText translatedText = new TranslatedText();
-                translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
-                translatedText.setPlayerTopic(source);
-                if (source.getExtPlayerPhrase() != null) {
-                    translatedText.setSpreadSheetsPlayerPhrase(source.getExtPlayerPhrase());
-                }
-
-                Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
-                addTranslation.addClickListener(new Button.ClickListener() {
-
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
-                        translatedText.getPlayerTopic().getPlayerTranslations().add(translatedText);
-                        vl.addComponent(new TranslationCell(translatedText));
-                        event.getButton().setVisible(false);
-                    }
-                });
-                vl.addComponent(addTranslation);
-            }
-            return vl;
-        }
-    }
-
-    private class NpcTopicTranslationsValueProvider implements ValueProvider<Topic, VerticalLayout> {
-
-        @Override
-        public VerticalLayout apply(Topic source) {
-            final VerticalLayout vl = new VerticalLayout();
-            vl.setSpacing(false);
-            vl.setMargin(false);
-            vl.setSizeFull();
-
-            Set<TranslatedText> list = new HashSet<>();
-            if (source.getNpcTranslations() != null) {
-                list.addAll(source.getNpcTranslations());
-            }
-            if (source.getExtNpcPhrase() != null && source.getExtNpcPhrase().getTranslatedTexts() != null) {
-                for (TranslatedText t : source.getExtNpcPhrase().getTranslatedTexts()) {
-                    if (!list.contains(t)) {
-                        list.add(t);
-                    }
-                }
-            }
-            String text = source.getNpcText();
-            if (text == null) {
-                text = source.getNpcTextRu();
-            }
-            List<SysAccount> accounts = new ArrayList<>();
-            for (TranslatedText t : list) {
-                vl.addComponent(new TranslationCell(t));
-                accounts.add(t.getAuthor());
-            }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
-                final TranslatedText translatedText = new TranslatedText();
-                translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
-                translatedText.setNpcTopic(source);
-                if (source.getExtNpcPhrase() != null) {
-                    translatedText.setSpreadSheetsNpcPhrase(source.getExtNpcPhrase());
-                }
-
-                Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
-                addTranslation.addClickListener(new Button.ClickListener() {
-
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
-                        translatedText.getNpcTopic().getNpcTranslations().add(translatedText);
-                        vl.addComponent(new TranslationCell(translatedText));
-                        event.getButton().setVisible(false);
-                    }
-                });
-                vl.addComponent(addTranslation);
-            }
-            return vl;
-        }
     }
 
     private class TranslationCell extends VerticalLayout {
@@ -1089,7 +1011,7 @@ public class TranslateTab extends VerticalLayout {
                 this.addComponent(correct);
             }
 
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.SANDBOX) || (translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 translation.setReadOnly(false);
                 accept = new Button("Принять эту версию", FontAwesome.THUMBS_UP);
                 accept.addClickListener(new Button.ClickListener() {
@@ -1105,7 +1027,7 @@ public class TranslateTab extends VerticalLayout {
                 });
                 this.addComponent(accept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getStatus() == TRANSLATE_STATUS.SANDBOX) || (SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
                 reject.addClickListener(new Button.ClickListener() {
 
@@ -1120,7 +1042,7 @@ public class TranslateTab extends VerticalLayout {
                 this.addComponent(reject);
             }
 
-            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
+            if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.SANDBOX || translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);
             }
         }
