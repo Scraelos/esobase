@@ -1499,7 +1499,6 @@ public class ImportTab extends VerticalLayout {
                     }
                 }
             } catch (JSONException ex) {
-                LOG.log(Level.WARNING, null, ex);
             }
             LOG.info("Books queued");
         }
