@@ -141,4 +141,9 @@ public class EsoInterfaceVariable extends DAO implements GSpreadSheetEntity {
         return Boolean.FALSE;
     }
 
+    @Override
+    public void setRowNum(Long rowNum) {
+        
+    }
+
 }

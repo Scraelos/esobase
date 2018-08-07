@@ -86,18 +86,22 @@ public class BookSpecification implements Specification<Book> {
             if (noTranslations) {
                 predicates.add(cb.or(
                         cb.equal(root.get("nameRu"), root.get("nameEn")),
-                        cb.equal(textJoin.get("textRu"), textJoin.get("textEn"))
+                        cb.equal(textJoin.get("textRu"), textJoin.get("textEn")),
+                        cb.isNull(root.get("nameRu")),
+                        cb.isNull(textJoin.get("textRu"))
                 ));
             }
             if (emptyTranslations) {
                 predicates.add(cb.or(
                         cb.and(
                                 cb.isEmpty(root.get("nameTranslations")),
-                                cb.equal(root.get("nameRu"), root.get("nameEn"))
+                                cb.or(
+                                cb.equal(root.get("nameRu"), root.get("nameEn")),cb.isNull(root.get("nameRu")))
                         ),
                         cb.and(
                                 cb.isEmpty(textJoin.get("translations")),
-                                cb.equal(textJoin.get("textRu"), textJoin.get("textEn"))
+                                cb.or(
+                                cb.equal(textJoin.get("textRu"), textJoin.get("textEn")),cb.isNull(textJoin.get("textRu")))
                         )
                 ));
             } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {

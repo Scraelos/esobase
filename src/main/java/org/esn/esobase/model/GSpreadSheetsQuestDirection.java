@@ -94,6 +94,7 @@ public class GSpreadSheetsQuestDirection extends DAO implements GSpreadSheetEnti
         return rowNum;
     }
 
+    @Override
     public void setRowNum(Long rowNum) {
         this.rowNum = rowNum;
     }
@@ -103,6 +104,7 @@ public class GSpreadSheetsQuestDirection extends DAO implements GSpreadSheetEnti
         return textEn;
     }
 
+    @Override
     public void setTextEn(String textEn) {
         this.textEn = textEn;
     }
@@ -112,6 +114,7 @@ public class GSpreadSheetsQuestDirection extends DAO implements GSpreadSheetEnti
         return textRu;
     }
 
+    @Override
     public void setTextRu(String textRu) {
         this.textRu = textRu;
     }
@@ -121,6 +124,7 @@ public class GSpreadSheetsQuestDirection extends DAO implements GSpreadSheetEnti
         return translator;
     }
 
+    @Override
     public void setTranslator(String translator) {
         this.translator = translator;
     }

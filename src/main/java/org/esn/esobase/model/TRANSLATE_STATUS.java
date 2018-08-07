@@ -18,7 +18,8 @@ public enum TRANSLATE_STATUS {
     ACCEPTED("Принят"),
     REJECTED("Отклонён"),
     EDITED("Исправлен"),
-    REVOKED("Отозван");
+    REVOKED("Отозван"),
+    SANDBOX("Новый (песочница)");
 
     private TRANSLATE_STATUS(String name_) {
         name = name_;

@@ -18,6 +18,7 @@ import javax.annotation.PostConstruct;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.DictionaryService;
 import org.esn.esobase.data.InsertExecutor;
+import org.esn.esobase.data.SearchService;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.view.tab.BookTranslateTab;
 import org.esn.esobase.view.tab.ChangePasswordTab;
@@ -47,6 +48,8 @@ public class MainView extends Panel implements View, Command {
 
     @Autowired
     private DBService service;
+    @Autowired
+    private SearchService searchService;
     @Autowired
     private DictionaryService dictionaryService;
     @Autowired
@@ -134,7 +137,7 @@ public class MainView extends Panel implements View, Command {
                 + ".v-table, .v-table * { overflow-anchor: none; };");
         VerticalLayout layout = new VerticalLayout();
         layout.setHeight(100f, Unit.PERCENTAGE);
-        layout.setSpacing(true);
+        layout.setSpacing(false);
         layout.setMargin(true);
         layout.addComponent(headerLayout);
         buildHeader();
@@ -179,6 +182,8 @@ public class MainView extends Panel implements View, Command {
     }
 
     private void buildHeader() {
+        headerLayout.setMargin(false);
+        headerLayout.setSpacing(false);
         headerLayout.setWidth(100f, Unit.PERCENTAGE);
         headerLayout.addComponent(loginLabel, 7, 0);
         ExternalResource resource = new ExternalResource("j_spring_security_logout");
@@ -274,10 +279,10 @@ public class MainView extends Panel implements View, Command {
             if (directTableEditTabContent != null) {
                 TabSheet.Tab tab = tabs.getTab(directTableEditTabContent);
                 if (tab == null) {
-                    directTableEditTabContent = new DirectTableEditTab(service);
+                    directTableEditTabContent = new DirectTableEditTab(service, searchService);
                 }
             } else {
-                directTableEditTabContent = new DirectTableEditTab(service);
+                directTableEditTabContent = new DirectTableEditTab(service, searchService);
             }
             TabSheet.Tab tab = tabs.addTab(directTableEditTabContent, selectedItem.getText());
             tab.setClosable(true);

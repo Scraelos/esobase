@@ -25,6 +25,7 @@ public class GSpreadSheetItemNameSpecification implements Specification<GSpreadS
 
     private ItemType itemType;
     private ItemSubType itemSubType;
+    private Boolean notTranslated;
 
     public void setItemType(ItemType itemType) {
         this.itemType = itemType;
@@ -32,6 +33,10 @@ public class GSpreadSheetItemNameSpecification implements Specification<GSpreadS
 
     public void setItemSubType(ItemSubType itemSubType) {
         this.itemSubType = itemSubType;
+    }
+
+    public void setNotTranslated(Boolean notTranslated) {
+        this.notTranslated = notTranslated;
     }
 
     @Override
@@ -43,6 +48,9 @@ public class GSpreadSheetItemNameSpecification implements Specification<GSpreadS
         }
         if (itemSubType != null) {
             predicates.add(cb.equal(root.get("itemSubType"), itemSubType));
+        }
+        if (notTranslated) {
+            predicates.add(cb.isNull(root.get("translator")));
         }
         Predicate result = cb.and(predicates.toArray(new Predicate[predicates.size()]));
 

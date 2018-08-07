@@ -83,6 +83,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         return rowNum;
     }
 
+    @Override
     public void setRowNum(Long rowNum) {
         this.rowNum = rowNum;
     }
@@ -92,6 +93,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         return textEn;
     }
 
+    @Override
     public void setTextEn(String textEn) {
         this.textEn = textEn;
     }
@@ -101,6 +103,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         return textRu;
     }
 
+    @Override
     public void setTextRu(String textRu) {
         this.textRu = textRu;
     }
@@ -110,6 +113,7 @@ public class GSpreadSheetsAbilityDescription extends DAO implements GSpreadSheet
         return translator;
     }
 
+    @Override
     public void setTranslator(String translator) {
         this.translator = translator;
     }

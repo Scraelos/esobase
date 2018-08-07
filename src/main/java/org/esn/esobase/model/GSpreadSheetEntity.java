@@ -28,4 +28,14 @@ public interface GSpreadSheetEntity extends TranslatedEntity {
     public Date getChangeTime();
 
     public String getTranslator();
+
+    public void setRowNum(Long rowNum);
+
+    public void setId(Long id);
+
+    public void setTextEn(String textEn);
+
+    public void setTextRu(String textRu);
+    
+    public void setTranslator(String translator);
 }

@@ -3271,7 +3271,7 @@ public class GoogleDocsService {
 
     public void updateTTCNpcTranslations(DBService service) {
         try {
-            Credential authorize = authorize2();
+            Credential authorize = authorize();
             SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
             spreadsheetService.setOAuth2Credentials(authorize);
             SpreadsheetFeed feed = spreadsheetService.getFeed(new URL("https://spreadsheets.google.com/feeds/spreadsheets/private/full"), SpreadsheetFeed.class);

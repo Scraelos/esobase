@@ -5,6 +5,7 @@
  */
 package org.esn.esobase.view.tab;
 
+import com.vaadin.data.HasValue;
 import com.vaadin.v7.data.Item;
 import com.vaadin.v7.data.Property;
 import com.vaadin.v7.data.util.BeanItemContainer;
@@ -18,24 +19,29 @@ import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
+import com.vaadin.shared.ui.slider.SliderOrientation;
 import com.vaadin.v7.shared.ui.combobox.FilteringMode;
 import com.vaadin.v7.shared.ui.grid.ScrollDestination;
 import com.vaadin.v7.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.v7.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Image;
 import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.PopupView;
+import com.vaadin.ui.Slider;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.v7.ui.Table;
 import com.vaadin.v7.ui.Table.ColumnGenerator;
 import com.vaadin.v7.ui.TextArea;
 import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,6 +49,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.esn.esobase.data.DBService;
+import org.esn.esobase.data.SearchService;
 import org.esn.esobase.data.specification.GSpreadSheetEntitySpecification;
 import org.esn.esobase.data.specification.GSpreadSheetItemNameSpecification;
 import org.esn.esobase.data.specification.TranslatedTextSpecification;
@@ -78,10 +85,10 @@ import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.GSpreadSheetLinkRouter;
 import org.esn.esobase.view.ui.GspreadSheetTable;
 import org.esn.esobase.view.ui.RefreshableGrid;
-import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 import org.vaadin.viritin.v7.SortableLazyList;
 import org.vaadin.viritin.v7.grid.GeneratedPropertyListContainer;
 import org.vaadin.viritin.v7.grid.MGrid;
@@ -93,7 +100,12 @@ import org.vaadin.viritin.v7.grid.MGrid;
 public class DirectTableEditTab extends VerticalLayout {
 
     private DBService service;
+    private SearchService searchService;
     private TextField searchField;
+    private ComboBoxMultiselect tableNames;
+    private CheckBox withTranslatedNeighbours;
+    private CheckBox regularExpression;
+    private Slider neighboursCount;
     private Button searchButton;
     private Table resultTable;
     private TabSheet searchTabs;
@@ -101,6 +113,7 @@ public class DirectTableEditTab extends VerticalLayout {
     private TabSheet tableTabs;
     private ComboBox itemType;
     private ComboBox itemSubType;
+    private CheckBox notTranslated;
 
     static final int PAGESIZE = 10;
 
@@ -182,16 +195,20 @@ public class DirectTableEditTab extends VerticalLayout {
     private final GSpreadSheetEntitySpecification specification = new GSpreadSheetEntitySpecification();
     private final GSpreadSheetItemNameSpecification itemNameSpecification = new GSpreadSheetItemNameSpecification();
 
-    public DirectTableEditTab(DBService service_) {
+    public DirectTableEditTab(DBService service_, SearchService searchService_) {
         this.service = service_;
+        this.searchService = searchService_;
         this.setSizeFull();
+        this.setMargin(false);
         linkedItemClickListener = new LinkedItemClickListener();
         searchTabs = new TabSheet();
         searchTabs.setSizeFull();
         searchTabs.setHeight(250f, Unit.PIXELS);
         VerticalLayout searchInCatalogsLayout = new VerticalLayout();
         searchInCatalogsLayout.setSizeFull();
+        searchInCatalogsLayout.setMargin(false);
         HorizontalLayout hl = new HorizontalLayout();
+        hl.setDefaultComponentAlignment(Alignment.BOTTOM_LEFT);
         searchField = new TextField();
         searchField.setWidth(500, Unit.PIXELS);
         searchField.addShortcutListener(new ShortcutListener("Search shortcut", ShortcutAction.KeyCode.ENTER, null) {
@@ -203,8 +220,6 @@ public class DirectTableEditTab extends VerticalLayout {
         hl.addComponent(searchField);
         searchButton = new Button("Поиск");
         searchButton.setIcon(FontAwesome.SEARCH);
-        searchButton.addStyleName(ValoTheme.BUTTON_SMALL);
-        searchButton.addStyleName(ValoTheme.BUTTON_TINY);
         searchButton.addClickListener(new Button.ClickListener() {
 
             @Override
@@ -214,6 +229,59 @@ public class DirectTableEditTab extends VerticalLayout {
             }
         });
         hl.addComponent(searchButton);
+        hl.addComponent(new Label(""));
+        tableNames = new ComboBoxMultiselect(null);
+        tableNames.setPageLength(0);
+        tableNames.addItems(
+                "GSpreadSheetsNpcName",
+                "GSpreadSheetsNpcPhrase",
+                "GSpreadSheetsPlayerPhrase",
+                "GSpreadSheetsAbilityDescription",
+                "GSpreadSheetsAchievement",
+                "GSpreadSheetsAchievementDescription",
+                "GSpreadSheetsActivator",
+                "GSpreadSheetsCollectible",
+                "GSpreadSheetsCollectibleDescription",
+                "GSpreadSheetsItemDescription",
+                "GSpreadSheetsItemName",
+                "GSpreadSheetsJournalEntry",
+                "GSpreadSheetsLoadscreen",
+                "GSpreadSheetsLocationName",
+                "GSpreadSheetsNote",
+                "GSpreadSheetsQuestDescription",
+                "GSpreadSheetsQuestDirection",
+                "GSpreadSheetsQuestEndTip",
+                "GSpreadSheetsQuestName",
+                "GSpreadSheetsQuestStartTip");
+        tableNames.selectAll();
+        tableNames.setItemCaption("GSpreadSheetsAbilityDescription", "Описания способностей");
+        tableNames.setItemCaption("GSpreadSheetsAchievement", "Достижения");
+        tableNames.setItemCaption("GSpreadSheetsAchievementDescription", "Описания достижений");
+        tableNames.setItemCaption("GSpreadSheetsActivator", "Активаторы");
+        tableNames.setItemCaption("GSpreadSheetsCollectible", "Коллекционные предметы");
+        tableNames.setItemCaption("GSpreadSheetsCollectibleDescription", "Описания коллекционных предметов");
+        tableNames.setItemCaption("GSpreadSheetsItemDescription", "Описания предметов");
+        tableNames.setItemCaption("GSpreadSheetsItemName", "Названия предметов");
+        tableNames.setItemCaption("GSpreadSheetsJournalEntry", "Записи журнала");
+        tableNames.setItemCaption("GSpreadSheetsLoadscreen", "Загрузочные экраны");
+        tableNames.setItemCaption("GSpreadSheetsLocationName", "Локации");
+        tableNames.setItemCaption("GSpreadSheetsNote", "Письма");
+        tableNames.setItemCaption("GSpreadSheetsNpcName", "NPC");
+        tableNames.setItemCaption("GSpreadSheetsNpcPhrase", "Фразы NPC");
+        tableNames.setItemCaption("GSpreadSheetsPlayerPhrase", "Фразы игрока");
+        tableNames.setItemCaption("GSpreadSheetsQuestDescription", "Описания квестов");
+        tableNames.setItemCaption("GSpreadSheetsQuestDirection", "Цели квестов");
+        tableNames.setItemCaption("GSpreadSheetsQuestEndTip", "Завершённые цепочки");
+        tableNames.setItemCaption("GSpreadSheetsQuestName", "Названия квестов");
+        tableNames.setItemCaption("GSpreadSheetsQuestStartTip", "Начатые цепочки");
+        hl.addComponent(tableNames);
+        regularExpression = new CheckBox("regexp", false);
+        hl.addComponent(regularExpression);
+        withTranslatedNeighbours = new CheckBox("Непереведённые с переведёнными соседями", false);
+        hl.addComponent(withTranslatedNeighbours);
+        neighboursCount = new Slider(null, 1, 200);
+        neighboursCount.setValue(20d);
+        hl.addComponent(neighboursCount);
         searchInCatalogsLayout.addComponent(hl);
         translatedTextSpecification = new TranslatedTextSpecification();
         resultTable = new Table("Результаты поиска");
@@ -236,6 +304,8 @@ public class DirectTableEditTab extends VerticalLayout {
 
         searchTabs.addTab(searchInCatalogsLayout, "Поиск");
         VerticalLayout translationsLayout = new VerticalLayout();
+        translationsLayout.setMargin(false);
+        translationsLayout.setSpacing(false);
         translationsLayout.setSizeFull();
         HorizontalLayout traslationsFilterslayout = new HorizontalLayout();
         statusFilter = new ComboBox("Статус", Arrays.asList(TRANSLATE_STATUS.values()));
@@ -319,16 +389,24 @@ public class DirectTableEditTab extends VerticalLayout {
         searchTabs.addTab(translationsLayout, "Переводы");
         this.addComponent(searchTabs);
         filterLayout = new HorizontalLayout();
-        itemType = new ComboBox("Тип");
+        Label itemTypeLabel=new Label("Тип");
+        itemType = new ComboBox();
         itemType.addItems(service.getTypes());
         itemType.setNullSelectionAllowed(true);
         itemType.setFilteringMode(FilteringMode.CONTAINS);
+        filterLayout.addComponent(itemTypeLabel);
         filterLayout.addComponent(itemType);
-        itemSubType = new ComboBox("Подтип");
+        Label itemSubTypeLabel=new Label("Подтип");
+        itemSubType = new ComboBox();
         itemSubType.addItems(service.getSubTypes());
         itemSubType.setNullSelectionAllowed(true);
         itemSubType.setFilteringMode(FilteringMode.CONTAINS);
+        filterLayout.addComponent(itemSubTypeLabel);
         filterLayout.addComponent(itemSubType);
+        notTranslated = new CheckBox("Не переведено");
+        notTranslated.setValue(Boolean.FALSE);
+        filterLayout.addComponent(notTranslated);
+        filterLayout.setComponentAlignment(notTranslated, Alignment.MIDDLE_LEFT);
         this.addComponent(filterLayout);
         tableTabs = new TabSheet();
         tableTabs.setSizeFull();
@@ -420,6 +498,8 @@ public class DirectTableEditTab extends VerticalLayout {
         questEndTipTable.setVisibleColumns(new Object[]{"rowNum", "textEn", "textRu", "infoColumn", "translateColumn"});
 
         itemNameLayout = new VerticalLayout();
+        itemNameLayout.setMargin(false);
+        itemNameLayout.setSpacing(false);
         itemNameLayout.setSizeFull();
         Label itemNameLabel = new Label("ВНИМАНИЕ! В этой таблице НЕЛЬЗЯ:  переводить односложные слова, особенно написанные со строчной буквы.");
         itemNameLabel.setStyleName(ValoTheme.LABEL_COLORED);
@@ -521,6 +601,12 @@ public class DirectTableEditTab extends VerticalLayout {
                 LoadTables();
             }
         });
+        notTranslated.addValueChangeListener(new HasValue.ValueChangeListener<Boolean>() {
+            @Override
+            public void valueChange(HasValue.ValueChangeEvent<Boolean> event) {
+                LoadTables();
+            }
+        });
 
         this.addComponent(tableTabs);
         this.setExpandRatio(tableTabs, 20f);
@@ -537,6 +623,8 @@ public class DirectTableEditTab extends VerticalLayout {
         } else {
             itemNameSpecification.setItemSubType(null);
         }
+        specification.setNotTranslated(notTranslated.getValue());
+        itemNameSpecification.setNotTranslated(notTranslated.getValue());
         npcNameTable.Load();
         locationNameTable.Load();
         activatorTable.Load();
@@ -588,8 +676,24 @@ public class DirectTableEditTab extends VerticalLayout {
     }
 
     private void search() {
-        if (searchField.getValue() != null && searchField.getValue().length() > 0) {
-            hc = service.searchInCatalogs(searchField.getValue(), hc);
+        hc.removeAllItems();
+        if ((searchField.getValue() != null && searchField.getValue().length() > 0) || withTranslatedNeighbours.getValue()) {
+            List<GSpreadSheetEntity> searchInCatalogs = searchService.searchInCatalogs((Set<String>) tableNames.getValue(), searchField.getValue(), withTranslatedNeighbours.getValue(), neighboursCount.getValue().intValue(), regularExpression.getValue());
+            for (GSpreadSheetEntity e : searchInCatalogs) {
+                Item item = hc.addItem(e);
+                item.getItemProperty("textEn").setValue(e.getTextEn());
+                if (e instanceof GSpreadSheetsNpcName) {
+                    GSpreadSheetsNpcName npc = (GSpreadSheetsNpcName) e;
+                    if (npc.getSex() != null) {
+                        item.getItemProperty("textEn").setValue(npc.getTextEn() + "(" + npc.getSex().toString().substring(0, 1) + ")");
+                    }
+                }
+                item.getItemProperty("textRu").setValue(e.getTextRu());
+                item.getItemProperty("weight").setValue(e.getWeight());
+                item.getItemProperty("translator").setValue(e.getTranslator());
+                item.getItemProperty("catalogType").setValue(tableNames.getItemCaption(e.getClass().getSimpleName()));
+            }
+            resultTable.setCaption("Результаты поиска (" + Integer.toString(searchInCatalogs.size()) + ")");
         }
     }
 
@@ -712,6 +816,8 @@ public class DirectTableEditTab extends VerticalLayout {
             this.itemId = itemId;
             this.columnId = columnId;
             this.grid = grid;
+            this.setSpacing(false);
+            this.setMargin(false);
         }
 
         public void build() {
@@ -796,9 +902,11 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
             VerticalLayout result = new VerticalLayout();
+            result.setMargin(false);
+            result.setSpacing(false);
             GSpreadSheetsItemName itemName = (GSpreadSheetsItemName) itemId;
             if (itemName.getIcon() != null) {
-                Image image = new Image(null, new ExternalResource("http://esoicons.uesp.net" + itemName.getIcon().replaceAll(".dds", ".png")));
+                Image image = new Image(null, new ExternalResource("https://elderscrolls.net" + itemName.getIcon().replaceAll(".dds", ".png")));
                 result.addComponent(image);
             }
             if (itemName.getItemType() != null) {
@@ -818,6 +926,8 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public Object generateCell(Table source, Object itemId, Object columnId) {
             VerticalLayout result = new VerticalLayout();
+            result.setMargin(false);
+            result.setSpacing(false);
             result.setSizeFull();
 
             GSpreadSheetEntity entity = (GSpreadSheetEntity) itemId;
@@ -837,6 +947,8 @@ public class DirectTableEditTab extends VerticalLayout {
             l.addStyleName("v-label");
             result.addComponent(l);
             HorizontalLayout actions = new HorizontalLayout();
+            actions.setMargin(false);
+            actions.setSpacing(false);
             if (itemId instanceof GSpreadSheetEntity) {
                 GSpreadSheetEntity e = (GSpreadSheetEntity) itemId;
                 GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(e.getaId());
@@ -863,6 +975,8 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public Component getValue(Item item, Object itemId, Object propertyId) {
             VerticalLayout result = new VerticalLayout();
+            result.setMargin(false);
+            result.setSpacing(false);
             result.setSizeFull();
 
             GSpreadSheetEntity entity = (GSpreadSheetEntity) itemId;
@@ -882,6 +996,8 @@ public class DirectTableEditTab extends VerticalLayout {
             l.addStyleName("v-label");
             result.addComponent(l);
             HorizontalLayout actions = new HorizontalLayout();
+            actions.setMargin(false);
+            actions.setSpacing(false);
             if (itemId instanceof GSpreadSheetEntity) {
                 GSpreadSheetEntity e = (GSpreadSheetEntity) itemId;
                 GSpreadSheetLinkRouter.RouteEntry route = GSpreadSheetLinkRouter.getRoute(e.getaId());
@@ -1094,6 +1210,8 @@ public class DirectTableEditTab extends VerticalLayout {
         public GridTranslationCell(TranslatedText translatedText_, RefreshableGrid grid_, Object itemId_) {
             //this.setHeight(95f, Unit.PIXELS);
             //this.setWidth(460f, Unit.PIXELS);
+            this.setMargin(false);
+            this.setSpacing(false);
             this.setSizeFull();
             this.translatedText = translatedText_;
             this.grid = grid_;
@@ -1114,6 +1232,8 @@ public class DirectTableEditTab extends VerticalLayout {
                 caption.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
             actionLayout = new VerticalLayout();
+            actionLayout.setMargin(false);
+            actionLayout.setSpacing(false);
             actionLayout.setDefaultComponentAlignment(Alignment.TOP_LEFT);
             actionLayout.setWidth(40f, Unit.PIXELS);
             actionLayout.setHeight(80f, Unit.PIXELS);

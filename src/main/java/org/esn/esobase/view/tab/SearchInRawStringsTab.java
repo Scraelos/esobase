@@ -5,6 +5,7 @@
  */
 package org.esn.esobase.view.tab;
 
+import com.vaadin.data.HasValue;
 import com.vaadin.v7.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
@@ -12,10 +13,11 @@ import com.vaadin.server.Page;
 import com.vaadin.server.Page.Styles;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.v7.ui.Table;
 import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.VerticalLayout;
 import org.esn.esobase.data.DBService;
 
 /**
@@ -28,13 +30,14 @@ public class SearchInRawStringsTab extends VerticalLayout {
 
     private final TextField searchField;
     private final Button searchButton;
+    private final CheckBox isJp;
     private final Table resultTable;
     private HierarchicalContainer hc = new HierarchicalContainer();
 
     public SearchInRawStringsTab(DBService service_) {
         this.service = service_;
         this.setSizeFull();
-        GridLayout hl = new GridLayout(2, 1);
+        GridLayout hl = new GridLayout(3, 1);
         hl.setHeight(100, Unit.PIXELS);
         searchField = new TextField();
         searchField.setWidth(500, Unit.PIXELS);
@@ -45,6 +48,15 @@ public class SearchInRawStringsTab extends VerticalLayout {
             }
         });
         hl.addComponent(searchField, 0, 0);
+        isJp = new CheckBox("Японский");
+        isJp.setValue(Boolean.FALSE);
+        isJp.addValueChangeListener(new HasValue.ValueChangeListener<Boolean>() {
+            @Override
+            public void valueChange(HasValue.ValueChangeEvent<Boolean> event) {
+                setColumns();
+            }
+        });
+        hl.addComponent(isJp, 1, 0);
         searchButton = new Button("Поиск");
         searchButton.addClickListener(new ClickListener() {
 
@@ -54,7 +66,7 @@ public class SearchInRawStringsTab extends VerticalLayout {
 
             }
         });
-        hl.addComponent(searchButton, 1, 0);
+        hl.addComponent(searchButton, 2, 0);
         this.addComponent(hl);
         resultTable = new Table("");
         resultTable.setSizeFull();
@@ -70,17 +82,28 @@ public class SearchInRawStringsTab extends VerticalLayout {
         hc.addContainerProperty("textEn", String.class, null);
         hc.addContainerProperty("textDe", String.class, null);
         hc.addContainerProperty("textFr", String.class, null);
+        hc.addContainerProperty("textJp", String.class, null);
         resultTable.setContainerDataSource(hc);
-        resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr"});
-        resultTable.setColumnHeaders(new String[]{"En", "De", "Fr"});
-        resultTable.setColumnExpandRatio("textEn", 1f);
-        resultTable.setColumnExpandRatio("textFr", 1f);
-        resultTable.setColumnExpandRatio("textDe", 1f);
+        setColumns();
 
         this.addComponent(resultTable);
         this.setExpandRatio(hl, 5);
         this.setExpandRatio(resultTable, 95);
 
+    }
+
+    private void setColumns() {
+        if (isJp.getValue()) {
+            resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr", "textJp"});
+            resultTable.setColumnHeaders(new String[]{"En", "De", "Fr", "Jp"});
+            resultTable.setColumnExpandRatio("textJp", 1f);
+        } else {
+            resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr"});
+            resultTable.setColumnHeaders(new String[]{"En", "De", "Fr"});
+        }
+        resultTable.setColumnExpandRatio("textEn", 1f);
+        resultTable.setColumnExpandRatio("textFr", 1f);
+        resultTable.setColumnExpandRatio("textDe", 1f);
     }
 
     private void search() {
