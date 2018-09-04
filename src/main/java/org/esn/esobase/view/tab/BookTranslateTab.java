@@ -5,15 +5,15 @@
  */
 package org.esn.esobase.view.tab;
 
+import com.vaadin.data.HasValue;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.v7.data.Property;
-import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.v7.event.FieldEvents;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.v7.shared.ui.combobox.FilteringMode;
 import com.vaadin.v7.ui.AbstractTextField;
 import com.vaadin.ui.Button;
 import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.ComboBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.v7.ui.HorizontalLayout;
 import com.vaadin.v7.ui.Label;
@@ -25,8 +25,11 @@ import com.vaadin.ui.themes.ValoTheme;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import org.esn.esncomboextension.NoAutcompleteComboBoxExtension;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.BookSpecification;
 import org.esn.esobase.model.Book;
@@ -54,14 +57,13 @@ public class BookTranslateTab extends VerticalLayout {
     private CheckBox emptyTranslations;
     private TextField searchField;
     private ComboBox translatorBox;
-    private BeanItemContainer<SysAccount> sysAccountContainer = new BeanItemContainer<>(SysAccount.class);
     private Button refreshButton;
     private Label countLabel;
 
     private ComboBox bookTable;
-    private BeanItemContainer<Location> locationContainer = new BeanItemContainer<>(Location.class);
-    private BeanItemContainer<Location> subLocationContainer = new BeanItemContainer<>(Location.class);
-    private BeanItemContainer<Book> bookContainer = new BeanItemContainer<>(Book.class);
+    private List<Book> books = new ArrayList<>();
+    private List<Location> locations = new ArrayList<>();
+    private List<Location> subLocations = new ArrayList<>();
     private BookSpecification bookSpecification = new BookSpecification();
 
     private HorizontalLayout bookNameLayout;
@@ -85,29 +87,24 @@ public class BookTranslateTab extends VerticalLayout {
         bookListlayout.setWidth(100f, Unit.PERCENTAGE);
         bookTable = new ComboBox("Книга");
         bookTable.setPageLength(20);
+        bookTable.setDataProvider(new ListDataProvider<>(books));
         bookTable.addValueChangeListener(new BookSelectListener());
 
         bookTable.setWidth(100f, Unit.PERCENTAGE);
-        bookTable.setFilteringMode(FilteringMode.CONTAINS);
-        locationContainer = new BeanItemContainer<>(Location.class);
         locationTable = new ComboBox("Локация");
         locationTable.setPageLength(15);
 
         locationTable.setWidth(100f, Unit.PERCENTAGE);
-        locationTable.setContainerDataSource(locationContainer);
-        locationTable.setFilteringMode(FilteringMode.CONTAINS);
+        locationTable.setDataProvider(new ListDataProvider<>(locations));
+
         locationTable.addValueChangeListener(filterChangeListener);
 
-        subLocationContainer = new BeanItemContainer<>(Location.class);
         subLocationTable = new ComboBox("Сублокация");
         subLocationTable.setPageLength(15);
         subLocationTable.addValueChangeListener(filterChangeListener);
 
         subLocationTable.setWidth(100f, Unit.PERCENTAGE);
-        subLocationTable.setContainerDataSource(subLocationContainer);
-        subLocationTable.setFilteringMode(FilteringMode.CONTAINS);
-
-        bookTable.setContainerDataSource(bookContainer);
+        subLocationTable.setDataProvider(new ListDataProvider<>(subLocations));
 
         FormLayout locationAndBook = new FormLayout(locationTable, subLocationTable, bookTable);
         locationAndBook.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
@@ -131,9 +128,7 @@ public class BookTranslateTab extends VerticalLayout {
         HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
-        sysAccountContainer = service.loadBeanItems(sysAccountContainer);
-        translatorBox.setContainerDataSource(sysAccountContainer);
-        translatorBox.setFilteringMode(FilteringMode.CONTAINS);
+        translatorBox.setDataProvider(new ListDataProvider(service.getSysAccounts()));
         translatorBox.addValueChangeListener(filterChangeListener);
         refreshButton = new Button("Обновить");
         refreshButton.addClickListener(new Button.ClickListener() {
@@ -208,11 +203,14 @@ public class BookTranslateTab extends VerticalLayout {
         this.addComponent(bookContentLayout);
         this.bookListlayout.setHeight(105f, Unit.PIXELS);
         this.setExpandRatio(bookContentLayout, 1f);
+        new NoAutcompleteComboBoxExtension(locationTable);
+        new NoAutcompleteComboBoxExtension(subLocationTable);
+        new NoAutcompleteComboBoxExtension(translatorBox);
         LoadFilters();
     }
 
     private void LoadFilters() {
-        bookContainer.removeAllItems();
+        books.clear();
         bookSpecification.setNoTranslations(noTranslations.getValue());
         bookSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
         bookSpecification.setTranslator((SysAccount) translatorBox.getValue());
@@ -225,33 +223,67 @@ public class BookTranslateTab extends VerticalLayout {
         } else {
             bookSpecification.setLocation((Location) locationTable.getValue());
         }
-        bookContainer.addAll(service.getBookRepository().findAll(bookSpecification));
-        List<Location> locations = new ArrayList<>();
-        for (Book book : bookContainer.getItemIds()) {
+        books.addAll(service.getBookRepository().findAll(bookSpecification));
+        locations.clear();
+        for (Book book : books) {
             for (Location loc : book.getLocations()) {
-                if (loc.getParentLocation() == null) {
+                if (loc.getParentLocation() == null && !locations.contains(loc)) {
                     locations.add(loc);
                 }
             }
 
         }
-        locationContainer.removeAllItems();
-        locationContainer.addAll(locations);
-        locationContainer.sort(new Object[]{"name"}, new boolean[]{true});
-        List<Location> subLocations = new ArrayList<>();
-        for (Book book : bookContainer.getItemIds()) {
+        Collections.sort(locations, new Comparator<Location>() {
+            @Override
+            public int compare(Location t, Location t1) {
+                String name = t.getName();
+                String name1 = t1.getName();
+                if (name == null) {
+                    name = t.getNameRu();
+                }
+                if (name1 == null) {
+                    name1 = t1.getNameRu();
+                }
+                if (name1 == null || name == null) {
+                    return 0;
+                }
+                return name.compareTo(name1);
+            }
+
+        });
+        subLocations.clear();
+        for (Book book : books) {
             for (Location loc : book.getLocations()) {
-                if (loc.getParentLocation() != null) {
-                    subLocations.add(loc.getParentLocation());
+                if (loc.getParentLocation() != null && !subLocations.contains(loc)) {
+                    if (!subLocations.contains(loc.getParentLocation())) {
+                        subLocations.add(loc.getParentLocation());
+                    }
                     subLocations.add(loc);
                 }
             }
 
         }
-        subLocationContainer.removeAllItems();
-        subLocationContainer.addAll(subLocations);
-        subLocationContainer.sort(new Object[]{"name"}, new boolean[]{true});
+        Collections.sort(subLocations, new Comparator<Location>() {
+            @Override
+            public int compare(Location t, Location t1) {
+                String name = t.getName();
+                String name1 = t1.getName();
+                if (name == null) {
+                    name = t.getNameRu();
+                }
+                if (name1 == null) {
+                    name1 = t1.getNameRu();
+                }
+                if (name1 == null || name == null) {
+                    return 0;
+                }
+                return name.compareTo(name1);
+            }
 
+        });
+        locationTable.getDataProvider().refreshAll();
+        subLocationTable.getDataProvider().refreshAll();
+        bookTable.getDataProvider().refreshAll();
     }
 
     private void LoadBookContent() {
@@ -336,20 +368,25 @@ public class BookTranslateTab extends VerticalLayout {
         }
     }
 
-    private class BookSelectListener implements Property.ValueChangeListener {
+    private class BookSelectListener implements HasValue.ValueChangeListener {
 
         @Override
-        public void valueChange(Property.ValueChangeEvent event) {
+        public void valueChange(HasValue.ValueChangeEvent event) {
             currentBook = (Book) bookTable.getValue();
             LoadBookContent();
         }
 
     }
 
-    private class FilterChangeListener implements Property.ValueChangeListener {
+    private class FilterChangeListener implements Property.ValueChangeListener, HasValue.ValueChangeListener {
 
         @Override
-        public void valueChange(Property.ValueChangeEvent event) {
+        public void valueChange(HasValue.ValueChangeEvent event) {
+            LoadFilters();
+        }
+
+        @Override
+        public void valueChange(Property.ValueChangeEvent vce) {
             LoadFilters();
         }
 
@@ -478,7 +515,7 @@ public class BookTranslateTab extends VerticalLayout {
                 this.addComponent(correct);
             }
 
-            if ((SpringSecurityHelper.hasRole("ROLE_APPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_APPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 translation.setReadOnly(false);
                 accept = new Button("Принять эту версию", FontAwesome.THUMBS_UP);
                 accept.addClickListener(new Button.ClickListener() {
@@ -493,7 +530,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(accept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
                 reject.addClickListener(new Button.ClickListener() {
 
@@ -610,7 +647,7 @@ public class BookTranslateTab extends VerticalLayout {
             } else {
                 save.setVisible(false);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 translation.setReadOnly(false);
                 preAccept = new Button("Перевод верен", FontAwesome.CHECK);
                 preAccept.addClickListener(new Button.ClickListener() {
@@ -625,7 +662,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(preAccept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED|| translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
+            if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
                 correct = new Button("Текст корректен", FontAwesome.PENCIL);
                 correct.addClickListener(new Button.ClickListener() {
@@ -656,7 +693,7 @@ public class BookTranslateTab extends VerticalLayout {
                 });
                 this.addComponent(accept);
             }
-            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED)|| (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
+            if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
                 reject.addClickListener(new Button.ClickListener() {
 

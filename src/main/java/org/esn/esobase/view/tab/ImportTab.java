@@ -1421,6 +1421,14 @@ public class ImportTab extends VerticalLayout {
                 newFormatImportQuestsWithSteps(jsonFromLua);
                 waitExecutorToComplete();
                 importBooksWithSublocations(jsonFromLua);
+            } else if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v15 =")) {
+                V15ImportNpcsWithSublocations(jsonFromLua);
+                waitExecutorToComplete();
+                newFormatImportSubtitlesWithSublocations(jsonFromLua);
+                waitExecutorToComplete();
+                newFormatImportQuestsWithSteps(jsonFromLua);
+                waitExecutorToComplete();
+                importBooksWithSublocations(jsonFromLua);
             }
             waitExecutorToComplete();
             Date endTime = new Date();
@@ -1466,6 +1474,17 @@ public class ImportTab extends VerticalLayout {
             while (locationsKeys.hasNext()) {
                 String locationKey = (String) locationsKeys.next();
                 ImportNpcLocationTask importNpcLocationTask = new ImportNpcLocationTask(locationKey, npcLocationObject);
+                executor.execute(importNpcLocationTask);
+            }
+
+        }
+        
+        private void V15ImportNpcsWithSublocations(JSONObject source) {
+            JSONObject npcLocationObject = source.getJSONObject("npc");
+            Iterator locationsKeys = npcLocationObject.keys();
+            while (locationsKeys.hasNext()) {
+                String locationKey = (String) locationsKeys.next();
+                V15ImportNpcLocationTask importNpcLocationTask = new V15ImportNpcLocationTask(locationKey, npcLocationObject);
                 executor.execute(importNpcLocationTask);
             }
 
@@ -1599,6 +1618,34 @@ public class ImportTab extends VerticalLayout {
             }
 
         }
+        
+        @Component
+        @Scope("prototype")
+        private class V15ImportNpcLocationTask implements Runnable {
+
+            private final String locationKey;
+            private final JSONObject npcLocationObject;
+
+            public V15ImportNpcLocationTask(String locationKey, JSONObject npcLocationObject) {
+                this.locationKey = locationKey;
+                this.npcLocationObject = npcLocationObject;
+            }
+
+            @Override
+            public void run() {
+                Location location = service.getLocation(locationKey);
+                if (location != null) {
+                    JSONObject subLocationObject = npcLocationObject.getJSONObject(locationKey);
+                    Iterator subLocationKeys = subLocationObject.keys();
+                    while (subLocationKeys.hasNext()) {
+                        String subLocationKey = (String) subLocationKeys.next();
+                        V15ImportNpcSublocationTask task = new V15ImportNpcSublocationTask(subLocationKey, locationKey, subLocationObject, location);
+                        executor.execute(task);
+                    }
+                }
+            }
+
+        }
 
         @Component
         @Scope("prototype")
@@ -1630,6 +1677,37 @@ public class ImportTab extends VerticalLayout {
                 }
             }
         }
+        
+        @Component
+        @Scope("prototype")
+        private class V15ImportNpcSublocationTask implements Runnable {
+
+            private final String subLocationKey;
+            private final String locationKey;
+            private final JSONObject subLocationObject;
+            private final Location location;
+
+            public V15ImportNpcSublocationTask(String subLocationKey, String locationKey, JSONObject subLocationObject, Location location) {
+                this.subLocationKey = subLocationKey;
+                this.locationKey = locationKey;
+                this.subLocationObject = subLocationObject;
+                this.location = location;
+            }
+
+            @Override
+            public void run() {
+                Location subLocation = service.getSubLocation(subLocationKey, locationKey, location);
+                if (subLocation != null) {
+                    JSONObject npcsObject = subLocationObject.getJSONObject(subLocationKey);
+                    Iterator npcsKeys = npcsObject.keys();
+                    while (npcsKeys.hasNext()) {
+                        String npcKey = (String) npcsKeys.next();
+                        V15ImportNpcWithSublocationsTask task = new V15ImportNpcWithSublocationsTask(npcKey, subLocation, npcsObject);
+                        executor.execute(task);
+                    }
+                }
+            }
+        }
 
         @Component
         @Scope("prototype")
@@ -1650,6 +1728,30 @@ public class ImportTab extends VerticalLayout {
                 Npc currentNpc = service.getNpc(npcKey, subLocation);
                 JSONObject npcContent = npcsObject.getJSONObject(npcKey);
                 service.newFormatImportNpcWithSublocations(currentNpc, npcContent);
+                service.calculateNpcProgress(currentNpc);
+            }
+
+        }
+        
+        @Component
+        @Scope("prototype")
+        private class V15ImportNpcWithSublocationsTask implements Runnable {
+
+            private final String npcKey;
+            private final Location subLocation;
+            private final JSONObject npcsObject;
+
+            public V15ImportNpcWithSublocationsTask(String npcKey, Location subLocation, JSONObject npcsObject) {
+                this.npcKey = npcKey;
+                this.subLocation = subLocation;
+                this.npcsObject = npcsObject;
+            }
+
+            @Override
+            public void run() {
+                Npc currentNpc = service.getNpc(npcKey, subLocation);
+                JSONObject npcContent = npcsObject.getJSONObject(npcKey);
+                service.v15importNpcWithSublocations(currentNpc, npcContent);
                 service.calculateNpcProgress(currentNpc);
             }
 
