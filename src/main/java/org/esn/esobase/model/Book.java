@@ -43,7 +43,7 @@ public class Book extends DAO {
     private Date changeTime;
     @OneToMany(mappedBy = "bookName", fetch = FetchType.LAZY)
     private Set<TranslatedText> nameTranslations;
-    @ManyToMany(cascade = CascadeType.MERGE)
+    @ManyToMany(cascade = CascadeType.MERGE,fetch = FetchType.EAGER)
     private Set<Location> locations;
     @OneToOne(fetch = FetchType.LAZY)
     private BookText bookText;
