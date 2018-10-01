@@ -31,7 +31,7 @@ public class SearchService {
     private EntityManager em;
 
     @Transactional
-    public List<GSpreadSheetEntity> searchInCatalogs(Set<String> tableNames, String searchString, Boolean withTranslatedNeighbours, Integer numberOfNeighbours, Boolean isRegexp) {
+    public List<GSpreadSheetEntity> searchInCatalogs(List<String> tableNames, String searchString, Boolean withTranslatedNeighbours, Integer numberOfNeighbours, Boolean isRegexp) {
         List<GSpreadSheetEntity> result = new ArrayList<>();
         if ((searchString != null && searchString.length() > 2) || withTranslatedNeighbours) {
             for (String tableName : tableNames) {

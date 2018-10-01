@@ -114,6 +114,8 @@ public class DirectTableEditTab extends VerticalLayout {
     private ComboBox itemType;
     private ComboBox itemSubType;
     private CheckBox notTranslated;
+    
+    private List<String> tableNamesList=new ArrayList<>();
 
     static final int PAGESIZE = 10;
 
@@ -230,29 +232,38 @@ public class DirectTableEditTab extends VerticalLayout {
         });
         hl.addComponent(searchButton);
         hl.addComponent(new Label(""));
+        
+        tableNamesList.add("GSpreadSheetsNpcName");
+        tableNamesList.add("GSpreadSheetsNpcPhrase");
+        tableNamesList.add("GSpreadSheetsPlayerPhrase");
+        tableNamesList.add("GSpreadSheetsAbilityDescription");
+        tableNamesList.add("GSpreadSheetsAchievement");
+        tableNamesList.add("GSpreadSheetsAchievementDescription");
+        tableNamesList.add("GSpreadSheetsActivator");
+        tableNamesList.add("GSpreadSheetsCollectible");
+        tableNamesList.add("GSpreadSheetsCollectibleDescription");
+        tableNamesList.add("GSpreadSheetsItemDescription");
+        tableNamesList.add("GSpreadSheetsItemName");
+        tableNamesList.add("GSpreadSheetsJournalEntry");
+        tableNamesList.add("GSpreadSheetsLoadscreen");
+        tableNamesList.add("GSpreadSheetsLocationName");
+        tableNamesList.add("GSpreadSheetsNote");
+        tableNamesList.add("GSpreadSheetsQuestDescription");
+        tableNamesList.add("GSpreadSheetsQuestDirection");
+        tableNamesList.add("GSpreadSheetsQuestName");
+        tableNamesList.add("GSpreadSheetsQuestStartTip");
+        tableNamesList.add("GSpreadSheetsQuestEndTip");
         tableNames = new ComboBoxMultiselect(null);
+        tableNames.setSelectAllButtonCaption("Выбрать все");
+        tableNames.setShowSelectAllButton(new ComboBoxMultiselect.ShowButton() {
+            @Override
+            public boolean isShow(String filter, int page) {
+                return true;
+            }
+        });
+        tableNames.setClearButtonCaption("Очистить выбор");
         tableNames.setPageLength(0);
-        tableNames.addItems(
-                "GSpreadSheetsNpcName",
-                "GSpreadSheetsNpcPhrase",
-                "GSpreadSheetsPlayerPhrase",
-                "GSpreadSheetsAbilityDescription",
-                "GSpreadSheetsAchievement",
-                "GSpreadSheetsAchievementDescription",
-                "GSpreadSheetsActivator",
-                "GSpreadSheetsCollectible",
-                "GSpreadSheetsCollectibleDescription",
-                "GSpreadSheetsItemDescription",
-                "GSpreadSheetsItemName",
-                "GSpreadSheetsJournalEntry",
-                "GSpreadSheetsLoadscreen",
-                "GSpreadSheetsLocationName",
-                "GSpreadSheetsNote",
-                "GSpreadSheetsQuestDescription",
-                "GSpreadSheetsQuestDirection",
-                "GSpreadSheetsQuestEndTip",
-                "GSpreadSheetsQuestName",
-                "GSpreadSheetsQuestStartTip");
+        tableNames.addItems(tableNamesList);
         tableNames.selectAll();
         tableNames.setItemCaption("GSpreadSheetsAbilityDescription", "Описания способностей");
         tableNames.setItemCaption("GSpreadSheetsAchievement", "Достижения");
@@ -678,7 +689,14 @@ public class DirectTableEditTab extends VerticalLayout {
     private void search() {
         hc.removeAllItems();
         if ((searchField.getValue() != null && searchField.getValue().length() > 0) || withTranslatedNeighbours.getValue()) {
-            List<GSpreadSheetEntity> searchInCatalogs = searchService.searchInCatalogs((Set<String>) tableNames.getValue(), searchField.getValue(), withTranslatedNeighbours.getValue(), neighboursCount.getValue().intValue(), regularExpression.getValue());
+            List<String> selectedNames=new ArrayList<>();
+            Set<String> selectedValues=(Set<String>)tableNames.getValue();
+            for(String t:tableNamesList) {
+                if(selectedValues.contains(t)) {
+                    selectedNames.add(t);
+                }
+            }
+            List<GSpreadSheetEntity> searchInCatalogs = searchService.searchInCatalogs(selectedNames, searchField.getValue(), withTranslatedNeighbours.getValue(), neighboursCount.getValue().intValue(), regularExpression.getValue());
             for (GSpreadSheetEntity e : searchInCatalogs) {
                 Item item = hc.addItem(e);
                 item.getItemProperty("textEn").setValue(e.getTextEn());
