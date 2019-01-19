@@ -109,7 +109,7 @@ public class QuestTranslateTab extends VerticalLayout {
     private final QuestSpecification questSpecification = new QuestSpecification();
     private final QuestLocationSpecification locationSpecification = new QuestLocationSpecification();
     private final QuestStepSpecification questStepSpecification = new QuestStepSpecification();
-    
+
     public QuestTranslateTab(DBService service_) {
         this.setSizeFull();
         this.setSpacing(false);
@@ -130,6 +130,7 @@ public class QuestTranslateTab extends VerticalLayout {
         questTable = new ComboBox("Квест");
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.setPageLength(15);
+        questTable.setScrollToSelectedItem(true);
 
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.addValueChangeListener(questChangeListener);
@@ -159,6 +160,7 @@ public class QuestTranslateTab extends VerticalLayout {
         checkBoxlayout.setMargin(false);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
+        translatorBox.setScrollToSelectedItem(true);
         translatorBox.setDataProvider(new ListDataProvider<SysAccount>(service.getSysAccounts()));
         translatorBox.addValueChangeListener(filterChangeListener);
         refreshButton = new Button("Обновить");
@@ -633,7 +635,7 @@ public class QuestTranslateTab extends VerticalLayout {
         itemsGrid.addComponentColumn(new ValueProvider() {
             @Override
             public Object apply(Object source) {
-                VerticalLayout result=new VerticalLayout();
+                VerticalLayout result = new VerticalLayout();
                 result.setMargin(new MarginInfo(true, false, false, false));
                 result.setSpacing(false);
                 if (source instanceof QuestItem) {
@@ -651,15 +653,13 @@ public class QuestTranslateTab extends VerticalLayout {
         tabSheet.addTab(itemsGrid, "Предметы");
         this.addComponent(tabSheet);
         this.setExpandRatio(tabSheet, 1f);
-        GridScrollExtension stepsScrollExtension=new GridScrollExtension(stepsGrid);
-        GridScrollExtension itemsScrollExtension=new GridScrollExtension(itemsGrid);
+        GridScrollExtension stepsScrollExtension = new GridScrollExtension(stepsGrid);
+        GridScrollExtension itemsScrollExtension = new GridScrollExtension(itemsGrid);
         new NoAutcompleteComboBoxExtension(locationTable);
         new NoAutcompleteComboBoxExtension(questTable);
         new NoAutcompleteComboBoxExtension(translatorBox);
         LoadFilters();
     }
-    
-    
 
     private class RowStyleGenerator implements StyleGenerator {
 
@@ -675,7 +675,7 @@ public class QuestTranslateTab extends VerticalLayout {
         }
 
     }
-    
+
     private void LoadContent() {
         Quest q = (Quest) questTable.getValue();
         stepsData.clear();
@@ -857,9 +857,17 @@ public class QuestTranslateTab extends VerticalLayout {
         private Button preAccept;
         private Button correct;
         private Button reject;
+        private Button player;
+        private boolean isPlayerAllowed;
         private final TranslatedText translatedText;
+        private HorizontalLayout translationActions;
 
         public TranslationCell(TranslatedText translatedText_) {
+            if (translatedText_.getSpreadSheetsJournalEntry() != null || translatedText_.getSpreadSheetsQuestDescription() != null) {
+                isPlayerAllowed = true;
+            } else {
+                isPlayerAllowed = false;
+            }
             this.setSizeFull();
             this.setSpacing(false);
             this.setMargin(false);
@@ -891,7 +899,9 @@ public class QuestTranslateTab extends VerticalLayout {
                 @Override
                 public void valueChange(HasValue.ValueChangeEvent<String> event) {
                     save.setVisible(true);
-
+                    if (isPlayerAllowed) {
+                        player.setVisible(true);
+                    }
                     if (event.getValue() == null || event.getValue().isEmpty()) {
                         save.setCaption("Удалить");
                         save.setIcon(FontAwesome.RECYCLE);
@@ -927,6 +937,8 @@ public class QuestTranslateTab extends VerticalLayout {
             }
             this.addComponent(translation);
             this.setExpandRatio(translation, 1f);
+            translationActions = new HorizontalLayout();
+            this.addComponent(translationActions);
             save = new Button("Сохранить", FontAwesome.SAVE);
             save.addClickListener(new Button.ClickListener() {
 
@@ -938,11 +950,24 @@ public class QuestTranslateTab extends VerticalLayout {
                 }
             });
 
-            this.addComponent(save);
-            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+            translationActions.addComponent(save);
+            save.setVisible(false);
+            player = new Button("P{}");
+            player.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
+            player.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    translation.setValue(translation.getValue() + "<<player{/}>>");
+                }
+            });
+            translationActions.addComponent(player);
+            player.setVisible(false);
+            if (translatedText.getStatus() == TRANSLATE_STATUS.DIRTY && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || translatedText.getAuthor().equals(SpringSecurityHelper.getSysAccount()))) {
                 save.setVisible(true);
-            } else {
-                save.setVisible(false);
+            }
+            if ((translatedText.getStatus() == null || translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) && isPlayerAllowed) {
+                player.setVisible(true);
             }
             if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
@@ -957,7 +982,7 @@ public class QuestTranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(preAccept);
+                translationActions.addComponent(preAccept);
             }
 
             if ((SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
@@ -973,7 +998,7 @@ public class QuestTranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(correct);
+                translationActions.addComponent(correct);
             }
 
             if ((SpringSecurityHelper.hasRole("ROLE_APPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
@@ -989,7 +1014,7 @@ public class QuestTranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(accept);
+                translationActions.addComponent(accept);
             }
             if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
@@ -1003,7 +1028,7 @@ public class QuestTranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(reject);
+                translationActions.addComponent(reject);
             }
             if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
                 translation.setReadOnly(false);

@@ -114,8 +114,8 @@ public class DirectTableEditTab extends VerticalLayout {
     private ComboBox itemType;
     private ComboBox itemSubType;
     private CheckBox notTranslated;
-    
-    private List<String> tableNamesList=new ArrayList<>();
+
+    private List<String> tableNamesList = new ArrayList<>();
 
     static final int PAGESIZE = 10;
 
@@ -232,7 +232,7 @@ public class DirectTableEditTab extends VerticalLayout {
         });
         hl.addComponent(searchButton);
         hl.addComponent(new Label(""));
-        
+
         tableNamesList.add("GSpreadSheetsNpcName");
         tableNamesList.add("GSpreadSheetsNpcPhrase");
         tableNamesList.add("GSpreadSheetsPlayerPhrase");
@@ -400,14 +400,14 @@ public class DirectTableEditTab extends VerticalLayout {
         searchTabs.addTab(translationsLayout, "Переводы");
         this.addComponent(searchTabs);
         filterLayout = new HorizontalLayout();
-        Label itemTypeLabel=new Label("Тип");
+        Label itemTypeLabel = new Label("Тип");
         itemType = new ComboBox();
         itemType.addItems(service.getTypes());
         itemType.setNullSelectionAllowed(true);
         itemType.setFilteringMode(FilteringMode.CONTAINS);
         filterLayout.addComponent(itemTypeLabel);
         filterLayout.addComponent(itemType);
-        Label itemSubTypeLabel=new Label("Подтип");
+        Label itemSubTypeLabel = new Label("Подтип");
         itemSubType = new ComboBox();
         itemSubType.addItems(service.getSubTypes());
         itemSubType.setNullSelectionAllowed(true);
@@ -689,10 +689,10 @@ public class DirectTableEditTab extends VerticalLayout {
     private void search() {
         hc.removeAllItems();
         if ((searchField.getValue() != null && searchField.getValue().length() > 0) || withTranslatedNeighbours.getValue()) {
-            List<String> selectedNames=new ArrayList<>();
-            Set<String> selectedValues=(Set<String>)tableNames.getValue();
-            for(String t:tableNamesList) {
-                if(selectedValues.contains(t)) {
+            List<String> selectedNames = new ArrayList<>();
+            Set<String> selectedValues = (Set<String>) tableNames.getValue();
+            for (String t : tableNamesList) {
+                if (selectedValues.contains(t)) {
                     selectedNames.add(t);
                 }
             }
@@ -734,6 +734,7 @@ public class DirectTableEditTab extends VerticalLayout {
         @Override
         public void buttonClick(Button.ClickEvent event) {
             TranslatedText tt = new TranslatedText();
+            tt.setText("");
             tt.setAuthor(SpringSecurityHelper.getSysAccount());
             if (entity instanceof GSpreadSheetsActivator) {
                 tt.setSpreadSheetsActivator((GSpreadSheetsActivator) entity);
@@ -1220,14 +1221,26 @@ public class DirectTableEditTab extends VerticalLayout {
         private Button preaccept;
         private Button correct;
         private Button reject;
+        private Button npc;
+        private Button player;
+        private boolean isPlayerAllowed;
+        private boolean isNpcAllowed;
         private final TranslatedText translatedText;
         private VerticalLayout actionLayout;
         private RefreshableGrid grid;
         private Object itemId;
 
         public GridTranslationCell(TranslatedText translatedText_, RefreshableGrid grid_, Object itemId_) {
-            //this.setHeight(95f, Unit.PIXELS);
-            //this.setWidth(460f, Unit.PIXELS);
+            if (translatedText_.getSpreadSheetsNpcPhrase() != null || translatedText_.getSpreadSheetsPlayerPhrase() != null || translatedText_.getSpreadSheetsJournalEntry() != null || translatedText_.getSpreadSheetsQuestDescription() != null) {
+                isPlayerAllowed = true;
+            } else {
+                isPlayerAllowed = false;
+            }
+            if (translatedText_.getSpreadSheetsNpcPhrase() != null || translatedText_.getSpreadSheetsPlayerPhrase() != null) {
+                isNpcAllowed = true;
+            } else {
+                isNpcAllowed = false;
+            }
             this.setMargin(false);
             this.setSpacing(false);
             this.setSizeFull();
@@ -1254,7 +1267,7 @@ public class DirectTableEditTab extends VerticalLayout {
             actionLayout.setSpacing(false);
             actionLayout.setDefaultComponentAlignment(Alignment.TOP_LEFT);
             actionLayout.setWidth(40f, Unit.PIXELS);
-            actionLayout.setHeight(80f, Unit.PIXELS);
+            actionLayout.setHeight(100f, Unit.PIXELS);
 
             translation = new TextArea();
             translation.setDescription(caption.toString());
@@ -1269,10 +1282,17 @@ public class DirectTableEditTab extends VerticalLayout {
                 @Override
                 public void textChange(FieldEvents.TextChangeEvent event) {
                     save.setVisible(true);
-
+                    if (isPlayerAllowed) {
+                        player.setVisible(true);
+                    }
+                    if (isNpcAllowed) {
+                        npc.setVisible(true);
+                    }
                     if (event.getText() == null || event.getText().isEmpty()) {
                         save.setIcon(FontAwesome.RECYCLE);
                         save.setDescription("Удалить");
+                        npc.setVisible(false);
+                        player.setVisible(false);
                     } else {
                         translatedText.setText(event.getText());
                         save.setIcon(FontAwesome.SAVE);
@@ -1304,6 +1324,7 @@ public class DirectTableEditTab extends VerticalLayout {
             }
             this.addComponent(translation);
             save = new Button();
+            save.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
             save.setIcon(FontAwesome.SAVE);
             save.setDescription("Сохранить");
             save.addClickListener(new Button.ClickListener() {
@@ -1315,17 +1336,49 @@ public class DirectTableEditTab extends VerticalLayout {
                     grid.Refresh();
                 }
             });
-
             actionLayout.addComponent(save);
-            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
-                save.setVisible(true);
-            } else {
-                save.setVisible(false);
-            }
+            save.setVisible(false);
+            npc = new Button("N{}");
+            npc.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
+            npc.addClickListener(new Button.ClickListener() {
 
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    translation.setValue(translation.getValue() + "<<npc{/}>>");
+                }
+            });
+            actionLayout.addComponent(npc);
+            npc.setVisible(false);
+            player = new Button("P{}");
+            player.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
+            player.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    translation.setValue(translation.getValue() + "<<player{/}>>");
+                }
+            });
+            actionLayout.addComponent(player);
+            player.setVisible(false);
+            if (translatedText.getStatus() == TRANSLATE_STATUS.DIRTY && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || translatedText.getAuthor().equals(SpringSecurityHelper.getSysAccount()))) {
+                save.setVisible(true);
+                if (isPlayerAllowed) {
+                    player.setVisible(true);
+                }
+                if (isNpcAllowed) {
+                    npc.setVisible(true);
+                }
+            }
+            if (translatedText.getStatus() == null && isPlayerAllowed) {
+                player.setVisible(true);
+            }
+            if (translatedText.getStatus() == null && isNpcAllowed) {
+                npc.setVisible(true);
+            }
             if (translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) && SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) {
                 translation.setReadOnly(false);
                 preaccept = new Button();
+                preaccept.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
                 preaccept.setIcon(FontAwesome.CHECK);
                 preaccept.setDescription("Перевод верен");
                 preaccept.addClickListener(new Button.ClickListener() {
@@ -1341,6 +1394,7 @@ public class DirectTableEditTab extends VerticalLayout {
             if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED) && SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) {
                 translation.setReadOnly(false);
                 correct = new Button();
+                correct.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
                 correct.setIcon(FontAwesome.PENCIL);
                 correct.setDescription("Текст корректен");
                 correct.addClickListener(new Button.ClickListener() {
@@ -1356,6 +1410,7 @@ public class DirectTableEditTab extends VerticalLayout {
             if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED) && SpringSecurityHelper.hasRole("ROLE_APPROVE")) {
                 translation.setReadOnly(false);
                 accept = new Button();
+                accept.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
                 accept.setIcon(FontAwesome.THUMBS_UP);
                 accept.setDescription("Принять");
                 accept.addClickListener(new Button.ClickListener() {
@@ -1370,6 +1425,7 @@ public class DirectTableEditTab extends VerticalLayout {
             }
             if (translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED) && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR"))) {
                 reject = new Button();
+                reject.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
                 reject.setIcon(FontAwesome.THUMBS_DOWN);
                 reject.setDescription("Отклонить");
                 reject.addClickListener(new Button.ClickListener() {

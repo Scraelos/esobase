@@ -33,10 +33,12 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.esn.esncomboextension.NoAutcompleteComboBoxExtension;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.LocationSpecification;
 import org.esn.esobase.data.specification.NpcSpecification;
+import org.esn.esobase.data.specification.QuestSpecification;
 import org.esn.esobase.data.specification.SubLocationSpecification;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
@@ -68,8 +70,8 @@ public class TranslateTab extends VerticalLayout {
     private VerticalLayout npcContentLayout;
     private ComboBox<Location> locationTable;
     private ComboBox<Location> subLocationTable;
-    private ComboBox questTable;
-    private ComboBox npcTable;
+    private ComboBox<Quest> questTable;
+    private ComboBox<Npc> npcTable;
     private TabSheet npcTabSheet;
     private TabSheet.Tab npcTab;
     private VerticalLayout npcTabLayout;
@@ -95,12 +97,14 @@ public class TranslateTab extends VerticalLayout {
     private final NpcSpecification npcSpecification = new NpcSpecification();
     private final LocationSpecification locationSpecification = new LocationSpecification();
     private final SubLocationSpecification subLocationSpecification = new SubLocationSpecification();
+    private final QuestSpecification questSpecification = new QuestSpecification();
     private List<Location> locations = new ArrayList<>();
     private List<Location> subLocations = new ArrayList<>();
     private List<Npc> npcList = new ArrayList<>();
     private List<Quest> questList = new ArrayList<>();
     private List<Topic> topicList = new ArrayList<>();
     private List<Subtitle> subtitleList = new ArrayList<>();
+    private static final Logger LOG = Logger.getLogger(TranslateTab.class.getName());
 
     public TranslateTab() {
 
@@ -148,10 +152,8 @@ public class TranslateTab extends VerticalLayout {
 
         questTable.setWidth(100f, Unit.PERCENTAGE);
         questTable.addValueChangeListener(filterChangeListener);
-        questList = service.getQuests();
-        questTable.setDataProvider(new ListDataProvider(questList));
-
-        npcTable.setDataProvider(new ListDataProvider(npcList));
+        questTable.setDataProvider(new ListDataProvider<>(questList));
+        npcTable.setDataProvider(new ListDataProvider<>(npcList));
 
         FormLayout locationAndNpc = new FormLayout(questTable, locationTable, subLocationTable, npcTable);
         locationAndNpc.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
@@ -300,17 +302,31 @@ public class TranslateTab extends VerticalLayout {
         npcSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
         npcSpecification.setTranslator((SysAccount) translatorBox.getValue());
         npcSpecification.setQuest((Quest) questTable.getValue());
-        npcSpecification.setLocation((Location) locationTable.getValue());
-        npcSpecification.setSubLocation((Location) subLocationTable.getValue());
+        npcSpecification.setLocation(locationTable.getValue());
+        npcSpecification.setSubLocation(subLocationTable.getValue());
         npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
         npcSpecification.setSearchString(searchField.getValue());
         if (subLocationTable.getValue() != null) {
-            npcSpecification.setLocation((Location) subLocationTable.getValue());
+            npcSpecification.setLocation(subLocationTable.getValue());
         } else {
-            npcSpecification.setLocation((Location) locationTable.getValue());
+            npcSpecification.setLocation(locationTable.getValue());
+        }
+        if (locationTable.getValue() != null) {
+            questSpecification.setLocation(locationTable.getValue());
+        } else if (subLocationTable.getValue() != null) {
+            if (subLocationTable.getValue().getParentLocation() != null) {
+                questSpecification.setLocation(subLocationTable.getValue().getParentLocation());
+            } else {
+                questSpecification.setLocation(subLocationTable.getValue());
+            }
+
+        } else {
+            questSpecification.setLocation(null);
         }
         npcList.clear();
         npcList.addAll(service.getNpcRepository().findAll(npcSpecification));
+        questList.clear();
+        questList.addAll(service.getQuestRepository().findAll(questSpecification));
         locationSpecification.setNoTranslations(noTranslations.getValue());
         locationSpecification.setEmptyTranslations(emptyTranslations.getValue());
         locationSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
@@ -357,6 +373,7 @@ public class TranslateTab extends VerticalLayout {
         locationTable.getDataProvider().refreshAll();
         subLocationTable.getDataProvider().refreshAll();
         npcTable.getDataProvider().refreshAll();
+        questTable.getDataProvider().refreshAll();
         Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
         countLabel.setCaption(countTranslatedTextFilterResult.toString());
     }
@@ -745,12 +762,29 @@ public class TranslateTab extends VerticalLayout {
             npcSpecification.setEmptyTranslations(emptyTranslations.getValue());
             npcSpecification.setTranslateStatus((Set<TRANSLATE_STATUS>) translateStatus.getValue());
             npcSpecification.setTranslator((SysAccount) translatorBox.getValue());
-            npcSpecification.setQuest((Quest) questTable.getValue());
-            npcSpecification.setLocation((Location) locationTable.getValue());
-            npcSpecification.setSubLocation((Location) subLocationTable.getValue());
+            npcSpecification.setQuest(questTable.getValue());
+            npcSpecification.setLocation(locationTable.getValue());
+            npcSpecification.setSubLocation(subLocationTable.getValue());
             npcSpecification.setSearchString(searchField.getValue());
             npcList.addAll(service.getNpcRepository().findAll(npcSpecification));
             npcTable.getDataProvider().refreshAll();
+
+            if (locationTable.getValue() != null) {
+                questSpecification.setLocation(locationTable.getValue());
+            } else if (subLocationTable.getValue() != null) {
+                if (subLocationTable.getValue().getParentLocation() != null) {
+                    questSpecification.setLocation(subLocationTable.getValue().getParentLocation());
+                } else {
+                    questSpecification.setLocation(subLocationTable.getValue());
+                }
+
+            } else {
+                questSpecification.setLocation(null);
+            }
+            questList.clear();
+
+            questList.addAll(service.getQuestRepository().findAll(questSpecification));
+            questTable.getDataProvider().refreshAll();
             Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
             countLabel.setCaption(countTranslatedTextFilterResult.toString());
         }
@@ -777,6 +811,22 @@ public class TranslateTab extends VerticalLayout {
             npcSpecification.setSearchString(searchField.getValue());
             npcList.addAll(service.getNpcRepository().findAll(npcSpecification));
             npcTable.getDataProvider().refreshAll();
+            if (locationTable.getValue() != null) {
+                questSpecification.setLocation(locationTable.getValue());
+            } else if (subLocationTable.getValue() != null) {
+                if (subLocationTable.getValue().getParentLocation() != null) {
+                    questSpecification.setLocation(subLocationTable.getValue().getParentLocation());
+                } else {
+                    questSpecification.setLocation(subLocationTable.getValue());
+                }
+
+            } else {
+                questSpecification.setLocation(null);
+            }
+            questList.clear();
+
+            questList.addAll(service.getQuestRepository().findAll(questSpecification));
+            questTable.getDataProvider().refreshAll();
             Long countTranslatedTextFilterResult = service.countTranslatedTextFilterResult((Location) locationTable.getValue(), (Location) subLocationTable.getValue(), (Quest) questTable.getValue(), (Set<TRANSLATE_STATUS>) translateStatus.getValue(), (SysAccount) translatorBox.getValue(), noTranslations.getValue(), emptyTranslations.getValue(), searchField.getValue());
             countLabel.setCaption(countTranslatedTextFilterResult.toString());
         }
@@ -798,7 +848,9 @@ public class TranslateTab extends VerticalLayout {
 
             String text = null;
             boolean isAssigned = false;
+            boolean isSubtitle = false;
             if (itemId instanceof Subtitle) {
+                isSubtitle = true;
                 text = ((Subtitle) itemId).getText();
                 if (text == null) {
                     text = ((Subtitle) itemId).getTextRu();
@@ -840,7 +892,7 @@ public class TranslateTab extends VerticalLayout {
 
             if (list != null) {
                 for (TranslatedText t : list) {
-                    vl.addComponent(new TranslationCell(t));
+                    vl.addComponent(new TranslationCell(t, isSubtitle));
                     accounts.add(t.getAuthor());
                 }
             }
@@ -848,6 +900,7 @@ public class TranslateTab extends VerticalLayout {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Subtitle) {
+                    isSubtitle = true;
                     Subtitle s = (Subtitle) itemId;
                     if (s.getExtNpcPhrase() != null) {
                         translatedText.setSpreadSheetsNpcPhrase(s.getExtNpcPhrase());
@@ -866,21 +919,7 @@ public class TranslateTab extends VerticalLayout {
                     }
                 }
                 Button addTranslation = new Button("Добавить перевод", FontAwesome.PLUS_SQUARE);
-                addTranslation.addClickListener(new Button.ClickListener() {
-
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
-
-                        if (translatedText.getSpreadSheetsNpcPhrase() != null) {
-                            translatedText.getSpreadSheetsNpcPhrase().getTranslatedTexts().add(translatedText);
-                        }
-                        if (translatedText.getSpreadSheetsPlayerPhrase() != null) {
-                            translatedText.getSpreadSheetsPlayerPhrase().getTranslatedTexts().add(translatedText);
-                        }
-                        vl.addComponent(new TranslationCell(translatedText));
-                        event.getButton().setVisible(false);
-                    }
-                });
+                addTranslation.addClickListener(new AddTranslationClickListener(translatedText, vl, isSubtitle));
                 vl.addComponent(addTranslation);
             }
             return vl;
@@ -888,17 +927,46 @@ public class TranslateTab extends VerticalLayout {
 
     }
 
+    private class AddTranslationClickListener implements Button.ClickListener {
+
+        private TranslatedText translatedText;
+        private VerticalLayout vl;
+        private boolean isSubtitle;
+
+        public AddTranslationClickListener(TranslatedText translatedText, VerticalLayout vl, boolean isSubtitle) {
+            this.translatedText = translatedText;
+            this.vl = vl;
+            this.isSubtitle = isSubtitle;
+        }
+
+        @Override
+        public void buttonClick(Button.ClickEvent event) {
+            if (translatedText.getSpreadSheetsNpcPhrase() != null) {
+                translatedText.getSpreadSheetsNpcPhrase().getTranslatedTexts().add(translatedText);
+            }
+            if (translatedText.getSpreadSheetsPlayerPhrase() != null) {
+                translatedText.getSpreadSheetsPlayerPhrase().getTranslatedTexts().add(translatedText);
+            }
+            vl.addComponent(new TranslationCell(translatedText, isSubtitle));
+            event.getButton().setVisible(false);
+        }
+    }
+
     private class TranslationCell extends VerticalLayout {
 
         private TextArea translation;
+        private Button npc;
+        private Button player;
         private Button save;
         private Button accept;
         private Button preAccept;
         private Button correct;
         private Button reject;
+        private HorizontalLayout translationActions;
         private final TranslatedText translatedText;
+        private boolean isSubtitle;
 
-        public TranslationCell(TranslatedText translatedText_) {
+        public TranslationCell(TranslatedText translatedText_, boolean isSubtitle) {
             this.setSizeFull();
             this.setSpacing(false);
             this.setMargin(false);
@@ -920,7 +988,7 @@ public class TranslateTab extends VerticalLayout {
             if (translatedText.getChangeTime() != null) {
                 description.append(", изменено: ").append(sdf.format(translatedText.getChangeTime()));
             }
-            translation = new TextArea("");
+            translation = new TextArea();
             translation.setDescription(description.toString());
             translation.setCaption(caption.toString());
             translation.setRows(7);
@@ -933,10 +1001,16 @@ public class TranslateTab extends VerticalLayout {
                 @Override
                 public void valueChange(HasValue.ValueChangeEvent<String> event) {
                     save.setVisible(true);
+                    if (!isSubtitle) {
+                        npc.setVisible(true);
+                    }
+                    player.setVisible(true);
 
                     if (event.getValue() == null || event.getValue().isEmpty()) {
                         save.setCaption("Удалить");
                         save.setIcon(FontAwesome.RECYCLE);
+                        npc.setVisible(false);
+                        player.setVisible(false);
                     } else {
                         translatedText.setText(event.getValue());
                         service.saveTranslatedTextDirty(translatedText);
@@ -968,6 +1042,8 @@ public class TranslateTab extends VerticalLayout {
                 translation.setReadOnly(true);
             }
             this.addComponent(translation);
+            translationActions = new HorizontalLayout();
+            this.addComponent(translationActions);
             save = new Button("Сохранить", FontAwesome.SAVE);
             save.addClickListener(new Button.ClickListener() {
 
@@ -979,11 +1055,43 @@ public class TranslateTab extends VerticalLayout {
                     LoadFilters();
                 }
             });
-
-            this.addComponent(save);
+            translationActions.addComponent(save);
             save.setVisible(false);
+            npc = new Button("N{}");
+            npc.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
+            npc.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    translation.setValue(translation.getValue() + "<<npc{/}>>");
+                }
+            });
+            translationActions.addComponent(npc);
+            npc.setVisible(false);
+            player = new Button("P{}");
+            player.addStyleNames(ValoTheme.BUTTON_SMALL, ValoTheme.BUTTON_TINY);
+            player.addClickListener(new Button.ClickListener() {
+
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    translation.setValue(translation.getValue() + "<<player{/}>>");
+                }
+            });
+            translationActions.addComponent(player);
+            player.setVisible(false);
+
             if (translatedText.getStatus() == TRANSLATE_STATUS.DIRTY && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || translatedText.getAuthor().equals(SpringSecurityHelper.getSysAccount()))) {
                 save.setVisible(true);
+                if (!isSubtitle) {
+                    npc.setVisible(true);
+                }
+                player.setVisible(true);
+            }
+            if (translatedText.getStatus() == null) {
+                if (!isSubtitle) {
+                    npc.setVisible(true);
+                }
+                player.setVisible(true);
             }
             if (SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
@@ -998,7 +1106,7 @@ public class TranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(preAccept);
+                translationActions.addComponent(preAccept);
             }
 
             if (SpringSecurityHelper.hasRole("ROLE_CORRECTOR") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
@@ -1014,7 +1122,7 @@ public class TranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(correct);
+                translationActions.addComponent(correct);
             }
 
             if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.SANDBOX) || (translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
@@ -1031,7 +1139,7 @@ public class TranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(accept);
+                translationActions.addComponent(accept);
             }
             if ((SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getStatus() == TRANSLATE_STATUS.SANDBOX) || (SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.PREACCEPTED) || (translatedText.getStatus() == TRANSLATE_STATUS.CORRECTED) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 reject = new Button("Отклонить эту версию", FontAwesome.THUMBS_DOWN);
@@ -1045,7 +1153,7 @@ public class TranslateTab extends VerticalLayout {
                         LoadFilters();
                     }
                 });
-                this.addComponent(reject);
+                translationActions.addComponent(reject);
             }
 
             if (SpringSecurityHelper.hasRole("ROLE_APPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.SANDBOX || translatedText.getStatus() == TRANSLATE_STATUS.ACCEPTED || translatedText.getStatus() == TRANSLATE_STATUS.REJECTED || translatedText.getStatus() == TRANSLATE_STATUS.REVOKED)) {
