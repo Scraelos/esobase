@@ -74,6 +74,8 @@ public class TopicSpecification implements Specification<Topic> {
                     ));
                 }
                 if (emptyTranslations) {
+                    Join<Object, Object> join2 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join3 = join1.join("translatedTexts", JoinType.LEFT);
                     predicates.add(cb.or(
                             cb.and(
                                     cb.isNotNull(root.get("extNpcPhrase")),
@@ -84,7 +86,9 @@ public class TopicSpecification implements Specification<Topic> {
                                     cb.isNotNull(root.get("extPlayerPhrase")),
                                     cb.isEmpty(join1.get("translatedTexts")),
                                     cb.isNull(join1.get("translator"))
-                            )
+                            ),
+                            cb.equal(join2.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join3.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
 
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {

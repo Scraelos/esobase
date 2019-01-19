@@ -59,40 +59,35 @@ public class SubtitleSpecification implements Specification<Subtitle> {
                 predicates.add(cb.isNull(root.get("extNpcPhrase").get("translator")));
             }
             if (emptyTranslations) {
-
+                Join<Object, Object> join2 = root.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
                 predicates.add(
-                        cb.and(
-                                cb.isNotNull(root.get("extNpcPhrase")),
-                                cb.isEmpty(root.get("extNpcPhrase").get("translatedTexts")),
-                                cb.isNull(root.get("extNpcPhrase").get("translator"))
+                        cb.or(
+                                cb.and(
+                                        cb.isNotNull(root.get("extNpcPhrase")),
+                                        cb.isEmpty(root.get("extNpcPhrase").get("translatedTexts")),
+                                        cb.isNull(root.get("extNpcPhrase").get("translator"))
+                                ),
+                                cb.equal(join2.get("status"), TRANSLATE_STATUS.DIRTY)
                         )
                 );
 
             } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
-                Join<Object, Object> join = root.join("translations", JoinType.LEFT);
                 Join<Object, Object> join2 = root.join("extNpcPhrase", JoinType.LEFT).join("translatedTexts", JoinType.LEFT);
                 if (translateStatus != null && !translateStatus.isEmpty() && translator != null) {
 
-                    predicates.add(cb.or(
-                            cb.and(
-                                    join.get("status").in(translateStatus),
-                                    cb.equal(join.get("author"), translator)
-                            ),
+                    predicates.add(
                             cb.and(
                                     join2.get("status").in(translateStatus),
                                     cb.equal(join2.get("author"), translator)
-                            )
-                    ));
+                            ));
                 } else if (translator != null) {
-                    predicates.add(cb.or(
-                            cb.equal(join.get("author"), translator),
+                    predicates.add(
                             cb.equal(join2.get("author"), translator)
-                    ));
+                    );
                 } else if (translateStatus != null && !translateStatus.isEmpty()) {
-                    predicates.add(cb.or(
-                            join.get("status").in(translateStatus),
+                    predicates.add(
                             join2.get("status").in(translateStatus)
-                    ));
+                    );
                 }
             }
         }

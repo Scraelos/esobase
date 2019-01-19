@@ -66,11 +66,15 @@ public class QuestDirectionSpecification implements Specification<QuestDirection
                     );
                 }
                 if (emptyTranslations) {
+                    Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);
                     predicates.add(
-                            cb.and(
-                                    cb.isNotNull(root.get("sheetsQuestDirection")),
-                                    cb.isEmpty(join.get("translatedTexts")),
-                                    cb.isNull(join.get("translator"))
+                            cb.or(
+                                    cb.and(
+                                            cb.isNotNull(root.get("sheetsQuestDirection")),
+                                            cb.isEmpty(join.get("translatedTexts")),
+                                            cb.isNull(join.get("translator"))
+                                    ),
+                                    cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY)
                             )
                     );
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {

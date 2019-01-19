@@ -131,6 +131,9 @@ public class NpcSpecification implements Specification<Npc> {
                     ));
                 }
                 if (emptyTranslations) {
+                    Join<Object, Object> join3 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join4 = join1.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join5 = join2.join("translatedTexts", JoinType.LEFT);
                     predicates.add(cb.or(
                             cb.and(
                                     cb.isNotNull(topicsJoin.get("extNpcPhrase")),
@@ -146,7 +149,10 @@ public class NpcSpecification implements Specification<Npc> {
                                     cb.isNotNull(subtitlesJoin.get("extNpcPhrase")),
                                     cb.isEmpty(join2.get("translatedTexts")),
                                     cb.isNull(join2.get("translator"))
-                            )
+                            ),
+                            cb.equal(join3.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join3 = join.join("translatedTexts", JoinType.LEFT);
@@ -156,15 +162,15 @@ public class NpcSpecification implements Specification<Npc> {
 
                         predicates.add(cb.or(
                                 cb.and(
-                                        join3.get("status").in( translateStatus),
+                                        join3.get("status").in(translateStatus),
                                         cb.equal(join3.get("author"), translator)
                                 ),
                                 cb.and(
-                                        join4.get("status").in( translateStatus),
+                                        join4.get("status").in(translateStatus),
                                         cb.equal(join4.get("author"), translator)
                                 ),
                                 cb.and(
-                                        join5.get("status").in( translateStatus),
+                                        join5.get("status").in(translateStatus),
                                         cb.equal(join5.get("author"), translator)
                                 )
                         ));

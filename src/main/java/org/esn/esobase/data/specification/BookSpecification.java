@@ -92,17 +92,21 @@ public class BookSpecification implements Specification<Book> {
                 ));
             }
             if (emptyTranslations) {
+                Join<Object, Object> join4 = root.join("nameTranslations", JoinType.LEFT);
+                Join<Object, Object> join5 = textJoin.join("translations", JoinType.LEFT);
                 predicates.add(cb.or(
                         cb.and(
                                 cb.isEmpty(root.get("nameTranslations")),
                                 cb.or(
-                                cb.equal(root.get("nameRu"), root.get("nameEn")),cb.isNull(root.get("nameRu")))
+                                        cb.equal(root.get("nameRu"), root.get("nameEn")), cb.isNull(root.get("nameRu")))
                         ),
                         cb.and(
                                 cb.isEmpty(textJoin.get("translations")),
                                 cb.or(
-                                cb.equal(textJoin.get("textRu"), textJoin.get("textEn")),cb.isNull(textJoin.get("textRu")))
-                        )
+                                        cb.equal(textJoin.get("textRu"), textJoin.get("textEn")), cb.isNull(textJoin.get("textRu")))
+                        ),
+                        cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
+                        cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                 ));
             } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                 Join<Object, Object> join4 = root.join("nameTranslations", JoinType.LEFT);

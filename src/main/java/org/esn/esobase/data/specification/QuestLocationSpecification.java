@@ -106,6 +106,10 @@ public class QuestLocationSpecification implements Specification<Location> {
                     ));
                 }
                 if (emptyTranslations) {
+                    Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join5 = join1.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join6 = join2.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join7 = join3.join("translatedTexts", JoinType.LEFT);
                     predicates.add(cb.or(
                             cb.and(
                                     cb.isNotNull(npcJoin.get("sheetsQuestName")),
@@ -126,7 +130,11 @@ public class QuestLocationSpecification implements Specification<Location> {
                                     cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                                     cb.isEmpty(join3.get("translatedTexts")),
                                     cb.isNull(join3.get("translator"))
-                            )
+                            ),
+                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join7.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);

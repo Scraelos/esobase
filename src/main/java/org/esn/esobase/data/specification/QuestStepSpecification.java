@@ -96,6 +96,8 @@ public class QuestStepSpecification implements Specification<QuestStep> {
                     ));
                 }
                 if (emptyTranslations) {
+                    Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join5 = join1.join("translatedTexts", JoinType.LEFT);
                     predicates.add(cb.or(
                             cb.and(
                                     cb.isNotNull(root.get("sheetsJournalEntry")),
@@ -106,7 +108,9 @@ public class QuestStepSpecification implements Specification<QuestStep> {
                                     cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                                     cb.isEmpty(join1.get("translatedTexts")),
                                     cb.isNull(join1.get("translator"))
-                            )
+                            ),
+                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);

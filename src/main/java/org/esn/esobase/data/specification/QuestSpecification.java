@@ -29,8 +29,8 @@ public class QuestSpecification implements Specification<Quest> {
 
     private Set<TRANSLATE_STATUS> translateStatus;
     private SysAccount translator;
-    private Boolean noTranslations;
-    private Boolean emptyTranslations;
+    private Boolean noTranslations = false;
+    private Boolean emptyTranslations = false;
     private Location location;
     private String searchString;
 
@@ -134,6 +134,12 @@ public class QuestSpecification implements Specification<Quest> {
                     ));
                 }
                 if (emptyTranslations) {
+                    Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join5 = join1.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join6 = join2.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join7 = join3.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join10 = join8.join("translatedTexts", JoinType.LEFT);
+                    Join<Object, Object> join11 = join9.join("translatedTexts", JoinType.LEFT);
                     predicates.add(cb.or(
                             cb.and(
                                     cb.isNotNull(root.get("sheetsQuestName")),
@@ -164,7 +170,13 @@ public class QuestSpecification implements Specification<Quest> {
                                     cb.isNotNull(itemsJoin.get("description")),
                                     cb.isEmpty(join9.get("translatedTexts")),
                                     cb.isNull(join9.get("translator"))
-                            )
+                            ),
+                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join7.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join10.get("status"), TRANSLATE_STATUS.DIRTY),
+                            cb.equal(join11.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);
