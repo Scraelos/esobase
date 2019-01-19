@@ -87,12 +87,14 @@ public class BookTranslateTab extends VerticalLayout {
         bookListlayout.setWidth(100f, Unit.PERCENTAGE);
         bookTable = new ComboBox("Книга");
         bookTable.setPageLength(20);
+        bookTable.setScrollToSelectedItem(true);
         bookTable.setDataProvider(new ListDataProvider<>(books));
         bookTable.addValueChangeListener(new BookSelectListener());
 
         bookTable.setWidth(100f, Unit.PERCENTAGE);
         locationTable = new ComboBox("Локация");
         locationTable.setPageLength(15);
+        locationTable.setScrollToSelectedItem(true);
 
         locationTable.setWidth(100f, Unit.PERCENTAGE);
         locationTable.setDataProvider(new ListDataProvider<>(locations));
@@ -101,6 +103,7 @@ public class BookTranslateTab extends VerticalLayout {
 
         subLocationTable = new ComboBox("Сублокация");
         subLocationTable.setPageLength(15);
+        subLocationTable.setScrollToSelectedItem(true);
         subLocationTable.addValueChangeListener(filterChangeListener);
 
         subLocationTable.setWidth(100f, Unit.PERCENTAGE);
@@ -128,6 +131,7 @@ public class BookTranslateTab extends VerticalLayout {
         HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
+        translatorBox.setScrollToSelectedItem(true);
         translatorBox.setDataProvider(new ListDataProvider(service.getSysAccounts()));
         translatorBox.addValueChangeListener(filterChangeListener);
         refreshButton = new Button("Обновить");
@@ -479,10 +483,9 @@ public class BookTranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+            save.setVisible(false);
+            if (translatedText.getStatus() == TRANSLATE_STATUS.DIRTY && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || translatedText.getAuthor().equals(SpringSecurityHelper.getSysAccount()))) {
                 save.setVisible(true);
-            } else {
-                save.setVisible(false);
             }
             if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
@@ -642,10 +645,9 @@ public class BookTranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+            save.setVisible(false);
+            if (translatedText.getStatus() == TRANSLATE_STATUS.DIRTY && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || translatedText.getAuthor().equals(SpringSecurityHelper.getSysAccount()))) {
                 save.setVisible(true);
-            } else {
-                save.setVisible(false);
             }
             if ((SpringSecurityHelper.hasRole("ROLE_PREAPPROVE")) && translatedText.getId() != null && ((translatedText.getStatus() == TRANSLATE_STATUS.NEW) || (translatedText.getStatus() == TRANSLATE_STATUS.EDITED))) {
                 translation.setReadOnly(false);
