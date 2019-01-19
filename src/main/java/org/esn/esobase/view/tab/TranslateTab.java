@@ -191,6 +191,7 @@ public class TranslateTab extends VerticalLayout {
         HorizontalLayout checkBoxlayout = new HorizontalLayout(noTranslations, emptyTranslations);
         translatorBox = new ComboBox("Переводчик");
         translatorBox.setPageLength(15);
+        translatorBox.setScrollToSelectedItem(true);
         translatorBox.setDataProvider(new ListDataProvider(service.getSysAccounts()));
         translatorBox.addValueChangeListener(new HasValue.ValueChangeListener() {
             @Override
@@ -796,12 +797,16 @@ public class TranslateTab extends VerticalLayout {
             List<SysAccount> accounts = new ArrayList<>();
 
             String text = null;
+            boolean isAssigned = false;
             if (itemId instanceof Subtitle) {
                 text = ((Subtitle) itemId).getText();
                 if (text == null) {
                     text = ((Subtitle) itemId).getTextRu();
                 }
                 Subtitle s = (Subtitle) itemId;
+                if (s.getExtNpcPhrase() != null) {
+                    isAssigned = true;
+                }
                 if (s.getExtNpcPhrase() != null && s.getExtNpcPhrase().getTranslatedTexts() != null) {
                     list.addAll(s.getExtNpcPhrase().getTranslatedTexts());
                 }
@@ -812,6 +817,9 @@ public class TranslateTab extends VerticalLayout {
                         text = ((Topic) itemId).getPlayerTextRu();
                     }
                     Topic t = (Topic) itemId;
+                    if (t.getExtPlayerPhrase() != null) {
+                        isAssigned = true;
+                    }
                     if (t.getExtPlayerPhrase() != null && t.getExtPlayerPhrase().getTranslatedTexts() != null) {
                         list.addAll(t.getExtPlayerPhrase().getTranslatedTexts());
                     }
@@ -821,6 +829,9 @@ public class TranslateTab extends VerticalLayout {
                         text = ((Topic) itemId).getNpcTextRu();
                     }
                     Topic t = (Topic) itemId;
+                    if (t.getExtNpcPhrase() != null) {
+                        isAssigned = true;
+                    }
                     if (t.getExtNpcPhrase() != null && t.getExtNpcPhrase().getTranslatedTexts() != null) {
                         list.addAll(t.getExtNpcPhrase().getTranslatedTexts());
                     }
@@ -833,7 +844,7 @@ public class TranslateTab extends VerticalLayout {
                     accounts.add(t.getAuthor());
                 }
             }
-            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && (SpringSecurityHelper.hasRole("ROLE_TRANSLATE") || SpringSecurityHelper.hasRole("ROLE_SANDBOX"))) {
+            if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && isAssigned && (SpringSecurityHelper.hasRole("ROLE_TRANSLATE") || SpringSecurityHelper.hasRole("ROLE_SANDBOX"))) {
                 final TranslatedText translatedText = new TranslatedText();
                 translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                 if (itemId instanceof Subtitle) {
@@ -860,16 +871,12 @@ public class TranslateTab extends VerticalLayout {
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
 
-                        if (translatedText.getSubtitle() != null) {
-                            translatedText.getSubtitle().getTranslations().add(translatedText);
+                        if (translatedText.getSpreadSheetsNpcPhrase() != null) {
+                            translatedText.getSpreadSheetsNpcPhrase().getTranslatedTexts().add(translatedText);
                         }
-                        if (translatedText.getPlayerTopic() != null) {
-                            translatedText.getPlayerTopic().getPlayerTranslations().add(translatedText);
+                        if (translatedText.getSpreadSheetsPlayerPhrase() != null) {
+                            translatedText.getSpreadSheetsPlayerPhrase().getTranslatedTexts().add(translatedText);
                         }
-                        if (translatedText.getNpcTopic() != null) {
-                            translatedText.getNpcTopic().getNpcTranslations().add(translatedText);
-                        }
-
                         vl.addComponent(new TranslationCell(translatedText));
                         event.getButton().setVisible(false);
                     }
@@ -974,10 +981,9 @@ public class TranslateTab extends VerticalLayout {
             });
 
             this.addComponent(save);
-            if (translatedText.getStatus() != null && translatedText.getStatus() == TRANSLATE_STATUS.DIRTY) {
+            save.setVisible(false);
+            if (translatedText.getStatus() == TRANSLATE_STATUS.DIRTY && (SpringSecurityHelper.hasRole("ROLE_APPROVE") || SpringSecurityHelper.hasRole("ROLE_CORRECTOR") || SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") || translatedText.getAuthor().equals(SpringSecurityHelper.getSysAccount()))) {
                 save.setVisible(true);
-            } else {
-                save.setVisible(false);
             }
             if (SpringSecurityHelper.hasRole("ROLE_PREAPPROVE") && translatedText.getId() != null && (translatedText.getStatus() == TRANSLATE_STATUS.NEW || translatedText.getStatus() == TRANSLATE_STATUS.EDITED)) {
                 translation.setReadOnly(false);
