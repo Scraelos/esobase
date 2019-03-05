@@ -3380,21 +3380,27 @@ public class DBService {
             if (emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
 
                 if (emptyTranslations) {
-
-                    predicates.add(cb.and(
+                    Join<Object, Object> join3 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join4 = join1.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join5 = join2.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    predicates.add(cb.or(cb.and(
                             cb.isNotNull(topicsJoin.get("extNpcPhrase")),
                             cb.isEmpty(join.get("translatedTexts")),
                             cb.isNull(join.get("translator"))
+                    ),
+                            cb.equal(join3.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates1.add(cb.and(
+                    predicates1.add(cb.or(cb.and(
                             cb.isNotNull(topicsJoin1.get("extPlayerPhrase")),
                             cb.isEmpty(join1.get("translatedTexts")),
-                            cb.isNull(join1.get("translator"))
+                            cb.isNull(join1.get("translator"))),
+                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates2.add(cb.and(
+                    predicates2.add(cb.or(cb.and(
                             cb.isNotNull(subtitlesJoin.get("extNpcPhrase")),
                             cb.isEmpty(join2.get("translatedTexts")),
-                            cb.isNull(join2.get("translator"))
+                            cb.isNull(join2.get("translator"))),
+                            cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join3 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
@@ -3599,36 +3605,49 @@ public class DBService {
             if (emptyTranslations || (translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
 
                 if (emptyTranslations) {
+                    Join<Object, Object> join4 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join5 = join1.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join6 = join2.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join7 = join3.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join10 = join8.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
+                    Join<Object, Object> join11 = join9.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
 
-                    predicates.add(cb.and(
+                    predicates.add(cb.or(cb.and(
                             cb.isNotNull(root.get("sheetsQuestName")),
                             cb.isEmpty(join.get("translatedTexts")),
-                            cb.isNull(join.get("translator"))
+                            cb.isNull(join.get("translator"))),
+                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates1.add(cb.and(
-                            cb.isNotNull(root1.get("sheetsQuestDescription")),
-                            cb.isEmpty(join1.get("translatedTexts")),
-                            cb.isNull(join1.get("translator"))
+                    predicates1.add(cb.or(
+                            cb.and(
+                                    cb.isNotNull(root1.get("sheetsQuestDescription")),
+                                    cb.isEmpty(join1.get("translatedTexts")),
+                                    cb.isNull(join1.get("translator"))),
+                            cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates2.add(cb.and(
+                    predicates2.add(cb.or(cb.and(
                             cb.isNotNull(stepsJoin.get("sheetsJournalEntry")),
                             cb.isEmpty(join2.get("translatedTexts")),
-                            cb.isNull(join2.get("translator"))
+                            cb.isNull(join2.get("translator"))),
+                            cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates3.add(cb.and(
+                    predicates3.add(cb.or(cb.and(
                             cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                             cb.isEmpty(join3.get("translatedTexts")),
-                            cb.isNull(join3.get("translator"))
+                            cb.isNull(join3.get("translator"))),
+                            cb.equal(join7.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates4.add(cb.and(
+                    predicates4.add(cb.or(cb.and(
                             cb.isNotNull(itemsJoin1.get("name")),
                             cb.isEmpty(join8.get("translatedTexts")),
-                            cb.isNull(join8.get("translator"))
+                            cb.isNull(join8.get("translator"))),
+                            cb.equal(join10.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates5.add(cb.and(
+                    predicates5.add(cb.or(cb.and(
                             cb.isNotNull(itemsJoin2.get("description")),
                             cb.isEmpty(join9.get("translatedTexts")),
-                            cb.isNull(join9.get("translator"))
+                            cb.isNull(join9.get("translator"))),
+                            cb.equal(join11.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {
                     Join<Object, Object> join4 = join.join("translatedTexts", javax.persistence.criteria.JoinType.LEFT);
@@ -4774,13 +4793,25 @@ public class DBService {
     public void calculateLocationProgress(Location l) {
         BigDecimal totalProgress = BigDecimal.ZERO;
         Location loc = em.find(Location.class, l.getId());
+        int total = loc.getNpcs().size();
         for (Npc npc : loc.getNpcs()) {
             if (npc.getProgress() != null) {
                 totalProgress = totalProgress.add(npc.getProgress());
             }
+
+        }
+        if (loc.getSubLocations() != null && !loc.getSubLocations().isEmpty()) {
+            for (Location subLoc : loc.getSubLocations()) {
+                total += subLoc.getNpcs().size();
+                for (Npc npc : subLoc.getNpcs()) {
+                    if (npc.getProgress() != null) {
+                        totalProgress = totalProgress.add(npc.getProgress());
+                    }
+                }
+            }
         }
         float r = 0;
-        BigDecimal averageProgress = totalProgress.divide(new BigDecimal(loc.getNpcs().size()), 2, RoundingMode.UP);
+        BigDecimal averageProgress = totalProgress.divide(new BigDecimal(total), 2, RoundingMode.UP);
         loc.setProgress(averageProgress);
         em.merge(loc);
     }
@@ -4795,7 +4826,8 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer searchInCatalogs(String search, HierarchicalContainer hc) {
+    public HierarchicalContainer searchInCatalogs(String search, HierarchicalContainer hc
+    ) {
         hc.removeAllItems();
         Integer weightValue = null;
         List<Criterion> searchTermitems = new ArrayList<>();
@@ -5098,7 +5130,8 @@ public class DBService {
     }
 
     @Transactional
-    public List<GSpreadSheetEntity> searchInCatalogs(String search) {
+    public List<GSpreadSheetEntity> searchInCatalogs(String search
+    ) {
         List<GSpreadSheetEntity> result = new ArrayList<>();
         List<Criterion> searchTermitems = new ArrayList<>();
         searchTermitems.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
@@ -5209,7 +5242,9 @@ public class DBService {
     }
 
     @Transactional
-    public HierarchicalContainer getTextForSpellCheck(Date startDate, Date endDate, HierarchicalContainer hc) {
+    public HierarchicalContainer getTextForSpellCheck(Date startDate, Date endDate,
+             HierarchicalContainer hc
+    ) {
         hc.removeAllItems();
         List<Criterion> searchTermitems = new ArrayList<>();
         if (startDate == null) {
@@ -5325,7 +5360,8 @@ public class DBService {
     }
 
     @Transactional
-    public void commitTableEntityItem(Object itemId, String textRu) {
+    public void commitTableEntityItem(Object itemId, String textRu
+    ) {
         if ((itemId instanceof GSpreadSheetsNpcName) || (itemId instanceof GSpreadSheetsLocationName) || (itemId instanceof GSpreadSheetsNpcPhrase) || (itemId instanceof GSpreadSheetsPlayerPhrase) || (itemId instanceof GSpreadSheetsQuestName) || (itemId instanceof GSpreadSheetsQuestDescription) || (itemId instanceof GSpreadSheetsActivator) || (itemId instanceof GSpreadSheetsJournalEntry) || (itemId instanceof GSpreadSheetsItemName) || (itemId instanceof GSpreadSheetsItemDescription) || (itemId instanceof GSpreadSheetsQuestDirection) || (itemId instanceof GSpreadSheetsAchievement) || (itemId instanceof GSpreadSheetsAchievementDescription) || (itemId instanceof GSpreadSheetsNote) || (itemId instanceof GSpreadSheetsAbilityDescription) || (itemId instanceof GSpreadSheetsQuestStartTip) || (itemId instanceof GSpreadSheetsQuestEndTip)) {
             if (itemId instanceof GSpreadSheetsNpcName) {
                 ((GSpreadSheetsNpcName) itemId).setChangeTime(new Date());
@@ -8077,9 +8113,6 @@ public class DBService {
                 if (r.getTextRu() != null && !r.getTextRu().isEmpty() && !r.getTextRu().equals(r.getTextEn())) {
                     BookText bookText = book.getBookText();
                     bookText.setTextEn(r.getTextEn());
-                    if (r.getTextRu() != null && !r.getTextEn().equals(r.getTextRu())) {
-                        bookText.setTextRu(r.getTextRu());
-                    }
                     em.merge(bookText);
                 }
                 if (r.getTextEn() != null && (book.getBookText().getTextEn() == null || !book.getBookText().getTextEn().equals(r.getTextEn()))) {
@@ -8113,7 +8146,7 @@ public class DBService {
                 bookText.setbId(0L);
                 bookText.setcId(r.getcId());
                 bookText.setTextEn(r.getTextEn());
-                if (r.getTextRu() != null && !r.getTextEn().equals(r.getTextRu())) {
+                if (r.getTextRu() == null && !r.getTextEn().equals(r.getTextRu())) {
                     bookText.setTextRu(r.getTextRu());
                 } else {
                     bookText.setTextRu(r.getTextEn());
@@ -8260,7 +8293,7 @@ public class DBService {
             if (resultList1 != null && !resultList1.isEmpty()) {
                 result = resultList1.get(0).longValue();
             } else {
-                Query q2 = em.createNativeQuery("select id from " + tableName + " where (:searchString ilike tren or :searchString ilike trrumm or :searchString ilike trruff or :searchString ilike trrufm or :searchString ilike trrumf) and (char_length(trrumm)>6 or char_length(tren)>6) order by char_length(trrumm),char_length(tren) desc");
+                Query q2 = em.createNativeQuery("select id from " + tableName + " where (:searchString ilike tren or :searchString ilike trrumm or :searchString ilike trruff or :searchString ilike trrufm or :searchString ilike trrumf) and (char_length(trrumm)>6 or char_length(tren)>6) order by char_length(tren) desc,char_length(trrumm) desc");
                 q2.setParameter("searchString", searchString);
                 List<BigInteger> resultList2 = q2.getResultList();
                 if (resultList2 != null && !resultList2.isEmpty()) {
@@ -8416,9 +8449,11 @@ public class DBService {
 
     @Transactional
     public void mergeSubtitles() {
+        em.setFlushMode(FlushModeType.COMMIT);
         List<BigInteger> removedIds = new ArrayList<>();
         Query dublicateSubtitleQuery = em.createNativeQuery("select s.id as sid,s1.id as s1id from subtitle s join subtitle s1 on s1.extnpcphrase_id=s.extnpcphrase_id and s1.id!=s.id and s1.npc_id=s.npc_id where s.text_en is not null order by sid");
         List<Object[]> resultList = dublicateSubtitleQuery.getResultList();
+        List<Subtitle> nextSubtitles = new ArrayList<>();
         for (Object[] o : resultList) {
             BigInteger sId = (BigInteger) o[0];
             BigInteger s1Id = (BigInteger) o[1];
@@ -8439,12 +8474,14 @@ public class DBService {
                 if (s1.getPreviousSubtitle() != null && s1.getPreviousSubtitle().getId() != null) {
                     Subtitle s2 = em.find(Subtitle.class, s1.getPreviousSubtitle().getId());
                     if (s2 != null && s2.getId() != null) {
-                        if (s.getPreviousSubtitle() == null) {
+                        if (s.getPreviousSubtitle() == null && !nextSubtitles.contains(s)) {
                             s2.setNextSubtitle(s);
+                            nextSubtitles.add(s);
                         } else {
                             s2.setNextSubtitle(null);
                         }
                         em.merge(s2);
+                        em.flush();
                     }
                 }
                 if (s1.getNextSubtitle() != null && s1.getNextSubtitle().getId() != null && s.getNextSubtitle() == null) {
@@ -8453,8 +8490,12 @@ public class DBService {
                     s1.setNextSubtitle(null);
                     em.merge(s1);
                     em.flush();
-                    s.setNextSubtitle(nextSubtitle);
+                    if (!nextSubtitles.contains(nextSubtitle)) {
+                        s.setNextSubtitle(nextSubtitle);
+                        nextSubtitles.add(nextSubtitle);
+                    }
                     em.merge(s);
+                    em.flush();
                 }
                 Logger.getLogger(DBService.class.getName()).log(Level.INFO, "merge\n{0} with \n{1}", new Object[]{s.getText(), s1.getTextRu()});
                 em.remove(s1);
@@ -8532,11 +8573,13 @@ public class DBService {
                 for (TranslatedText tt : t2.getNpcTranslations()) {
                     tt.setNpcTopic(t1);
                     em.merge(tt);
+                    em.flush();
                 }
                 t2.getNpcTranslations().clear();
                 for (TranslatedText tt : t2.getPlayerTranslations()) {
                     tt.setPlayerTopic(t1);
                     em.merge(tt);
+                    em.flush();
                 }
                 t2.getPlayerTranslations().clear();
                 for (Topic pt : t2.getPreviousTopics()) {
@@ -8547,6 +8590,7 @@ public class DBService {
                         pt.getNextTopics().add(t1);
                     }
                     em.merge(pt);
+                    em.flush();
                 }
                 t2.getPreviousTopics().clear();
                 for (Topic nt : t2.getNextTopics()) {
@@ -8557,6 +8601,7 @@ public class DBService {
                         nt.getPreviousTopics().add(t1);
                     }
                     em.merge(nt);
+                    em.flush();
                 }
                 t2.getNextTopics().clear();
                 em.merge(t2);
@@ -8692,9 +8737,14 @@ public class DBService {
                 String topickey = (String) topicsKeys.next();
                 JSONObject npcTextObject = topicsObject.getJSONObject(topickey);
                 Iterator npcTextKeys = npcTextObject.keys();
-                while (npcTextKeys.hasNext()) {
+                do {
                     String playerString = topickey;
-                    String npcString = (String) npcTextKeys.next();
+                    String npcString = "";
+                    try {
+                        npcString = (String) npcTextKeys.next();
+                    } catch (Exception ex) {
+
+                    }
                     String playerText = null;
                     String playerTextRu = null;
                     String npcText = null;
@@ -8857,7 +8907,7 @@ public class DBService {
                         em.persist(topic);
                         npcTopics.add(topic);
                     }
-                }
+                } while (npcTextKeys.hasNext());
 
             }
         }
