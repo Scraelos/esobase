@@ -23,6 +23,7 @@
                     password-parameter="j_password" 
                     login-processing-url="/j_spring_security_check" 
                     authentication-failure-url="/login/?error=true"/>
+                    <remember-me token-validity-seconds="99999999" key="fsdgsdgfg4g445ftgfg43445" remember-me-parameter="remember-me"/>
         <logout logout-url="/j_spring_security_logout"/>
     </http>
 

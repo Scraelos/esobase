@@ -43,6 +43,10 @@
                         <td><input type="password" name="j_password"/></td>
                     </tr>
                     <tr>
+                        <td>Запомнить</td>
+                        <td><input type="checkbox" name="remember-me"/></td>
+                    </tr>
+                    <tr>
                         <td>&nbsp;</td>
                         <td><input type="submit" value="Вход"></td>
                     </tr>
