@@ -400,7 +400,6 @@ public class QuestTranslateTab extends VerticalLayout {
                     List<SysAccount> accounts = new ArrayList<>();
 
                     QuestStep step = (QuestStep) source;
-                    String text = step.getTextEn();
                     list.addAll(step.getSheetsJournalEntry().getTranslatedTexts());
 
                     if (list != null) {
@@ -409,7 +408,7 @@ public class QuestTranslateTab extends VerticalLayout {
                             accounts.add(t.getAuthor());
                         }
                     }
-                    if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+                    if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && step.getSheetsJournalEntry()!=null && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
                         final TranslatedText translatedText = new TranslatedText();
                         translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                         translatedText.setSpreadSheetsJournalEntry(step.getSheetsJournalEntry());
@@ -433,7 +432,6 @@ public class QuestTranslateTab extends VerticalLayout {
                     List<SysAccount> accounts = new ArrayList<>();
 
                     QuestDirection d = (QuestDirection) source;
-                    String text = d.getTextEn();
                     list.addAll(d.getSheetsQuestDirection().getTranslatedTexts());
 
                     if (list != null) {
@@ -442,7 +440,7 @@ public class QuestTranslateTab extends VerticalLayout {
                             accounts.add(t.getAuthor());
                         }
                     }
-                    if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && text != null && !text.isEmpty() && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
+                    if (!accounts.contains(SpringSecurityHelper.getSysAccount()) && d.getSheetsQuestDirection()!=null && SpringSecurityHelper.hasRole("ROLE_TRANSLATE")) {
                         final TranslatedText translatedText = new TranslatedText();
                         translatedText.setAuthor(SpringSecurityHelper.getSysAccount());
                         translatedText.setSpreadSheetsQuestDirection(d.getSheetsQuestDirection());
