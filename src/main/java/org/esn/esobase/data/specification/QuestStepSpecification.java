@@ -16,6 +16,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import org.esn.esobase.model.Quest;
+import org.esn.esobase.model.QuestDirection;
 import org.esn.esobase.model.QuestStep;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
@@ -99,17 +100,18 @@ public class QuestStepSpecification implements Specification<QuestStep> {
                     Join<Object, Object> join4 = join.join("translatedTexts", JoinType.LEFT);
                     Join<Object, Object> join5 = join1.join("translatedTexts", JoinType.LEFT);
                     predicates.add(cb.or(
-                            cb.and(
-                                    cb.isNotNull(root.get("sheetsJournalEntry")),
-                                    cb.isEmpty(join.get("translatedTexts")),
-                                    cb.isNull(join.get("translator"))
-                            ),
+//                            cb.and(
+//                                    cb.isNotNull(root.get("sheetsJournalEntry")),
+//                                    cb.isEmpty(join.get("translatedTexts")),
+//                                    cb.isNull(join.get("translator"))
+//                            ),
                             cb.and(
                                     cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                                     cb.isEmpty(join1.get("translatedTexts")),
-                                    cb.isNull(join1.get("translator"))
+                                    cb.isNull(join1.get("translator")),
+                                    cb.notEqual(stepsDirectionsJoin.get("directionType"), QuestDirection.DIRECTION_TYPE.hidden)
                             ),
-                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
+//                            cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
                             cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {

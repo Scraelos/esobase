@@ -54,7 +54,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.vaadin.addons.comboboxmultiselect.ComboBoxMultiselect;
 import org.vaadin.viritin.layouts.MMarginInfo;
-import org.vaadin.viritin.util.HtmlElementPropertySetter;
 
 /**
  *
@@ -1134,6 +1133,11 @@ public class TranslateTab extends VerticalLayout {
                     public void buttonClick(Button.ClickEvent event) {
                         translatedText.setText(translation.getValue());
                         service.acceptTranslatedText(translatedText);
+                        service.calculateNpcProgress(currentNpc);
+                        service.calculateLocationProgress(currentNpc.getLocation());
+                        if (currentNpc.getLocation().getParentLocation() != null) {
+                            service.calculateLocationProgress(currentNpc.getLocation().getParentLocation());
+                        }
                         service.calculateQuestProgressByNpc(currentNpc);
                         LoadNpcContent();
                         LoadFilters();

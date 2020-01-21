@@ -11,6 +11,7 @@ import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.data.ItemInfoImportService;
 import org.esn.esobase.data.SearchService;
+import org.esn.esobase.data.StatsService;
 import org.esn.esobase.data.SysAccountService;
 import org.esn.esobase.data.TableUpdateService;
 import org.springframework.context.annotation.Bean;
@@ -52,14 +53,19 @@ public class DataContext {
     public DictionaryService dictionaryService() {
         return new DictionaryService();
     }
-    
+
     @Bean
     public SysAccountService sysAccountService() {
         return new SysAccountService();
     }
-    
+
     @Bean
     public SearchService searchService() {
         return new SearchService();
+    }
+
+    @Bean
+    public StatsService statsService() {
+        return new StatsService();
     }
 }

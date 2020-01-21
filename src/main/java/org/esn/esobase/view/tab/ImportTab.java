@@ -7,6 +7,7 @@ package org.esn.esobase.view.tab;
 
 import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Notification;
 import com.vaadin.v7.ui.Upload;
 import com.vaadin.v7.ui.Upload.Receiver;
 import com.vaadin.v7.ui.Upload.SucceededListener;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,9 +39,11 @@ import org.esn.esobase.data.GoogleDocsService;
 import org.esn.esobase.data.InsertExecutor;
 import org.esn.esobase.data.ItemInfoImportService;
 import org.esn.esobase.data.TableUpdateService;
+import org.esn.esobase.data.repository.TopicRepository;
 import org.esn.esobase.model.EsoInterfaceVariable;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
+import org.esn.esobase.model.Topic;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.EsnDecoder;
 import org.esn.esobase.tools.LuaDecoder;
@@ -68,6 +72,8 @@ public class ImportTab extends VerticalLayout {
     private TableUpdateService tableUpdateService;
     @Autowired
     private ItemInfoImportService itemInfoImportService;
+    @Autowired
+    private TopicRepository topicRepository;
     private Button updateAbilityDescriptions;
     private Button updateAchievements;
     private Button updateAchievementDescriptions;
@@ -89,26 +95,6 @@ public class ImportTab extends VerticalLayout {
     private Button updateQuestStartTips;
     private Button updateQuestEndTips;
     private Upload uploadNewFormat;
-    private Button importPlayerPhrasesFromG;
-    private Button importNpcPhrasesFromG;
-    private Button importLocationNamesFromG;
-    private Button importQuestNamesFromG;
-    private Button importQuestDescriptionsFromG;
-    private Button importQuestDirectionsFromG;
-    private Button importQuestStartTipsFromG;
-    private Button importQuestEndTipsFromG;
-    private Button importItemNamesFromG;
-    private Button importItemDescriptionsFromG;
-    private Button importJournalEntriesFromG;
-    private Button importNpcNamesFromG;
-    private Button importActiivatorsFromG;
-    private Button importAchievementsFromG;
-    private Button importAchievementDescriptionsFromG;
-    private Button importNotesFromG;
-    private Button importAbilityDescriptionsFromG;
-    private Button importCollectiblesFromG;
-    private Button importCollectibleDescriptionsFromG;
-    private Button importLoadscreensFromG;
     private Button assignPhrases;
     private Button fillLocationsAndNpc;
     private Button gatherQuestStatistics;
@@ -143,7 +129,7 @@ public class ImportTab extends VerticalLayout {
         uploadNewFormat.setImmediate(true);
         this.addComponent(uploadNewFormat);
         if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
-            updateIndexes=new Button("Обновить индексы", new Button.ClickListener() {
+            updateIndexes = new Button("Обновить индексы", new Button.ClickListener() {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     LOG.info("Search index...");
@@ -415,246 +401,6 @@ public class ImportTab extends VerticalLayout {
                 }
             });
             this.addComponent(updateQuestEndTips);
-            /*importPlayerPhrasesFromG = new Button("Импорт фраз игрока из гугл-таблиц");
-            importPlayerPhrasesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsPlayerPhrase> playerPhrases = docsService.getPlayerPhrases();
-                    service.loadPlayerPhrasesFromSpreadSheet(playerPhrases);
-                }
-            });
-            this.addComponent(importPlayerPhrasesFromG);
-            
-            importNpcPhrasesFromG = new Button("Импорт фраз NPC из гугл-таблиц");
-            importNpcPhrasesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    try {
-                        GoogleDocsService docsService = new GoogleDocsService();
-                        List<GSpreadSheetsNpcPhrase> npcPhrases = docsService.getNpcPhrases();
-                        service.loadNpcPhrasesFromSpreadSheet(npcPhrases);
-                    } catch (Exception ex) {
-                        Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            });
-            this.addComponent(importNpcPhrasesFromG);
-            importLocationNamesFromG = new Button("Импорт локаций из гугл-таблиц");
-            importLocationNamesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsLocationName> locationsNames = docsService.getLocationsNames();
-                    service.loadLocationNamesFromSpreadSheet(locationsNames);
-                }
-            });
-            this.addComponent(importLocationNamesFromG);
-
-            importQuestNamesFromG = new Button("Импорт названий квестов из гугл-таблиц");
-            importQuestNamesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestName> items = docsService.getQuestNames();
-                    service.loadQuestNamesFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importQuestNamesFromG);
-
-            importQuestDescriptionsFromG = new Button("Импорт описаний квестов из гугл-таблиц");
-            importQuestDescriptionsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestDescription> items = docsService.getQuestDescriptions();
-                    service.loadQuestDesciptionsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importQuestDescriptionsFromG);
-
-            importQuestDirectionsFromG = new Button("Импорт целей квестов из гугл-таблиц");
-            importQuestDirectionsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestDirection> items = docsService.getQuestDirections();
-                    service.loadQuestDirectionsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importQuestDirectionsFromG);
-
-            importItemNamesFromG = new Button("Импорт названий предметов из гугл-таблиц");
-            importItemNamesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsItemName> items = docsService.getItemNames();
-                    service.loadItemNamesFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importItemNamesFromG);
-
-            importItemDescriptionsFromG = new Button("Импорт описаний предметов из гугл-таблиц");
-            importItemDescriptionsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsItemDescription> items = docsService.getItemDescriptions();
-                    service.loadItemDesciptionsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importItemDescriptionsFromG);
-
-            importJournalEntriesFromG = new Button("Импорт записей журнала из гугл-таблиц");
-            importJournalEntriesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsJournalEntry> items = docsService.getJournaleEntries();
-                    service.loadJournalEntriesFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importJournalEntriesFromG);
-
-            importActiivatorsFromG = new Button("Импорт активаторов из гугл-таблиц");
-            importActiivatorsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsActivator> items = docsService.getActivators();
-                    service.loadActivatorsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importActiivatorsFromG);
-
-            importAchievementsFromG = new Button("Импорт достижений из гугл-таблиц");
-            importAchievementsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsAchievement> items = docsService.getAchievements();
-                    service.loadAchievementsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importAchievementsFromG);
-
-            importAchievementDescriptionsFromG = new Button("Импорт описаний достижений из гугл-таблиц");
-            importAchievementDescriptionsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsAchievementDescription> items = docsService.getAchievementDescriptions();
-                    service.loadAchievementDescriptionsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importAchievementDescriptionsFromG);
-
-            importNotesFromG = new Button("Импорт записок из гугл-таблиц");
-            importNotesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsNote> items = docsService.getNotes();
-                    service.loadNotesFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importNotesFromG);
-            importAbilityDescriptionsFromG = new Button("Импорт описаний способностей из гугл-таблиц");
-            importAbilityDescriptionsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsAbilityDescription> items = docsService.getAbilityDescriptions();
-                    service.loadAbilityDescriptionsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importAbilityDescriptionsFromG);
-
-            importCollectiblesFromG = new Button("Импорт коллекционных предметов из гугл-таблиц");
-            importCollectiblesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsCollectible> items = docsService.getCollectibles();
-                    service.loadCollectiblesFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importCollectiblesFromG);
-
-            importCollectibleDescriptionsFromG = new Button("Импорт описаний коллекционных предметов из гугл-таблиц");
-            importCollectibleDescriptionsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsCollectibleDescription> items = docsService.getCollectibleDescriptions();
-                    service.loadCollectibleDescriptionsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importCollectibleDescriptionsFromG);
-
-            importLoadscreensFromG = new Button("Импорт загрузочных экранов из гугл-таблиц");
-            importLoadscreensFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsLoadscreen> items = docsService.getLoadscreens();
-                    service.loadLoadscreensFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importLoadscreensFromG);
-
-            importNpcNamesFromG = new Button("Импорт NPC из гугл-таблиц");
-            importNpcNamesFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsNpcName> npcNames = docsService.getNpcNames();
-                    service.loadNpcNamesFromSpreadSheet(npcNames);
-                }
-            });
-            this.addComponent(importNpcNamesFromG);
-            
-            importQuestStartTipsFromG = new Button("Импорт стартовых цепочек заданий");
-            importQuestStartTipsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestStartTip> items = docsService.getQuestStartTips();
-                    service.loadQuestStartTipsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importQuestStartTipsFromG);
-            importQuestEndTipsFromG = new Button("Импорт конечных цепочек заданий");
-            importQuestEndTipsFromG.addClickListener(new Button.ClickListener() {
-
-                @Override
-                public void buttonClick(Button.ClickEvent event) {
-                    GoogleDocsService docsService = new GoogleDocsService();
-                    List<GSpreadSheetsQuestEndTip> items = docsService.getQuestEndTips();
-                    service.loadQuestEndTipsFromSpreadSheet(items);
-                }
-            });
-            this.addComponent(importQuestEndTipsFromG); */
             fillLocationsAndNpc = new Button("Заполнить имена локаций и NPC");
             fillLocationsAndNpc.addClickListener(new Button.ClickListener() {
 
@@ -674,7 +420,30 @@ public class ImportTab extends VerticalLayout {
                     //service.generateSearchIndex();
                     service.assignToSpreadSheetPhrases();
                     service.mergeSubtitles();
-                    service.mergeTopics();
+                    List<Object[]> topicToMerge = service.getTopicToMerge();
+                    List<Topic> topicsToDelete = new ArrayList<>();
+                    List<Topic> undeletable = new ArrayList<>();
+                    for (Object[] o : topicToMerge) {
+                        BigInteger sId = (BigInteger) o[0];
+                        BigInteger s1Id = (BigInteger) o[1];
+                        executor.execute(new MergeTopicsTask(sId, s1Id, topicsToDelete, undeletable));
+
+                    }
+                    for (;;) {
+                        int count = executor.getActiveCount();
+                        LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, executor.getThreadPoolExecutor().getQueue().size()});
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            LOG.log(Level.SEVERE, null, ex);
+                        }
+                        if (count == 0) {
+                            break;
+                        }
+                    }
+                    for (Topic t : topicsToDelete) {
+                        executor.execute(new DeleteTopicTask(t));
+                    }
                 }
             });
             this.addComponent(assignPhrases);
@@ -889,7 +658,7 @@ public class ImportTab extends VerticalLayout {
                         Cell textCell = r.getCell(3);
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
-                        if (rows.size() > 5000) {
+                        if (rows.size() > 1000) {
                             InsertTask task = new InsertTask(rows, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -975,7 +744,7 @@ public class ImportTab extends VerticalLayout {
                         Cell gameCell = r.getCell(3);
                         Object[] row = new Object[]{getStringFromCell(textEnCell), getStringFromCell(textRuCell), getStringFromCell(descriptionCell), getStringFromCell(gameCell)};
                         rows.add(row);
-                        if (rows.size() > 5000) {
+                        if (rows.size() > 1000) {
                             DictionaryInsertTask task = new DictionaryInsertTask(rows, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -1060,7 +829,7 @@ public class ImportTab extends VerticalLayout {
                         Cell textCell = r.getCell(3);
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
-                        if (rows.size() > 500) {
+                        if (rows.size() > 1000) {
                             InsertTask task = new InsertTask(rows, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -1146,7 +915,7 @@ public class ImportTab extends VerticalLayout {
                         Cell textCell = r.getCell(3);
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
-                        if (rows.size() > 5000) {
+                        if (rows.size() > 1000) {
                             InsertTask task = new InsertTask(rows, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -1232,7 +1001,7 @@ public class ImportTab extends VerticalLayout {
                         Cell textCell = r.getCell(3);
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
-                        if (rows.size() > 5000) {
+                        if (rows.size() > 1000) {
                             InsertTask task = new InsertTask(rows, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -1320,7 +1089,7 @@ public class ImportTab extends VerticalLayout {
                         Cell textCell = r.getCell(3);
                         Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
                         rows.add(row);
-                        if (rows.size() > 5000) {
+                        if (rows.size() > 1000) {
                             InsertTask task = new InsertTask(rows, ver, service);
                             taskExecutor.execute(task);
                             rows = new ArrayList<>();
@@ -1384,6 +1153,8 @@ public class ImportTab extends VerticalLayout {
 
         private final DBService service;
 
+        private ImportStatsCallBack cb;
+
         private ByteArrayOutputStream baos;
 
         @Override
@@ -1409,11 +1180,12 @@ public class ImportTab extends VerticalLayout {
 
         @Override
         public void uploadSucceeded(Upload.SucceededEvent event) {
+            cb = new ImportStatsCallBack();
             Date startTime = new Date();
             byte[] toByteArray = baos.toByteArray();
             String text = new String(toByteArray);
             JSONObject jsonFromLua = LuaDecoder.getJsonFromLua(text);
-            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14 =")) {
+            if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v14")) {
                 newFormatImportNpcsWithSublocations(jsonFromLua);
                 waitExecutorToComplete();
                 newFormatImportSubtitlesWithSublocations(jsonFromLua);
@@ -1421,7 +1193,7 @@ public class ImportTab extends VerticalLayout {
                 newFormatImportQuestsWithSteps(jsonFromLua);
                 waitExecutorToComplete();
                 importBooksWithSublocations(jsonFromLua);
-            } else if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v15 =")) {
+            } else if (LuaDecoder.getFileheader(text).equals("ConversationsQQ_SavedVariables_v15")) {
                 V15ImportNpcsWithSublocations(jsonFromLua);
                 waitExecutorToComplete();
                 newFormatImportSubtitlesWithSublocations(jsonFromLua);
@@ -1436,6 +1208,22 @@ public class ImportTab extends VerticalLayout {
             Date completeTime = new Date(totalTime);
             SimpleDateFormat sdf = new SimpleDateFormat("mm:ss");
             LOG.log(Level.INFO, "Completed in {0}", sdf.format(completeTime));
+            Notification n = new Notification("Загрузка выполнена");
+            StringBuilder description = new StringBuilder();
+            description.append("Время загрузки: ").append(sdf.format(completeTime));
+            description.append("Добавлено:").append("\n");
+            description.append("Локаций — ").append(Integer.toString(cb.getNewLocations())).append("\n");
+            description.append("NPC — ").append(Integer.toString(cb.getNewNpcs())).append("\n");
+            description.append("Диалогов — ").append(Integer.toString(cb.getNewTopics())).append("\n");
+            description.append("Субтитров — ").append(Integer.toString(cb.getNewSubtitles())).append("\n");
+            description.append("Квестов — ").append(Integer.toString(cb.getNewQuests())).append("\n");
+            description.append("Стадий квестов — ").append(Integer.toString(cb.getNewQuestSteps())).append("\n");
+            description.append("Целей квестов — ").append(Integer.toString(cb.getNewQuestDirections())).append("\n");
+            description.append("Квестовых предметов — ").append(Integer.toString(cb.getNewQuestItems())).append("\n");
+
+            n.setDescription(description.toString());
+            n.setDelayMsec(30000);
+            n.show(getUI().getPage());
         }
 
         private void newFormatImportQuestsWithSteps(JSONObject source) {
@@ -1445,7 +1233,7 @@ public class ImportTab extends VerticalLayout {
                 Iterator locationsKeys = locationObject.keys();
                 while (locationsKeys.hasNext()) {
                     String locationName = (String) locationsKeys.next();
-                    ImportQuestsLocationTask task = new ImportQuestsLocationTask(locationName, locationObject);
+                    ImportQuestsLocationTask task = new ImportQuestsLocationTask(locationName, locationObject, cb);
                     executor.execute(task);
                 }
             } catch (JSONException ex) {
@@ -1460,7 +1248,7 @@ public class ImportTab extends VerticalLayout {
                 Iterator locationsKeys = npcLocationObject.keys();
                 while (locationsKeys.hasNext()) {
                     String locationName = (String) locationsKeys.next();
-                    ImportSubtitleLocationTask importSubtitleLocationTask = new ImportSubtitleLocationTask(locationName, npcLocationObject);
+                    ImportSubtitleLocationTask importSubtitleLocationTask = new ImportSubtitleLocationTask(locationName, npcLocationObject, cb);
                     executor.execute(importSubtitleLocationTask);
                 }
             } catch (JSONException ex) {
@@ -1473,18 +1261,18 @@ public class ImportTab extends VerticalLayout {
             Iterator locationsKeys = npcLocationObject.keys();
             while (locationsKeys.hasNext()) {
                 String locationKey = (String) locationsKeys.next();
-                ImportNpcLocationTask importNpcLocationTask = new ImportNpcLocationTask(locationKey, npcLocationObject);
+                ImportNpcLocationTask importNpcLocationTask = new ImportNpcLocationTask(locationKey, npcLocationObject, cb);
                 executor.execute(importNpcLocationTask);
             }
 
         }
-        
+
         private void V15ImportNpcsWithSublocations(JSONObject source) {
             JSONObject npcLocationObject = source.getJSONObject("npc");
             Iterator locationsKeys = npcLocationObject.keys();
             while (locationsKeys.hasNext()) {
                 String locationKey = (String) locationsKeys.next();
-                V15ImportNpcLocationTask importNpcLocationTask = new V15ImportNpcLocationTask(locationKey, npcLocationObject);
+                V15ImportNpcLocationTask importNpcLocationTask = new V15ImportNpcLocationTask(locationKey, npcLocationObject, cb);
                 executor.execute(importNpcLocationTask);
             }
 
@@ -1498,13 +1286,13 @@ public class ImportTab extends VerticalLayout {
                 Iterator locationsKeys = bookLocationObject.keys();
                 while (locationsKeys.hasNext()) {
                     String locationKey = (String) locationsKeys.next();
-                    Location location = service.getLocation(locationKey);
+                    Location location = service.getLocation(locationKey, cb);
                     if (location != null) {
                         JSONObject subLocationObject = bookLocationObject.getJSONObject(locationKey);
                         Iterator subLocationKeys = subLocationObject.keys();
                         while (subLocationKeys.hasNext()) {
                             String subLocationKey = (String) subLocationKeys.next();
-                            Location subLocation = service.getSubLocation(subLocationKey, locationKey, location);
+                            Location subLocation = service.getSubLocation(subLocationKey, locationKey, location, cb);
                             if (subLocation != null) {
                                 JSONObject locationBooksObject = subLocationObject.getJSONObject(subLocationKey);
                                 Iterator locationBooksObjectIterator = locationBooksObject.keys();
@@ -1526,24 +1314,31 @@ public class ImportTab extends VerticalLayout {
         @Scope("prototype")
         private class ImportQuestsLocationTask implements Runnable {
 
-            private final String locationName;
+            private String locationName;
             private final JSONObject locationObject;
+            private final ImportStatsCallBack cb;
 
-            public ImportQuestsLocationTask(String locationName, JSONObject locationObject) {
+            public ImportQuestsLocationTask(String locationName, JSONObject locationObject, ImportStatsCallBack cb) {
                 this.locationName = locationName;
                 this.locationObject = locationObject;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location location = service.getLocation(locationName);
+                JSONObject locationQuestsObject = locationObject.getJSONObject(locationName);
+                if (locationName.equals("Северный Эльсвейр")) {
+                    locationName = "Эльсвейр";
+                } else if (locationName.equals("Northern Elsweyr")) {
+                    locationName = "Elsweyr";
+                }
+                Location location = service.getLocation(locationName, cb);
                 if (location != null) {
-                    JSONObject locationQuestsObject = locationObject.getJSONObject(locationName);
                     Iterator locationQuestsObjectIterator = locationQuestsObject.keys();
                     while (locationQuestsObjectIterator.hasNext()) {
                         String questKey = (String) locationQuestsObjectIterator.next();
                         JSONObject questObject = locationQuestsObject.getJSONObject(questKey);
-                        ImportQuestTask task = new ImportQuestTask(questKey, questObject, location);
+                        ImportQuestTask task = new ImportQuestTask(questKey, questObject, location, cb);
                         executor.execute(task);
                     }
                 }
@@ -1558,16 +1353,18 @@ public class ImportTab extends VerticalLayout {
             private final String questKey;
             private final JSONObject questObject;
             private final Location location;
+            private final ImportStatsCallBack cb;
 
-            public ImportQuestTask(String questKey, JSONObject questObject, Location location) {
+            public ImportQuestTask(String questKey, JSONObject questObject, Location location, ImportStatsCallBack cb) {
                 this.questKey = questKey;
                 this.questObject = questObject;
                 this.location = location;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                service.newFormatImportQuestWithSteps(questKey, questObject, location);
+                service.newFormatImportQuestWithSteps(questKey, questObject, location, cb);
             }
 
         }
@@ -1597,49 +1394,53 @@ public class ImportTab extends VerticalLayout {
 
             private final String locationKey;
             private final JSONObject npcLocationObject;
+            private final ImportStatsCallBack cb;
 
-            public ImportNpcLocationTask(String locationKey, JSONObject npcLocationObject) {
+            public ImportNpcLocationTask(String locationKey, JSONObject npcLocationObject, ImportStatsCallBack cb) {
                 this.locationKey = locationKey;
                 this.npcLocationObject = npcLocationObject;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location location = service.getLocation(locationKey);
+                Location location = service.getLocation(locationKey, cb);
                 if (location != null) {
                     JSONObject subLocationObject = npcLocationObject.getJSONObject(locationKey);
                     Iterator subLocationKeys = subLocationObject.keys();
                     while (subLocationKeys.hasNext()) {
                         String subLocationKey = (String) subLocationKeys.next();
-                        ImportNpcSublocationTask task = new ImportNpcSublocationTask(subLocationKey, locationKey, subLocationObject, location);
+                        ImportNpcSublocationTask task = new ImportNpcSublocationTask(subLocationKey, locationKey, subLocationObject, location, cb);
                         executor.execute(task);
                     }
                 }
             }
 
         }
-        
+
         @Component
         @Scope("prototype")
         private class V15ImportNpcLocationTask implements Runnable {
 
             private final String locationKey;
             private final JSONObject npcLocationObject;
+            private final ImportStatsCallBack cb;
 
-            public V15ImportNpcLocationTask(String locationKey, JSONObject npcLocationObject) {
+            public V15ImportNpcLocationTask(String locationKey, JSONObject npcLocationObject, ImportStatsCallBack cb) {
                 this.locationKey = locationKey;
                 this.npcLocationObject = npcLocationObject;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location location = service.getLocation(locationKey);
+                Location location = service.getLocation(locationKey, cb);
                 if (location != null) {
                     JSONObject subLocationObject = npcLocationObject.getJSONObject(locationKey);
                     Iterator subLocationKeys = subLocationObject.keys();
                     while (subLocationKeys.hasNext()) {
                         String subLocationKey = (String) subLocationKeys.next();
-                        V15ImportNpcSublocationTask task = new V15ImportNpcSublocationTask(subLocationKey, locationKey, subLocationObject, location);
+                        V15ImportNpcSublocationTask task = new V15ImportNpcSublocationTask(subLocationKey, locationKey, subLocationObject, location, cb);
                         executor.execute(task);
                     }
                 }
@@ -1655,17 +1456,19 @@ public class ImportTab extends VerticalLayout {
             private final String locationKey;
             private final JSONObject subLocationObject;
             private final Location location;
+            private final ImportStatsCallBack cb;
 
-            public ImportNpcSublocationTask(String subLocationKey, String locationKey, JSONObject subLocationObject, Location location) {
+            public ImportNpcSublocationTask(String subLocationKey, String locationKey, JSONObject subLocationObject, Location location, ImportStatsCallBack cb) {
                 this.subLocationKey = subLocationKey;
                 this.locationKey = locationKey;
                 this.subLocationObject = subLocationObject;
                 this.location = location;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location subLocation = service.getSubLocation(subLocationKey, locationKey, location);
+                Location subLocation = service.getSubLocation(subLocationKey, locationKey, location, cb);
                 if (subLocation != null) {
                     JSONObject npcsObject = subLocationObject.getJSONObject(subLocationKey);
                     Iterator npcsKeys = npcsObject.keys();
@@ -1677,7 +1480,7 @@ public class ImportTab extends VerticalLayout {
                 }
             }
         }
-        
+
         @Component
         @Scope("prototype")
         private class V15ImportNpcSublocationTask implements Runnable {
@@ -1686,23 +1489,25 @@ public class ImportTab extends VerticalLayout {
             private final String locationKey;
             private final JSONObject subLocationObject;
             private final Location location;
+            private final ImportStatsCallBack cb;
 
-            public V15ImportNpcSublocationTask(String subLocationKey, String locationKey, JSONObject subLocationObject, Location location) {
+            public V15ImportNpcSublocationTask(String subLocationKey, String locationKey, JSONObject subLocationObject, Location location, ImportStatsCallBack cb) {
                 this.subLocationKey = subLocationKey;
                 this.locationKey = locationKey;
                 this.subLocationObject = subLocationObject;
                 this.location = location;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location subLocation = service.getSubLocation(subLocationKey, locationKey, location);
+                Location subLocation = service.getSubLocation(subLocationKey, locationKey, location, cb);
                 if (subLocation != null) {
                     JSONObject npcsObject = subLocationObject.getJSONObject(subLocationKey);
                     Iterator npcsKeys = npcsObject.keys();
                     while (npcsKeys.hasNext()) {
                         String npcKey = (String) npcsKeys.next();
-                        V15ImportNpcWithSublocationsTask task = new V15ImportNpcWithSublocationsTask(npcKey, subLocation, npcsObject);
+                        V15ImportNpcWithSublocationsTask task = new V15ImportNpcWithSublocationsTask(npcKey, subLocation, npcsObject, cb);
                         executor.execute(task);
                     }
                 }
@@ -1729,10 +1534,14 @@ public class ImportTab extends VerticalLayout {
                 JSONObject npcContent = npcsObject.getJSONObject(npcKey);
                 service.newFormatImportNpcWithSublocations(currentNpc, npcContent);
                 service.calculateNpcProgress(currentNpc);
+                service.calculateLocationProgress(currentNpc.getLocation());
+                if (currentNpc.getLocation().getParentLocation() != null) {
+                    service.calculateLocationProgress(currentNpc.getLocation().getParentLocation());
+                }
             }
 
         }
-        
+
         @Component
         @Scope("prototype")
         private class V15ImportNpcWithSublocationsTask implements Runnable {
@@ -1740,19 +1549,22 @@ public class ImportTab extends VerticalLayout {
             private final String npcKey;
             private final Location subLocation;
             private final JSONObject npcsObject;
+            private final ImportStatsCallBack cb;
 
-            public V15ImportNpcWithSublocationsTask(String npcKey, Location subLocation, JSONObject npcsObject) {
+            public V15ImportNpcWithSublocationsTask(String npcKey, Location subLocation, JSONObject npcsObject, ImportStatsCallBack cb) {
                 this.npcKey = npcKey;
                 this.subLocation = subLocation;
                 this.npcsObject = npcsObject;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
                 Npc currentNpc = service.getNpc(npcKey, subLocation);
                 JSONObject npcContent = npcsObject.getJSONObject(npcKey);
-                service.v15importNpcWithSublocations(currentNpc, npcContent);
+                service.v15importNpcWithSublocations(currentNpc, npcContent, cb);
                 service.calculateNpcProgress(currentNpc);
+
             }
 
         }
@@ -1763,21 +1575,23 @@ public class ImportTab extends VerticalLayout {
 
             private final String locationName;
             private final JSONObject npcLocationObject;
+            private final ImportStatsCallBack cb;
 
-            public ImportSubtitleLocationTask(String locationName, JSONObject npcLocationObject) {
+            public ImportSubtitleLocationTask(String locationName, JSONObject npcLocationObject, ImportStatsCallBack cb) {
                 this.locationName = locationName;
                 this.npcLocationObject = npcLocationObject;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location location = service.getLocation(locationName);
+                Location location = service.getLocation(locationName, cb);
                 if (location != null) {
                     JSONObject subLocationObject = npcLocationObject.getJSONObject(locationName);
                     Iterator subLocationKeys = subLocationObject.keys();
                     while (subLocationKeys.hasNext()) {
                         String subLocationKey = (String) subLocationKeys.next();
-                        ImportSubtitleSubLocationTask task = new ImportSubtitleSubLocationTask(subLocationKey, locationName, subLocationObject, location);
+                        ImportSubtitleSubLocationTask task = new ImportSubtitleSubLocationTask(subLocationKey, locationName, subLocationObject, location, cb);
                         executor.execute(task);
                     }
                 }
@@ -1793,23 +1607,25 @@ public class ImportTab extends VerticalLayout {
             private final String locationName;
             private final JSONObject subLocationObject;
             private final Location location;
+            private final ImportStatsCallBack cb;
 
-            public ImportSubtitleSubLocationTask(String subLocationKey, String locationName, JSONObject subLocationObject, Location location) {
+            public ImportSubtitleSubLocationTask(String subLocationKey, String locationName, JSONObject subLocationObject, Location location, ImportStatsCallBack cb) {
                 this.subLocationKey = subLocationKey;
                 this.locationName = locationName;
                 this.subLocationObject = subLocationObject;
                 this.location = location;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                Location subLocation = service.getSubLocation(subLocationKey, locationName, location);
+                Location subLocation = service.getSubLocation(subLocationKey, locationName, location, cb);
                 if (subLocation != null) {
                     JSONObject locationSubtitlesObject = subLocationObject.getJSONObject(subLocationKey);
                     Iterator locationSubtitlesObjectIterator = locationSubtitlesObject.keys();
                     while (locationSubtitlesObjectIterator.hasNext()) {
                         JSONObject subtitleSet = locationSubtitlesObject.getJSONObject((String) locationSubtitlesObjectIterator.next());
-                        ImportSubtitlesTask task = new ImportSubtitlesTask(subtitleSet, subLocation);
+                        ImportSubtitlesTask task = new ImportSubtitlesTask(subtitleSet, subLocation, cb);
                         executor.execute(task);
                     }
                 }
@@ -1823,15 +1639,17 @@ public class ImportTab extends VerticalLayout {
 
             private final JSONObject subtitleSet;
             private final Location subLocation;
+            private final ImportStatsCallBack cb;
 
-            public ImportSubtitlesTask(JSONObject subtitleSet, Location subLocation) {
+            public ImportSubtitlesTask(JSONObject subtitleSet, Location subLocation, ImportStatsCallBack cb) {
                 this.subtitleSet = subtitleSet;
                 this.subLocation = subLocation;
+                this.cb = cb;
             }
 
             @Override
             public void run() {
-                service.newFormatImportSubtitleWithSublocations(subtitleSet, subLocation);
+                service.newFormatImportSubtitleWithSublocations(subtitleSet, subLocation, cb);
             }
 
         }
@@ -1967,6 +1785,46 @@ public class ImportTab extends VerticalLayout {
 
     @Component
     @Scope("prototype")
+    private class MergeTopicsTask implements Runnable {
+
+        private final BigInteger sId;
+        private final BigInteger s1Id;
+        private final List<Topic> topicsToDelete;
+        private final List<Topic> undeletable;
+
+        public MergeTopicsTask(BigInteger sId, BigInteger s1Id, List<Topic> topicsToDelete, List<Topic> undeletable) {
+            this.sId = sId;
+            this.s1Id = s1Id;
+            this.topicsToDelete = topicsToDelete;
+            this.undeletable = undeletable;
+        }
+
+        @Override
+        public void run() {
+            service.mergeTopics(sId, s1Id, topicsToDelete, undeletable);
+        }
+
+    }
+
+    @Component
+    @Scope("prototype")
+    private class DeleteTopicTask implements Runnable {
+
+        private final Topic topicToDelete;
+
+        public DeleteTopicTask(Topic topicToDelete) {
+            this.topicToDelete = topicToDelete;
+        }
+
+        @Override
+        public void run() {
+            topicRepository.delete(topicToDelete);
+        }
+
+    }
+
+    @Component
+    @Scope("prototype")
     private class CalculateNpcProgressTask implements Runnable {
 
         private final Npc npc;
@@ -2018,6 +1876,83 @@ public class ImportTab extends VerticalLayout {
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+
+    }
+
+    public class ImportStatsCallBack {
+
+        private int newLocations = 0;
+        private int newNpcs = 0;
+        private int newTopics = 0;
+        private int newSubtitles = 0;
+        private int newQuests = 0;
+        private int newQuestSteps = 0;
+        private int newQuestDirections = 0;
+        private int newQuestItems = 0;
+
+        public synchronized void newLocation() {
+            newLocations++;
+        }
+
+        public synchronized void newNpc() {
+            newNpcs++;
+        }
+
+        public synchronized void newTopic() {
+            newTopics++;
+        }
+
+        public synchronized void newSubtitle() {
+            newSubtitles++;
+        }
+
+        public synchronized void newQuest() {
+            newQuests++;
+        }
+
+        public synchronized void newQuestSteps() {
+            newQuestSteps++;
+        }
+
+        public synchronized void newQuestDirections() {
+            newQuestDirections++;
+        }
+
+        public synchronized void newQuestItems() {
+            newQuestItems++;
+        }
+
+        public int getNewLocations() {
+            return newLocations;
+        }
+
+        public int getNewNpcs() {
+            return newNpcs;
+        }
+
+        public int getNewTopics() {
+            return newTopics;
+        }
+
+        public int getNewSubtitles() {
+            return newSubtitles;
+        }
+
+        public int getNewQuests() {
+            return newQuests;
+        }
+
+        public int getNewQuestSteps() {
+            return newQuestSteps;
+        }
+
+        public int getNewQuestDirections() {
+            return newQuestDirections;
+        }
+
+        public int getNewQuestItems() {
+            return newQuestItems;
         }
 
     }

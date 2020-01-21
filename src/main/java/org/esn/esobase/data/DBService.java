@@ -132,6 +132,7 @@ import org.esn.esobase.model.lib.DAO;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.esn.esobase.tools.EsnDecoder;
 import org.esn.esobase.tools.GSpreadSheetLinkRouter;
+import org.esn.esobase.view.tab.ImportTab;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
@@ -3625,12 +3626,13 @@ public class DBService {
                                     cb.isNull(join1.get("translator"))),
                             cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
-                    predicates2.add(cb.or(cb.and(
-                            cb.isNotNull(stepsJoin.get("sheetsJournalEntry")),
-                            cb.isEmpty(join2.get("translatedTexts")),
-                            cb.isNull(join2.get("translator"))),
-                            cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY)
-                    ));
+//                    predicates2.add(cb.or(cb.and(
+//                            cb.isNotNull(stepsJoin.get("sheetsJournalEntry")),
+//                            cb.isEmpty(join2.get("translatedTexts")),
+//                            cb.isNull(join2.get("translator"))),
+//                            cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY)
+//                    ));
+                    predicates2.add(cb.equal(join2.get("translator"), "заглушка"));
                     predicates3.add(cb.or(cb.and(
                             cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                             cb.isEmpty(join3.get("translatedTexts")),
@@ -4365,8 +4367,9 @@ public class DBService {
     @Transactional
     public void acceptTranslatedText(TranslatedText entity) {
         Session session = (Session) em.getDelegate();
+        String acceptedText = entity.getText();
         if (entity.getBook() == null) {
-            entity.setText(entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n", "$"));
+            acceptedText = entity.getText().trim().replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n", "$");
         }
         Npc npc = null;
         boolean isSucceeded = false;
@@ -4375,7 +4378,7 @@ public class DBService {
             Subtitle subtitle = em.find(Subtitle.class, entity.getSubtitle().getId());
             GSpreadSheetsNpcPhrase npcPhrase = subtitle.getExtNpcPhrase();
             if (npcPhrase != null) {
-                npcPhrase.setTextRu(entity.getText());
+                npcPhrase.setTextRu(acceptedText);
                 npcPhrase.setTranslator(entity.getAuthor().getLogin());
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
@@ -4387,7 +4390,7 @@ public class DBService {
             Topic topic = em.find(Topic.class, entity.getNpcTopic().getId());
             GSpreadSheetsNpcPhrase npcPhrase = topic.getExtNpcPhrase();
             if (npcPhrase != null) {
-                npcPhrase.setTextRu(entity.getText());
+                npcPhrase.setTextRu(acceptedText);
                 npcPhrase.setTranslator(entity.getAuthor().getLogin());
                 npcPhrase.setChangeTime(new Date());
                 em.merge(npcPhrase);
@@ -4399,7 +4402,7 @@ public class DBService {
             Topic topic = em.find(Topic.class, entity.getPlayerTopic().getId());
             GSpreadSheetsPlayerPhrase playerPhrase = topic.getExtPlayerPhrase();
             if (playerPhrase != null) {
-                playerPhrase.setTextRu(entity.getText());
+                playerPhrase.setTextRu(acceptedText);
                 playerPhrase.setTranslator(entity.getAuthor().getLogin());
                 playerPhrase.setChangeTime(new Date());
                 em.merge(playerPhrase);
@@ -4408,84 +4411,84 @@ public class DBService {
 
         } else if (entity.getSpreadSheetsActivator() != null) {
             GSpreadSheetsActivator gs = em.find(GSpreadSheetsActivator.class, entity.getSpreadSheetsActivator().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsAchievement() != null) {
             GSpreadSheetsAchievement gs = em.find(GSpreadSheetsAchievement.class, entity.getSpreadSheetsAchievement().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsAchievementDescription() != null) {
             GSpreadSheetsAchievementDescription gs = em.find(GSpreadSheetsAchievementDescription.class, entity.getSpreadSheetsAchievementDescription().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsNote() != null) {
             GSpreadSheetsNote gs = em.find(GSpreadSheetsNote.class, entity.getSpreadSheetsNote().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSheetsAbilityDescription() != null) {
             GSpreadSheetsAbilityDescription gs = em.find(GSpreadSheetsAbilityDescription.class, entity.getSheetsAbilityDescription().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsQuestStartTip() != null) {
             GSpreadSheetsQuestStartTip gs = em.find(GSpreadSheetsQuestStartTip.class, entity.getSpreadSheetsQuestStartTip().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsQuestEndTip() != null) {
             GSpreadSheetsQuestEndTip gs = em.find(GSpreadSheetsQuestEndTip.class, entity.getSpreadSheetsQuestEndTip().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSheetsCollectible() != null) {
             GSpreadSheetsCollectible gs = em.find(GSpreadSheetsCollectible.class, entity.getSheetsCollectible().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSheetsCollectibleDescription() != null) {
             GSpreadSheetsCollectibleDescription gs = em.find(GSpreadSheetsCollectibleDescription.class, entity.getSheetsCollectibleDescription().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSheetsLoadscreen() != null) {
             GSpreadSheetsLoadscreen gs = em.find(GSpreadSheetsLoadscreen.class, entity.getSheetsLoadscreen().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getBook() != null) {
             BookText gs = em.find(BookText.class, entity.getBook().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.getBook().setTranslator(entity.getAuthor().getLogin());
             gs.getBook().setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getBookName() != null) {
             Book gs = em.find(Book.class, entity.getBookName().getId());
-            gs.setNameRu(entity.getText());
+            gs.setNameRu(acceptedText);
             gs.setChangeTime(new Date());
             em.merge(gs);
             Criteria activatorCrit = session.createCriteria(GSpreadSheetsActivator.class);
@@ -4493,7 +4496,7 @@ public class DBService {
             List<GSpreadSheetsActivator> activatorList = activatorCrit.list();
             if (activatorList != null) {
                 for (GSpreadSheetsActivator ac : activatorList) {
-                    ac.setTextRu(entity.getText());
+                    ac.setTextRu(acceptedText);
                     ac.setTranslator(entity.getAuthor().getLogin());
                     ac.setChangeTime(new Date());
                     em.merge(ac);
@@ -4504,7 +4507,7 @@ public class DBService {
             List<GSpreadSheetsItemName> itemList = itemCrit.list();
             if (itemList != null) {
                 for (GSpreadSheetsItemName it : itemList) {
-                    it.setTextRu(entity.getText());
+                    it.setTextRu(acceptedText);
                     it.setTranslator(entity.getAuthor().getLogin());
                     it.setChangeTime(new Date());
                     em.merge(it);
@@ -4513,28 +4516,28 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getSpreadSheetsItemDescription() != null) {
             GSpreadSheetsItemDescription gs = em.find(GSpreadSheetsItemDescription.class, entity.getSpreadSheetsItemDescription().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsItemName() != null) {
             GSpreadSheetsItemName gs = em.find(GSpreadSheetsItemName.class, entity.getSpreadSheetsItemName().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsJournalEntry() != null) {
             GSpreadSheetsJournalEntry gs = em.find(GSpreadSheetsJournalEntry.class, entity.getSpreadSheetsJournalEntry().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsLocationName() != null) {
             GSpreadSheetsLocationName gs = em.find(GSpreadSheetsLocationName.class, entity.getSpreadSheetsLocationName().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
@@ -4548,7 +4551,7 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getSpreadSheetsNpcName() != null) {
             GSpreadSheetsNpcName gs = em.find(GSpreadSheetsNpcName.class, entity.getSpreadSheetsNpcName().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
@@ -4562,35 +4565,35 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getSpreadSheetsNpcPhrase() != null) {
             GSpreadSheetsNpcPhrase gs = em.find(GSpreadSheetsNpcPhrase.class, entity.getSpreadSheetsNpcPhrase().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsPlayerPhrase() != null) {
             GSpreadSheetsPlayerPhrase gs = em.find(GSpreadSheetsPlayerPhrase.class, entity.getSpreadSheetsPlayerPhrase().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsQuestDescription() != null) {
             GSpreadSheetsQuestDescription gs = em.find(GSpreadSheetsQuestDescription.class, entity.getSpreadSheetsQuestDescription().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsQuestDirection() != null) {
             GSpreadSheetsQuestDirection gs = em.find(GSpreadSheetsQuestDirection.class, entity.getSpreadSheetsQuestDirection().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
             isSucceeded = true;
         } else if (entity.getSpreadSheetsQuestName() != null) {
             GSpreadSheetsQuestName gs = em.find(GSpreadSheetsQuestName.class, entity.getSpreadSheetsQuestName().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
@@ -4604,7 +4607,7 @@ public class DBService {
             isSucceeded = true;
         } else if (entity.getEsoInterfaceVariable() != null) {
             EsoInterfaceVariable gs = em.find(EsoInterfaceVariable.class, entity.getEsoInterfaceVariable().getId());
-            gs.setTextRu(entity.getText());
+            gs.setTextRu(acceptedText);
             gs.setTranslator(entity.getAuthor().getLogin());
             gs.setChangeTime(new Date());
             em.merge(gs);
@@ -4742,78 +4745,60 @@ public class DBService {
 
     @Transactional
     public void calculateNpcProgress(Npc n) {
-        int totalPhases = 0;
-        int translatedPhrases = 0;
-        Npc npc = em.find(Npc.class, n.getId());
-        if (npc.getTopics() != null) {
-            for (Topic t : npc.getTopics()) {
-                GSpreadSheetsNpcPhrase extNpcPhrase = t.getExtNpcPhrase();
-                if (extNpcPhrase != null) {
-                    totalPhases++;
-                    if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                        translatedPhrases++;
-                    }
-                }
-                GSpreadSheetsPlayerPhrase extPlayerPhrase = t.getExtPlayerPhrase();
-                if (extPlayerPhrase != null) {
-                    totalPhases++;
-                    if (extPlayerPhrase.getTranslator() != null && !extPlayerPhrase.getTranslator().isEmpty()) {
-                        translatedPhrases++;
-                    }
-                }
-            }
+        try {
+            Query q = em.createNativeQuery("update npc set progress=(select CASE count(total) WHEN 0 THEN 0 ELSE (count(translated)\\:\\:float/count(total)\\:\\:float)\\:\\:numeric(19,2) END from (select translated,total from (select p.id as translated,null\\:\\:bigint as total from npc n join topic t on t.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=t.extnpcphrase_id where n.id=:npcId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from npc n join topic t on t.npc_id=n.id join gspreadsheetsplayerphrase p on p.id=t.extplayerphrase_id where n.id=:npcId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from npc n join subtitle s on s.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=s.extnpcphrase_id where n.id=:npcId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from npc n join topic t on t.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=t.extnpcphrase_id where n.id=:npcId\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from npc n join topic t on t.npc_id=n.id join gspreadsheetsplayerphrase p on p.id=t.extplayerphrase_id where n.id=:npcId\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from npc n join subtitle s on s.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=s.extnpcphrase_id where n.id=:npcId) as rr group by translated,total) as rr) where npc.id=:npcId");
+            q.setParameter("npcId", n.getId());
+            q.executeUpdate();
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, null, ex);
         }
-
-        if (npc.getSubtitles() != null) {
-            for (Subtitle s : npc.getSubtitles()) {
-                GSpreadSheetsNpcPhrase extNpcPhrase = s.getExtNpcPhrase();
-                if (extNpcPhrase != null) {
-                    totalPhases++;
-                    if (extNpcPhrase.getTranslator() != null && !extNpcPhrase.getTranslator().isEmpty()) {
-                        translatedPhrases++;
-                    }
-                }
-            }
-        }
-        float r = 0;
-        if (totalPhases > 0) {
-            r = (float) translatedPhrases / totalPhases;
-        }
-        if (r > 0) {
-            n.setProgress(new BigDecimal(r).setScale(2, RoundingMode.UP));
-        } else if (totalPhases == 0) {
-            n.setProgress(BigDecimal.ONE);
-        } else {
-            n.setProgress(BigDecimal.ZERO);
-        }
-        em.merge(n);
     }
 
     @Transactional
     public void calculateLocationProgress(Location l) {
-        BigDecimal totalProgress = BigDecimal.ZERO;
-        Location loc = em.find(Location.class, l.getId());
-        int total = loc.getNpcs().size();
-        for (Npc npc : loc.getNpcs()) {
-            if (npc.getProgress() != null) {
-                totalProgress = totalProgress.add(npc.getProgress());
-            }
-
+        LOG.info(l.getName());
+        try {
+            Query q = em.createNativeQuery("update location set progress=(select CASE count(total) WHEN 0 THEN 0 ELSE (count(translated)\\:\\:float/count(total)\\:\\:float)\\:\\:numeric(19,2) END from (\n"
+                    + "select translated,total from (\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=t.extnpcphrase_id where l.id=:locatioId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsplayerphrase p on p.id=t.extplayerphrase_id where l.id=:locatioId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from location l join npc n on n.location_id=l.id join subtitle s on s.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=s.extnpcphrase_id where l.id=:locatioId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=t.extnpcphrase_id where l.id=:locatioId\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsplayerphrase p on p.id=t.extplayerphrase_id where l.id=:locatioId\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from location l join npc n on n.location_id=l.id join subtitle s on s.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=s.extnpcphrase_id where l.id=:locatioId\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=t.extnpcphrase_id where l.parentlocation_id=:locatioId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsplayerphrase p on p.id=t.extplayerphrase_id where l.parentlocation_id=:locatioId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select p.id as translated,null\\:\\:bigint as total from location l join npc n on n.location_id=l.id join subtitle s on s.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=s.extnpcphrase_id where l.parentlocation_id=:locatioId and p.translator is not null\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=t.extnpcphrase_id where l.parentlocation_id=:locatioId\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from location l join npc n on n.location_id=l.id join topic t on t.npc_id=n.id join gspreadsheetsplayerphrase p on p.id=t.extplayerphrase_id where l.parentlocation_id=:locatioId\n"
+                    + "union all\n"
+                    + "select null\\:\\:bigint as translated,p.id as total from location l join npc n on n.location_id=l.id join subtitle s on s.npc_id=n.id join gspreadsheetsnpcphrase p on p.id=s.extnpcphrase_id where l.parentlocation_id=:locatioId\n"
+                    + ") as rr group by translated,total) as rrr) where location.id=:locatioId");
+            q.setParameter("locatioId", l.getId());
+            q.executeUpdate();
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, null, ex);
         }
-        if (loc.getSubLocations() != null && !loc.getSubLocations().isEmpty()) {
-            for (Location subLoc : loc.getSubLocations()) {
-                total += subLoc.getNpcs().size();
-                for (Npc npc : subLoc.getNpcs()) {
-                    if (npc.getProgress() != null) {
-                        totalProgress = totalProgress.add(npc.getProgress());
-                    }
-                }
-            }
-        }
-        float r = 0;
-        BigDecimal averageProgress = totalProgress.divide(new BigDecimal(total), 2, RoundingMode.UP);
-        loc.setProgress(averageProgress);
-        em.merge(loc);
     }
 
     @Transactional
@@ -5243,7 +5228,7 @@ public class DBService {
 
     @Transactional
     public HierarchicalContainer getTextForSpellCheck(Date startDate, Date endDate,
-             HierarchicalContainer hc
+            HierarchicalContainer hc
     ) {
         hc.removeAllItems();
         List<Criterion> searchTermitems = new ArrayList<>();
@@ -5530,19 +5515,18 @@ public class DBService {
         Item item = result.addItem(newTranslationCount);
         item.getItemProperty("name").setValue("Новых строк");
         item.getItemProperty("value").setValue(Long.toString(newTranslationCount.longValue()));
-        Query preApproveTranslationsQuery = em.createNativeQuery("select count(*) from translatedtext where status='PREACCEPTED'");
-        preApproveTranslationsQuery.setMaxResults(1);
-        BigInteger preApproveTranslationCount = (BigInteger) preApproveTranslationsQuery.getSingleResult();
-        Item preApproveItem = result.addItem(preApproveTranslationCount);
-        preApproveItem.getItemProperty("name").setValue("Предварительно вычитанных строк");
-        preApproveItem.getItemProperty("value").setValue(Long.toString(preApproveTranslationCount.longValue()));
-
         Query correctedTranslationsQuery = em.createNativeQuery("select count(*) from translatedtext where status='CORRECTED'");
         correctedTranslationsQuery.setMaxResults(1);
         BigInteger correctedTranslationCount = (BigInteger) correctedTranslationsQuery.getSingleResult();
         Item correctedItem = result.addItem(correctedTranslationCount);
         correctedItem.getItemProperty("name").setValue("Откорректированных строк");
         correctedItem.getItemProperty("value").setValue(Long.toString(correctedTranslationCount.longValue()));
+        Query preApproveTranslationsQuery = em.createNativeQuery("select count(*) from translatedtext where status='PREACCEPTED'");
+        preApproveTranslationsQuery.setMaxResults(1);
+        BigInteger preApproveTranslationCount = (BigInteger) preApproveTranslationsQuery.getSingleResult();
+        Item preApproveItem = result.addItem(preApproveTranslationCount);
+        preApproveItem.getItemProperty("name").setValue("Предварительно вычитанных строк");
+        preApproveItem.getItemProperty("value").setValue(Long.toString(preApproveTranslationCount.longValue()));
         return result;
     }
 
@@ -7042,18 +7026,18 @@ public class DBService {
     }
 
     @Transactional
-    public void newFormatImportNpcsWithSublocations(JSONObject source) {
+    public void newFormatImportNpcsWithSublocations(JSONObject source, ImportTab.ImportStatsCallBack callback) {
         JSONObject npcLocationObject = source.getJSONObject("npc");
         Iterator locationsKeys = npcLocationObject.keys();
         while (locationsKeys.hasNext()) {
             String locationKey = (String) locationsKeys.next();
-            Location location = getLocation(locationKey);
+            Location location = getLocation(locationKey, callback);
             if (location != null) {
                 JSONObject subLocationObject = npcLocationObject.getJSONObject(locationKey);
                 Iterator subLocationKeys = subLocationObject.keys();
                 while (subLocationKeys.hasNext()) {
                     String subLocationKey = (String) subLocationKeys.next();
-                    Location subLocation = getSubLocation(subLocationKey, locationKey, location);
+                    Location subLocation = getSubLocation(subLocationKey, locationKey, location, callback);
                     JSONObject npcsObject = subLocationObject.getJSONObject(subLocationKey);
                     Iterator npcsKeys = npcsObject.keys();
                     while (npcsKeys.hasNext()) {
@@ -7068,7 +7052,7 @@ public class DBService {
     }
 
     @Transactional
-    public void newFormatImportSubtitleWithSublocations(JSONObject subtitleSet, Location subLocation) {
+    public void newFormatImportSubtitleWithSublocations(JSONObject subtitleSet, Location subLocation, ImportTab.ImportStatsCallBack callback) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         int subtitleCount = subtitleSet.length();
         Subtitle[] subtilteArray = new Subtitle[subtitleCount];
@@ -7150,6 +7134,7 @@ public class DBService {
                     subtitle.setExtNpcPhrase(subtitleExtPhrase);
                 }
                 LOG.log(Level.INFO, "new subtitle: {0}|{1}", new String[]{subtitleText, subtitleTextRu});
+                callback.newSubtitle();
                 em.persist(subtitle);
 
             } else {
@@ -7185,25 +7170,25 @@ public class DBService {
     }
 
     @Transactional
-    public void newFormatImportSubtitlesWithSublocations(JSONObject source) {
+    public void newFormatImportSubtitlesWithSublocations(JSONObject source, ImportTab.ImportStatsCallBack callback) {
         JSONObject npcLocationObject = null;
         try {
             npcLocationObject = source.getJSONObject("subtitles");
             Iterator locationsKeys = npcLocationObject.keys();
             while (locationsKeys.hasNext()) {
                 String locationName = (String) locationsKeys.next();
-                Location location = getLocation(locationName);
+                Location location = getLocation(locationName, callback);
                 if (location != null) {
                     JSONObject subLocationObject = npcLocationObject.getJSONObject(locationName);
                     Iterator subLocationKeys = subLocationObject.keys();
                     while (subLocationKeys.hasNext()) {
                         String subLocationKey = (String) subLocationKeys.next();
-                        Location subLocation = getSubLocation(subLocationKey, locationName, location);
+                        Location subLocation = getSubLocation(subLocationKey, locationName, location, callback);
                         JSONObject locationSubtitlesObject = subLocationObject.getJSONObject(subLocationKey);
                         Iterator locationSubtitlesObjectIterator = locationSubtitlesObject.keys();
                         while (locationSubtitlesObjectIterator.hasNext()) {
                             JSONObject subtitleSet = locationSubtitlesObject.getJSONObject((String) locationSubtitlesObjectIterator.next());
-                            newFormatImportSubtitleWithSublocations(subtitleSet, subLocation);
+                            newFormatImportSubtitleWithSublocations(subtitleSet, subLocation, callback);
                         }
                     }
                 }
@@ -7214,7 +7199,7 @@ public class DBService {
     }
 
     @Transactional
-    public void newFormatImportQuestWithSteps(String questKey, JSONObject questObject, Location location) {
+    public void newFormatImportQuestWithSteps(String questKey, JSONObject questObject, Location location, ImportTab.ImportStatsCallBack callback) {
         Pattern goalWithCounterPattern = Pattern.compile("(.*):.\\d+.\\/.\\d");
         Session session = (Session) em.getDelegate();
         String questNameEn = null;
@@ -7264,6 +7249,7 @@ public class DBService {
 
             } else {
                 quest = new Quest();
+                callback.newQuest();
                 quest.setLocation(location);
                 quest.setName(sheetsQuestName.getTextEn());
                 if (!sheetsQuestName.getTextEn().equals(sheetsQuestName.getTextRu())) {
@@ -7319,6 +7305,7 @@ public class DBService {
                                 em.merge(step);
                             } else {
                                 step = new QuestStep();
+                                callback.newQuestSteps();
                                 step.setQuest(quest);
                                 step.setSheetsJournalEntry(journalEntry);
                                 if (!EsnDecoder.IsMostlyRu(description)) {
@@ -7393,6 +7380,7 @@ public class DBService {
                                                     em.merge(goal);
                                                 } else {
                                                     goal = new QuestDirection();
+                                                    callback.newQuestDirections();
                                                     goal.setQuest(quest);
                                                     goal.setStep(step);
                                                     goal.setSheetsQuestDirection(direction);
@@ -7477,6 +7465,7 @@ public class DBService {
                                     questItem = itemQuery.getSingleResult();
                                 } catch (javax.persistence.NoResultException ex) {
                                     questItem = new QuestItem();
+                                    callback.newQuestItems();
                                     questItem.setQuests(new HashSet<>());
                                     questItem.setName(gItemName);
                                 }
@@ -7591,6 +7580,7 @@ public class DBService {
                             }
                             if (currentNpc.getId() == null) {
                                 LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
+                                callback.newNpc();
                                 em.persist(currentNpc);
                             } else {
                                 LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
@@ -7694,6 +7684,7 @@ public class DBService {
                             }
                             if (currentNpc.getId() == null) {
                                 LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
+                                callback.newNpc();
                                 em.persist(currentNpc);
                             } else {
                                 LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
@@ -7797,6 +7788,7 @@ public class DBService {
                             }
                             if (currentNpc.getId() == null) {
                                 LOG.log(Level.INFO, "new npc: {0}", currentNpc.toString());
+                                callback.newNpc();
                                 em.persist(currentNpc);
                             } else {
                                 LOG.log(Level.INFO, "update npc: {0}", currentNpc.toString());
@@ -7821,21 +7813,21 @@ public class DBService {
     }
 
     @Transactional
-    public void newFormatImportQuestsWithSteps(JSONObject source) {
+    public void newFormatImportQuestsWithSteps(JSONObject source, ImportTab.ImportStatsCallBack callback) {
         JSONObject locationObject = null;
         try {
             locationObject = source.getJSONObject("quest");
             Iterator locationsKeys = locationObject.keys();
             while (locationsKeys.hasNext()) {
                 String locationName = (String) locationsKeys.next();
-                Location location = getLocation(locationName);
+                Location location = getLocation(locationName, callback);
                 if (location != null) {
                     JSONObject locationQuestsObject = locationObject.getJSONObject(locationName);
                     Iterator locationQuestsObjectIterator = locationQuestsObject.keys();
                     while (locationQuestsObjectIterator.hasNext()) {
                         String questKey = (String) locationQuestsObjectIterator.next();
                         JSONObject questObject = locationQuestsObject.getJSONObject(questKey);
-                        newFormatImportQuestWithSteps(questKey, questObject, location);
+                        newFormatImportQuestWithSteps(questKey, questObject, location, callback);
                     }
                 }
             }
@@ -7845,7 +7837,7 @@ public class DBService {
     }
 
     @Transactional
-    public Location getLocation(String locationName) {
+    public Location getLocation(String locationName, ImportTab.ImportStatsCallBack callback) {
         Location location = null;
         Matcher locationNameMatcher = nameCasesPattern.matcher(locationName);
         if (locationNameMatcher.matches()) {
@@ -7887,6 +7879,7 @@ public class DBService {
                     }
                 } else {
                     location = new Location();
+                    callback.newLocation();
                     location.setProgress(BigDecimal.ZERO);
                 }
             }
@@ -7909,7 +7902,7 @@ public class DBService {
     }
 
     @Transactional
-    public Location getSubLocation(String subLocationName, String locationName, Location location) {
+    public Location getSubLocation(String subLocationName, String locationName, Location location, ImportTab.ImportStatsCallBack cb) {
         Location subLocation = null;
         Session session = (Session) em.getDelegate();
         if (subLocationName.equals(locationName)) {
@@ -7970,6 +7963,7 @@ public class DBService {
                 }
                 if (subLocation.getId() == null) {
                     LOG.log(Level.INFO, "new sublocation: " + subLocation.toString() + "/" + location.toString());
+                    cb.newLocation();
                     em.persist(subLocation);
                     em.flush();
                 } else {
@@ -8043,20 +8037,20 @@ public class DBService {
     }
 
     @Transactional
-    public void importBooksWithSublocations(JSONObject source) {
+    public void importBooksWithSublocations(JSONObject source, ImportTab.ImportStatsCallBack callback) {
         JSONObject bookLocationObject = null;
         try {
             bookLocationObject = source.getJSONObject("books");
             Iterator locationsKeys = bookLocationObject.keys();
             while (locationsKeys.hasNext()) {
                 String locationKey = (String) locationsKeys.next();
-                Location location = getLocation(locationKey);
+                Location location = getLocation(locationKey, callback);
                 if (location != null) {
                     JSONObject subLocationObject = bookLocationObject.getJSONObject(locationKey);
                     Iterator subLocationKeys = subLocationObject.keys();
                     while (subLocationKeys.hasNext()) {
                         String subLocationKey = (String) subLocationKeys.next();
-                        Location subLocation = getSubLocation(subLocationKey, locationKey, location);
+                        Location subLocation = getSubLocation(subLocationKey, locationKey, location, callback);
                         JSONObject locationBooksObject = subLocationObject.getJSONObject(subLocationKey);
                         Iterator locationBooksObjectIterator = locationBooksObject.keys();
                         while (locationBooksObjectIterator.hasNext()) {
@@ -8128,9 +8122,6 @@ public class DBService {
                 if (rawBookNameList != null && !rawBookNameList.isEmpty()) {
                     EsoRawString rawBook = rawBookNameList.get(0);
                     book.setNameEn(rawBook.getTextEn());
-                    if (rawBook.getTextRu() != null && !rawBook.getTextEn().equals(rawBook.getTextRu())) {
-                        book.setNameRu(rawBook.getTextRu());
-                    }
                 } else {
                     book.setNameEn("-no name-");
                 }
@@ -8146,7 +8137,7 @@ public class DBService {
                 bookText.setbId(0L);
                 bookText.setcId(r.getcId());
                 bookText.setTextEn(r.getTextEn());
-                if (r.getTextRu() == null && !r.getTextEn().equals(r.getTextRu())) {
+                if (r.getTextRu() != null && !r.getTextEn().equals(r.getTextRu())) {
                     bookText.setTextRu(r.getTextRu());
                 } else {
                     bookText.setTextRu(r.getTextEn());
@@ -8550,72 +8541,74 @@ public class DBService {
     }
 
     @Transactional
-    public void mergeTopics() {
+    public List<Object[]> getTopicToMerge() {
         List<Topic> topicsToDelete = new ArrayList<>();
         List<Topic> undeletable = new ArrayList<>();
         Query dublicateTopicQuery = em.createNativeQuery("select t1.id as id1,t2.id as id2 from topic t1 join topic t2 on t1.npc_id=t2.npc_id and t1.extnpcphrase_id=t2.extnpcphrase_id and t1.extplayerphrase_id=t2.extplayerphrase_id and t1.id!=t2.id where t1.npctext is not null and t1.playertext is not null order by t1.id desc");
         List<Object[]> resultList = dublicateTopicQuery.getResultList();
-        for (Object[] o : resultList) {
-            BigInteger sId = (BigInteger) o[0];
-            BigInteger s1Id = (BigInteger) o[1];
-            Topic t1 = em.find(Topic.class, sId.longValue());
-            Topic t2 = em.find(Topic.class, s1Id.longValue());
-            if (!undeletable.contains(t2)) {
-                Logger.getLogger(DBService.class.getName()).log(Level.INFO, "merge\n{0}\nwith\n{1}", new Object[]{t2.getPlayerTextRu(), t1.getPlayerText()});
-                undeletable.add(t1);
-                topicsToDelete.add(t2);
-                if (t1.getNpcTextRu() == null && t2.getNpcTextRu() != null) {
-                    t1.setNpcTextRu(t2.getNpcTextRu());
-                }
-                if (t1.getPlayerTextRu() == null && t2.getPlayerTextRu() != null) {
-                    t1.setPlayerTextRu(t2.getPlayerTextRu());
-                }
-                for (TranslatedText tt : t2.getNpcTranslations()) {
-                    tt.setNpcTopic(t1);
-                    em.merge(tt);
-                    em.flush();
-                }
-                t2.getNpcTranslations().clear();
-                for (TranslatedText tt : t2.getPlayerTranslations()) {
-                    tt.setPlayerTopic(t1);
-                    em.merge(tt);
-                    em.flush();
-                }
-                t2.getPlayerTranslations().clear();
-                for (Topic pt : t2.getPreviousTopics()) {
-                    if (pt.getNextTopics().contains(t2)) {
-                        pt.getNextTopics().remove(t2);
-                    }
-                    if (!pt.getNextTopics().contains(t1)) {
-                        pt.getNextTopics().add(t1);
-                    }
-                    em.merge(pt);
-                    em.flush();
-                }
-                t2.getPreviousTopics().clear();
-                for (Topic nt : t2.getNextTopics()) {
-                    if (nt.getPreviousTopics().contains(t2)) {
-                        nt.getPreviousTopics().remove(t2);
-                    }
-                    if (!nt.getPreviousTopics().contains(t1)) {
-                        nt.getPreviousTopics().add(t1);
-                    }
-                    em.merge(nt);
-                    em.flush();
-                }
-                t2.getNextTopics().clear();
-                em.merge(t2);
-                em.merge(t1);
-                em.flush();
-            }
-        }
+        
         for (Topic t : topicsToDelete) {
             em.remove(t);
+        }
+        return resultList;
+    }
+
+    @Transactional
+    public void mergeTopics(BigInteger sId, BigInteger s1Id, List<Topic> topicsToDelete, List<Topic> undeletable) {
+        Topic t1 = em.find(Topic.class, sId.longValue());
+        Topic t2 = em.find(Topic.class, s1Id.longValue());
+        if (!undeletable.contains(t2)) {
+            Logger.getLogger(DBService.class.getName()).log(Level.INFO, "merge\n{0}\nwith\n{1}", new Object[]{t2.getPlayerTextRu(), t1.getPlayerText()});
+            undeletable.add(t1);
+            topicsToDelete.add(t2);
+            if (t1.getNpcTextRu() == null && t2.getNpcTextRu() != null) {
+                t1.setNpcTextRu(t2.getNpcTextRu());
+            }
+            if (t1.getPlayerTextRu() == null && t2.getPlayerTextRu() != null) {
+                t1.setPlayerTextRu(t2.getPlayerTextRu());
+            }
+            for (TranslatedText tt : t2.getNpcTranslations()) {
+                tt.setNpcTopic(t1);
+                em.merge(tt);
+                em.flush();
+            }
+            t2.getNpcTranslations().clear();
+            for (TranslatedText tt : t2.getPlayerTranslations()) {
+                tt.setPlayerTopic(t1);
+                em.merge(tt);
+                em.flush();
+            }
+            t2.getPlayerTranslations().clear();
+            for (Topic pt : t2.getPreviousTopics()) {
+                if (pt.getNextTopics().contains(t2)) {
+                    pt.getNextTopics().remove(t2);
+                }
+                if (!pt.getNextTopics().contains(t1)) {
+                    pt.getNextTopics().add(t1);
+                }
+                em.merge(pt);
+                em.flush();
+            }
+            t2.getPreviousTopics().clear();
+            for (Topic nt : t2.getNextTopics()) {
+                if (nt.getPreviousTopics().contains(t2)) {
+                    nt.getPreviousTopics().remove(t2);
+                }
+                if (!nt.getPreviousTopics().contains(t1)) {
+                    nt.getPreviousTopics().add(t1);
+                }
+                em.merge(nt);
+                em.flush();
+            }
+            t2.getNextTopics().clear();
+            em.merge(t2);
+            em.merge(t1);
+            em.flush();
         }
     }
 
     @Transactional
-    public void v15importNpcWithSublocations(Npc currentNpc, JSONObject npcContent) {
+    public void v15importNpcWithSublocations(Npc currentNpc, JSONObject npcContent, ImportTab.ImportStatsCallBack callBack) {
         Session session = (Session) em.getDelegate();
         CriteriaBuilder cb = em.getCriteriaBuilder();
         List<Topic> npcTopics = new ArrayList<>();
@@ -8700,6 +8693,7 @@ public class DBService {
                 }
                 if (greetingTopic == null) {
                     greetingTopic = new Topic(null, greetingText, null, greetingTextRu, currentNpc);
+                    callBack.newTopic();
                     LOG.log(Level.INFO, "new greeting topic: {0}|{1}", new String[]{greetingText, greetingTextRu});
                     if (greetingExtPhrase != null) {
                         greetingTopic.setExtNpcPhrase(greetingExtPhrase);
@@ -8897,6 +8891,7 @@ public class DBService {
                         npcTopics.add(topic);
                     } else if (playerText != null || npcText != null || playerTextRu != null || npcTextRu != null) {
                         topic = new Topic(playerText, npcText, playerTextRu, npcTextRu, currentNpc);
+                        callBack.newTopic();
                         LOG.log(Level.INFO, "new topic: {0}|{1}|{2}|{3}", new String[]{playerText, npcText, playerTextRu, npcTextRu});
                         if (playerExtPhrase != null) {
                             topic.setExtPlayerPhrase(playerExtPhrase);
@@ -9026,6 +9021,7 @@ public class DBService {
                 }
                 if (subtitle == null) {
                     subtitle = new Subtitle(subtitleText, subtitleTextRu, currentNpc);
+                    callBack.newSubtitle();
                     if (subtitleExtPhrase != null) {
                         subtitle.setExtNpcPhrase(subtitleExtPhrase);
                     }

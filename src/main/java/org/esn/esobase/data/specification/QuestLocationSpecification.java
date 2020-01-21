@@ -16,6 +16,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import org.esn.esobase.model.Location;
+import org.esn.esobase.model.QuestDirection;
 import org.esn.esobase.model.SysAccount;
 import org.esn.esobase.model.TRANSLATE_STATUS;
 import org.springframework.data.jpa.domain.Specification;
@@ -121,19 +122,20 @@ public class QuestLocationSpecification implements Specification<Location> {
                                     cb.isEmpty(join1.get("translatedTexts")),
                                     cb.isNull(join1.get("translator"))
                             ),
-                            cb.and(
-                                    cb.isNotNull(stepsJoin.get("sheetsJournalEntry")),
-                                    cb.isEmpty(join2.get("translatedTexts")),
-                                    cb.isNull(join2.get("translator"))
-                            ),
+//                            cb.and(
+//                                    cb.isNotNull(stepsJoin.get("sheetsJournalEntry")),
+//                                    cb.isEmpty(join2.get("translatedTexts")),
+//                                    cb.isNull(join2.get("translator"))
+//                            ),
                             cb.and(
                                     cb.isNotNull(stepsDirectionsJoin.get("sheetsQuestDirection")),
                                     cb.isEmpty(join3.get("translatedTexts")),
-                                    cb.isNull(join3.get("translator"))
+                                    cb.isNull(join3.get("translator")),
+                                    cb.notEqual(stepsDirectionsJoin.get("directionType"), QuestDirection.DIRECTION_TYPE.hidden)
                             ),
                             cb.equal(join4.get("status"), TRANSLATE_STATUS.DIRTY),
                             cb.equal(join5.get("status"), TRANSLATE_STATUS.DIRTY),
-                            cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY),
+                            //cb.equal(join6.get("status"), TRANSLATE_STATUS.DIRTY),
                             cb.equal(join7.get("status"), TRANSLATE_STATUS.DIRTY)
                     ));
                 } else if ((translateStatus != null && !translateStatus.isEmpty()) || translator != null) {

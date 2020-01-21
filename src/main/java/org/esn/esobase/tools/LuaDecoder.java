@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.esn.esobase.model.Location;
 import org.esn.esobase.model.Npc;
 import org.esn.esobase.model.Subtitle;
@@ -161,9 +163,11 @@ public class LuaDecoder {
 
     public static JSONObject getJsonFromLua(String source) {
         JSONObject result = null;
+        source=source.replaceAll("^ConversationsQQ_SavedVariables_v\\d{2}\\s*=", "");
+        source=source.replaceAll("^ItemDump_SavedVariables\\s*=", "");
         String[] lines = source.split("\n");
         StringBuilder sb = new StringBuilder();
-        for (int i = 1; i < lines.length; i++) {
+        for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
             sb.append(line.replaceAll("=", ":").replaceAll("[\\[\\]]", "").replaceAll("\" :", "\":").replaceAll(",\\n(.+)\\}", "\n$1}"));
         }
@@ -172,10 +176,15 @@ public class LuaDecoder {
         result = new JSONObject(jsonString);
         return result;
     }
-    
+
     public static String getFileheader(String source) {
-        String[] lines = source.split("\n");
-        return lines[0].replace("\r", "");
+        Pattern headerPattern = Pattern.compile("^(ConversationsQQ_SavedVariables_v\\d{2})\\s*=");
+        String result = "";
+        Matcher matcher = headerPattern.matcher(source);
+        if (matcher.find()) {
+            result = matcher.group(1);
+        }
+        return result;
     }
 
 }

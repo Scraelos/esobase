@@ -33,6 +33,7 @@ import org.esn.esobase.view.tab.SpellerTestTab;
 import org.esn.esobase.view.tab.SynchronizationTab;
 import org.esn.esobase.view.tab.SystemSettingsTab;
 import org.esn.esobase.view.tab.TranslateTab;
+import org.esn.esobase.view.tab.UserStatisticsTab;
 import org.esn.esobase.view.tab.UsersTab;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -76,6 +77,7 @@ public class MainView extends Panel implements View, Command {
     private MenuBar.MenuItem searchInRawStringsMenuItem;
     private MenuBar.MenuItem directTableEditMenuItem;
     private MenuBar.MenuItem portalInfoMenuItem;
+    private MenuBar.MenuItem userStatisticsMenuItem;
     private MenuBar.MenuItem systemSettingsMenuItem;
     private MenuBar.MenuItem spellerTestMenuItem;
     private MenuBar.MenuItem bookTanslateMenuItem;
@@ -97,6 +99,8 @@ public class MainView extends Panel implements View, Command {
     private SpellerTestTab spellerTestTabContent;
     private QuestTranslateTab questTranslateTabContent;
     private BookTranslateTab bookTranslateTabContent;
+    @Autowired
+    private UserStatisticsTab userStatisticsTabContent;
 
     //protected final ShortcutListener shiftTwoListener;
     //protected final ShortcutListener shiftThreeListener;
@@ -177,6 +181,9 @@ public class MainView extends Panel implements View, Command {
         }
         changePasswordMenuItem = mainMenu.addItem("Сменить пароль", this);
         portalInfoMenuItem = mainMenu.addItem("Инфо", this);
+        if (SpringSecurityHelper.hasRole("ROLE_ADMIN")) {
+            userStatisticsMenuItem = mainMenu.addItem("Статистика", this);
+        }
         //this.addShortcutListener(shiftTwoListener);
         //this.addShortcutListener(shiftThreeListener);
     }
@@ -352,6 +359,14 @@ public class MainView extends Panel implements View, Command {
             spellerTestTabContent = new SpellerTestTab(service);
             TabSheet.Tab tab = tabs.addTab(spellerTestTabContent, selectedItem.getText());
             tab.setClosable(true);
+            tabs.setSelectedTab(tab);
+        } else if (selectedItem == userStatisticsMenuItem) {
+            TabSheet.Tab tab = tabs.getTab(userStatisticsTabContent);
+            if (tab == null) {
+                tab = tabs.addTab(userStatisticsTabContent, selectedItem.getText());
+                userStatisticsTabContent.Init();
+                tab.setClosable(true);
+            }
             tabs.setSelectedTab(tab);
         }
 

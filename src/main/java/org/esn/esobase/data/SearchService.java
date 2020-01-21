@@ -10,7 +10,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
@@ -62,7 +61,7 @@ public class SearchService {
                     addPredicate(sqlBuilder, " g.texten=g.textru", firstWhere);
                     firstWhere = false;
                 }
-
+                addPredicate(sqlBuilder, " g.deprecated=false", firstWhere);
                 sqlBuilder.append(" order by rownum");
                 if (withTranslatedNeighbours) {
                     sqlBuilder.append(") as countneighbours where cnt_prev=").append(numberOfNeighbours.toString()).append(" and cnt_next=").append(numberOfNeighbours.toString()).append(";");
