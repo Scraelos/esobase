@@ -13,7 +13,7 @@
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>4.3.23.RELEASE</spring.version>
-        <spring.security.version>4.2.12.RELEASE</spring.security.version>
+        <spring.security.version>5.2.1.RELEASE</spring.security.version>
         <vaadin.version>8.7.2</vaadin.version>
         <vaadin.plugin.version>8.7.2</vaadin.plugin.version>
         <hibernate.version>5.2.17.Final</hibernate.version>
