@@ -83,6 +83,8 @@ public class SearchInRawStringsTab extends VerticalLayout {
         hc.addContainerProperty("textDe", String.class, null);
         hc.addContainerProperty("textFr", String.class, null);
         hc.addContainerProperty("textJp", String.class, null);
+        hc.addContainerProperty("textRu", String.class, null);
+        hc.addContainerProperty("textRuoff", String.class, null);
         resultTable.setContainerDataSource(hc);
         setColumns();
 
@@ -94,16 +96,18 @@ public class SearchInRawStringsTab extends VerticalLayout {
 
     private void setColumns() {
         if (isJp.getValue()) {
-            resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr", "textJp"});
-            resultTable.setColumnHeaders(new String[]{"En", "De", "Fr", "Jp"});
+            resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr", "textJp", "textRu", "textRuoff"});
+            resultTable.setColumnHeaders(new String[]{"En", "De", "Fr", "Jp", "RuESO", "RuOff"});
             resultTable.setColumnExpandRatio("textJp", 1f);
         } else {
-            resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr"});
-            resultTable.setColumnHeaders(new String[]{"En", "De", "Fr"});
+            resultTable.setVisibleColumns(new Object[]{"textEn", "textDe", "textFr", "textRu", "textRuoff"});
+            resultTable.setColumnHeaders(new String[]{"En", "De", "Fr", "RuESO", "RuOff"});
         }
         resultTable.setColumnExpandRatio("textEn", 1f);
         resultTable.setColumnExpandRatio("textFr", 1f);
         resultTable.setColumnExpandRatio("textDe", 1f);
+        resultTable.setColumnExpandRatio("textRu", 1f);
+        resultTable.setColumnExpandRatio("textRuoff", 1f);
     }
 
     private void search() {

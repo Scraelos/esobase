@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetEntity;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.NPC_SEX;
@@ -116,6 +117,55 @@ public class SearchService {
                         Logger.getLogger(SearchService.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+            }
+        }
+
+        return result;
+    }
+
+    @Transactional
+    public List<EsoRawString> searchInRawRuoff(String searchString, Boolean isRegexp) {
+        List<EsoRawString> result = new ArrayList<>();
+        if ((searchString != null && searchString.length() > 2)) {
+            StringBuilder sqlBuilder = new StringBuilder();
+            sqlBuilder.append("select g.aid,regexp_replace(g.texten,'\\^[FfMmNn].*','') as texten,regexp_replace(g.textru,'\\^[FfMmNn].*','') as textru,regexp_replace(g.textruoff,'\\^[FfMmNn].*','') as textruoff ");
+            sqlBuilder.append(" from EsoRawString g where g.id in(");
+            sqlBuilder.append(" select min(gg.id) from EsoRawString gg");
+            sqlBuilder.append(" where gg.aid in("
+                    + "198758357,17915077,"//abilities
+                    + "124362421,242841733,267697733,"//items
+                    + "10860933, 146361138, 162946485, 162658389, 164009093, 267200725, 28666901, 81344020, 268015829, 111863941, 157886597,"//locations
+                    + "52420949,"//quests
+                    + "51188213,"//books
+                    + "12529189,172030117,"//achievements
+                    + "18173141,70328405,160914197,245765621,213229525,204530069,42041397,"//collectibles
+                    + "8290981,51188660,191999749,33425332"//npc
+                    + ")");
+            if (isRegexp) {
+                sqlBuilder.append(" and (gg.texten ~ :searchString or gg.textruoff ~ :searchString or gg.textru ~ :searchString)");
+            } else {
+                sqlBuilder.append(" and (gg.texten ilike :searchString or gg.textruoff ilike :searchString or gg.textru ilike :searchString)");
+            }
+            sqlBuilder.append(" group by gg.texten) order by g.aid,g.texten");
+
+            Query nativeQuery = em.createNativeQuery(sqlBuilder.toString());
+            if (isRegexp) {
+                nativeQuery.setParameter("searchString", searchString);
+            } else {
+                nativeQuery.setParameter("searchString", "%" + searchString + "%");
+            }
+            List<Object[]> resultList = nativeQuery.getResultList();
+            for (Object[] o : resultList) {
+                BigInteger aid = (BigInteger) o[0];
+                String textEn = (String) o[1];
+                String textRu = (String) o[2];
+                String textRuOff = (String) o[3];
+                EsoRawString s = new EsoRawString();
+                s.setaId(aid.longValue());
+                s.setTextEn(textEn);
+                s.setTextRu(textRu);
+                s.setTextRuoff(textRuOff);
+                result.add(s);
             }
         }
 

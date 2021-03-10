@@ -5331,7 +5331,11 @@ public class DBService {
         searchTermitems.add(Restrictions.ilike("textFr", search, MatchMode.ANYWHERE));
         Disjunction searchTerms = Restrictions.or(searchTermitems.toArray(new Criterion[searchTermitems.size()]));
         crit.add(searchTerms);*/
-        crit.add(Restrictions.ilike("textEn", search, MatchMode.ANYWHERE));
+        crit.add(Restrictions.or(
+                Restrictions.ilike("textEn", search, MatchMode.ANYWHERE),
+                Restrictions.ilike("textRu", search, MatchMode.ANYWHERE),
+                Restrictions.ilike("textRuoff", search, MatchMode.ANYWHERE)
+        ));
         List<EsoRawString> rows = crit.list();
         for (EsoRawString row : rows) {
             Item item = hc.addItem(row);
@@ -5339,6 +5343,8 @@ public class DBService {
             item.getItemProperty("textFr").setValue(row.getTextFr());
             item.getItemProperty("textDe").setValue(row.getTextDe());
             item.getItemProperty("textJp").setValue(row.getTextJp());
+            item.getItemProperty("textRu").setValue(row.getTextRu());
+            item.getItemProperty("textRuoff").setValue(row.getTextRuoff());
         }
 
         return hc;
@@ -5637,6 +5643,19 @@ public class DBService {
             q.setParameter("bid", row[1]);
             q.setParameter("cid", row[2]);
             q.setParameter("textru", row[3]);
+            q.setParameter("ver", ver);
+            q.executeUpdate();
+        }
+    }
+
+    @Transactional
+    public void updateRuoffRawStrings(List<Object[]> rows, String ver) {
+        for (Object[] row : rows) {
+            Query q = em.createNativeQuery("update esorawstring set textruoff=:textruoff,ver=:ver where aid=:aid and bid=:bid and cid=:cid");
+            q.setParameter("aid", row[0]);
+            q.setParameter("bid", row[1]);
+            q.setParameter("cid", row[2]);
+            q.setParameter("textruoff", row[3]);
             q.setParameter("ver", ver);
             q.executeUpdate();
         }
@@ -8500,20 +8519,60 @@ public class DBService {
     @Transactional
     public EsoRawString getNpcRaw(String name) {
         EsoRawString result = null;
-        GSpreadSheetsNpcName npcNesult = null;
-        TypedQuery<GSpreadSheetsNpcName> cq = em.createQuery("select g from GSpreadSheetsNpcName g where lower(textEn) like :name", GSpreadSheetsNpcName.class);
-        cq.setParameter("name", name.toLowerCase());
-        List<GSpreadSheetsNpcName> resultList = cq.getResultList();
-        if (resultList != null && !resultList.isEmpty()) {
-            npcNesult = resultList.get(0);
-            TypedQuery<EsoRawString> rq = em.createQuery("select r from EsoRawString r where aId=:aid and bId=:bid and cId=:cid", EsoRawString.class);
-            rq.setParameter("aid", npcNesult.getaId());
-            rq.setParameter("bid", npcNesult.getbId());
-            rq.setParameter("cid", npcNesult.getcId());
-            List<EsoRawString> rawResultList = rq.getResultList();
-            if (rawResultList != null && !rawResultList.isEmpty()) {
-                result = rawResultList.get(0);
-            }
+        List<Long> nameTableids = new ArrayList<>();
+        nameTableids.add(8290981L);
+        nameTableids.add(51188660L);
+        nameTableids.add(191999749L);
+        nameTableids.add(33425332L);
+        TypedQuery<EsoRawString> rq = em.createQuery("select r from EsoRawString r where lower(textEn) like :name and textEn!=textRuoff and aid in(:ids) order by cid asc", EsoRawString.class);
+        rq.setParameter("name", name + "%");
+        rq.setParameter("ids", nameTableids);
+        List<EsoRawString> rawResultList = rq.getResultList();
+        if (rawResultList != null && !rawResultList.isEmpty()) {
+            result = rawResultList.get(0);
+        }
+        return result;
+    }
+
+    @Transactional
+    public EsoRawString getItemSetRaw(String name) {
+        EsoRawString result = null;
+        List<Long> nameTableids = new ArrayList<>();
+        nameTableids.add(18173141L);
+        nameTableids.add(38727365L);
+        nameTableids.add(198758357L);
+        nameTableids.add(242841733L);
+        TypedQuery<EsoRawString> rq = em.createQuery("select r from EsoRawString r where (textEn =:name or REPLACE(textEn,'''','') =:name) and textRuoff is not null and textEn!=textRuoff and aId in(:ids) order by aId asc", EsoRawString.class);
+        rq.setParameter("name", name);
+        rq.setParameter("ids", nameTableids);
+        List<EsoRawString> rawResultList = rq.getResultList();
+        if (rawResultList != null && !rawResultList.isEmpty()) {
+            result = rawResultList.get(0);
+        }
+        return result;
+    }
+
+    @Transactional
+    public EsoRawString getLocationRaw(String name) {
+        EsoRawString result = null;
+        List<Long> nameTableids = new ArrayList<>();
+        nameTableids.add(10860933L);
+        nameTableids.add(146361138L);
+        nameTableids.add(162946485L);
+        nameTableids.add(162658389L);
+        nameTableids.add(267200725L);
+        nameTableids.add(28666901L);
+        nameTableids.add(81344020L);
+        nameTableids.add(268015829L);
+        nameTableids.add(111863941L);
+        nameTableids.add(157886597L);
+        nameTableids.add(164009093L);
+        TypedQuery<EsoRawString> rq = em.createQuery("select r from EsoRawString r where textEn =:name and textRuoff is not null and textEn!=textRuoff and aId in(:ids) order by aId asc", EsoRawString.class);
+        rq.setParameter("name", name);
+        rq.setParameter("ids", nameTableids);
+        List<EsoRawString> rawResultList = rq.getResultList();
+        if (rawResultList != null && !rawResultList.isEmpty()) {
+            result = rawResultList.get(0);
         }
         return result;
     }
@@ -8546,7 +8605,7 @@ public class DBService {
         List<Topic> undeletable = new ArrayList<>();
         Query dublicateTopicQuery = em.createNativeQuery("select t1.id as id1,t2.id as id2 from topic t1 join topic t2 on t1.npc_id=t2.npc_id and t1.extnpcphrase_id=t2.extnpcphrase_id and t1.extplayerphrase_id=t2.extplayerphrase_id and t1.id!=t2.id where t1.npctext is not null and t1.playertext is not null order by t1.id desc");
         List<Object[]> resultList = dublicateTopicQuery.getResultList();
-        
+
         for (Topic t : topicsToDelete) {
             em.remove(t);
         }

@@ -30,7 +30,6 @@ import org.esn.esobase.view.tab.QuestsTab;
 import org.esn.esobase.view.tab.SearchInCatalogsTab;
 import org.esn.esobase.view.tab.SearchInRawStringsTab;
 import org.esn.esobase.view.tab.SpellerTestTab;
-import org.esn.esobase.view.tab.SynchronizationTab;
 import org.esn.esobase.view.tab.SystemSettingsTab;
 import org.esn.esobase.view.tab.TranslateTab;
 import org.esn.esobase.view.tab.UserStatisticsTab;
@@ -87,7 +86,6 @@ public class MainView extends Panel implements View, Command {
     @Autowired
     private TranslateTab translateTabContent;
     private UsersTab usersTabContent;
-    private SynchronizationTab synchronizationTabContent;
     private QuestsTab questsTabContent;
     private SearchInCatalogsTab searchInCatalogsTabContent;
     @Autowired
@@ -306,13 +304,6 @@ public class MainView extends Panel implements View, Command {
                 usersTabContent = new UsersTab(service);
             }
             TabSheet.Tab tab = tabs.addTab(usersTabContent, selectedItem.getText());
-            tab.setClosable(true);
-            tabs.setSelectedTab(tab);
-        } else if (selectedItem == syncMenuItem) {
-            if (synchronizationTabContent == null) {
-                synchronizationTabContent = new SynchronizationTab(service);
-            }
-            TabSheet.Tab tab = tabs.addTab(synchronizationTabContent, selectedItem.getText());
             tab.setClosable(true);
             tabs.setSelectedTab(tab);
         } else if (selectedItem == searchInCatalogsMenuItem) {

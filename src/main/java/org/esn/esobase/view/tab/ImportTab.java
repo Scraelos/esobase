@@ -5,6 +5,7 @@
  */
 package org.esn.esobase.view.tab;
 
+import com.github.pjfanning.xlsx.StreamingReader;
 import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,8 +32,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.DictionaryService;
@@ -106,6 +110,7 @@ public class ImportTab extends VerticalLayout {
     private Upload uploadXlsDe;
     private Upload uploadXlsJp;
     private Upload uploadXlsRu;
+    private Upload uploadXlsRuoff;
     private Upload uploadInterfaceLua;
     private Upload uploadRuInterfaceLua;
     private Upload uploadDictionary;
@@ -522,6 +527,11 @@ public class ImportTab extends VerticalLayout {
             uploadXlsRu.addSucceededListener(raswStringReceiverRu);
             uploadXlsRu.setImmediate(true);
             this.addComponent(uploadXlsRu);
+            RawStringReceiverRuoff rawStringReceiverRuoff = new RawStringReceiverRuoff(service);
+            uploadXlsRuoff = new Upload("Загрузите ruoff-файл xlsx", rawStringReceiverRuoff);
+            uploadXlsRuoff.addSucceededListener(rawStringReceiverRuoff);
+            uploadXlsRuoff.setImmediate(true);
+            this.addComponent(uploadXlsRuoff);
             DictionaryReceiver dictionaryReceiver = new DictionaryReceiver();
             uploadDictionary = new Upload("Загрузка словаря TES", dictionaryReceiver);
             uploadDictionary.addSucceededListener(dictionaryReceiver);
@@ -584,7 +594,7 @@ public class ImportTab extends VerticalLayout {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     GoogleDocsService docsService = new GoogleDocsService();
-                    docsService.updateTTCNpcTranslations(service);
+                    docsService.updateTTCTranslations(service);
                 }
             });
             this.addComponent(updateTTCNpcNames);
@@ -596,28 +606,66 @@ public class ImportTab extends VerticalLayout {
         }
     }
 
-    private String getStringFromCell(Cell c) {
+    public static String getStringFromCell(Cell cell) {
         String result = null;
-        switch (c.getCellType()) {
-            case Cell.CELL_TYPE_STRING:
-                result = c.getStringCellValue();
+        if (cell == null) {
+            return null;
+        }
+        CellType cellType = cell.getCellType();
+        switch (cellType) {
+            case BLANK:
+                result = "";
                 break;
-            case Cell.CELL_TYPE_NUMERIC:
-                Double numValue = c.getNumericCellValue();
-                result = Integer.toString(numValue.intValue());
+            case BOOLEAN:
+                boolean booleanValue = cell.getBooleanCellValue();
+                result = Boolean.toString(booleanValue);
+                break;
+            case ERROR:
+                byte errorCode = cell.getErrorCellValue();
+                result = Byte.toString(errorCode);
+                break;
+            case FORMULA:
+                result = cell.getCellFormula();
+                break;
+            case NUMERIC:
+                Double doubleValue = cell.getNumericCellValue();
+                if (doubleValue % 1 != 0) {
+                    BigDecimal decimalValue = BigDecimal.valueOf(doubleValue).stripTrailingZeros();
+                    result = decimalValue.toString();
+                } else {
+                    result = Long.toString(doubleValue.longValue());
+                }
+                break;
+            case STRING:
+                result = cell.getStringCellValue();
+                break;
         }
         return result;
     }
 
-    private Long getLongFromCell(Cell c) {
+    public static Long getLongFromCell(Cell c) {
         Long result = null;
-        switch (c.getCellType()) {
-            case Cell.CELL_TYPE_STRING:
-                result = Long.valueOf(c.getStringCellValue());
-                break;
-            case Cell.CELL_TYPE_NUMERIC:
-                Double d = c.getNumericCellValue();
-                result = d.longValue();
+        if (c != null) {
+            switch (c.getCellType()) {
+                case STRING:
+                    result = Long.valueOf(c.getStringCellValue());
+                    break;
+                case NUMERIC:
+                    Double d = c.getNumericCellValue();
+                    result = d.longValue();
+                    break;
+                case FORMULA:
+                    switch (c.getCachedFormulaResultType()) {
+                        case NUMERIC:
+                            Double dd = c.getNumericCellValue();
+                            result = dd.longValue();
+                            break;
+                        case STRING:
+                            result = Long.valueOf(c.getStringCellValue());
+                            break;
+                    }
+                    break;
+            }
         }
         return result;
     }
@@ -644,7 +692,10 @@ public class ImportTab extends VerticalLayout {
 
                 ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
                 List<Object[]> rows = new ArrayList<>();
                 while (sheetIterator.hasNext()) {
@@ -729,7 +780,10 @@ public class ImportTab extends VerticalLayout {
 
                 ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
                 dictionaryService.cleanupDictionaryStrings();
                 List<Object[]> rows = new ArrayList<>();
@@ -815,7 +869,10 @@ public class ImportTab extends VerticalLayout {
             try {
                 ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
                 List<Object[]> rows = new ArrayList<>();
                 while (sheetIterator.hasNext()) {
@@ -901,7 +958,10 @@ public class ImportTab extends VerticalLayout {
             try {
                 ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
                 List<Object[]> rows = new ArrayList<>();
                 while (sheetIterator.hasNext()) {
@@ -987,7 +1047,10 @@ public class ImportTab extends VerticalLayout {
             try {
                 ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
                 List<Object[]> rows = new ArrayList<>();
                 while (sheetIterator.hasNext()) {
@@ -1075,7 +1138,10 @@ public class ImportTab extends VerticalLayout {
                 SimpleDateFormat versdf = new SimpleDateFormat("yyyyMMddHHmm");
                 String ver = versdf.format(new Date());
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                XSSFWorkbook wb = new XSSFWorkbook(bais);
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
                 Iterator<Sheet> sheetIterator = wb.sheetIterator();
                 List<Object[]> rows = new ArrayList<>();
                 while (sheetIterator.hasNext()) {
@@ -1114,10 +1180,10 @@ public class ImportTab extends VerticalLayout {
                         break;
                     }
                 }
-                Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with null ver");
-                service.cleanupRawWithNullVer();
-                Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with wrong ver");
-                service.cleanupRawWithWrongVer(ver);
+                //Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with null ver");
+                //service.cleanupRawWithNullVer();
+                //Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with wrong ver");
+                //service.cleanupRawWithWrongVer(ver);
             } catch (IOException ex) {
                 Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1140,6 +1206,102 @@ public class ImportTab extends VerticalLayout {
             @Override
             public void run() {
                 service.updateRuRawStrings(rows, ver);
+            }
+
+        }
+    }
+
+    private class RawStringReceiverRuoff implements Receiver, SucceededListener {
+
+        private final DBService service;
+
+        private ByteArrayOutputStream baos;
+
+        public RawStringReceiverRuoff(DBService service) {
+            this.service = service;
+        }
+
+        @Override
+        public OutputStream receiveUpload(String filename, String mimeType) {
+            baos = new ByteArrayOutputStream();
+            return baos;
+        }
+
+        @Override
+        public void uploadSucceeded(Upload.SucceededEvent event) {
+            try {
+                ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) executor;
+                SimpleDateFormat versdf = new SimpleDateFormat("yyyyMMddHHmm");
+                String ver = versdf.format(new Date());
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                Workbook wb = StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .open(bais);
+                Iterator<Sheet> sheetIterator = wb.sheetIterator();
+                List<Object[]> rows = new ArrayList<>();
+                while (sheetIterator.hasNext()) {
+                    Sheet s = sheetIterator.next();
+                    Long aId = Long.valueOf(s.getSheetName());
+                    Iterator<Row> rowIterator = s.rowIterator();
+                    while (rowIterator.hasNext()) {
+                        Row r = rowIterator.next();
+                        Cell bIdCell = r.getCell(1);
+                        Cell cIdCell = r.getCell(2);
+                        Cell textCell = r.getCell(3);
+                        Object[] row = new Object[]{aId, getLongFromCell(bIdCell), getLongFromCell(cIdCell), getStringFromCell(textCell)};
+                        rows.add(row);
+                        if (rows.size() > 100) {
+                            InsertTask task = new InsertTask(rows, ver, service);
+                            taskExecutor.execute(task);
+                            rows = new ArrayList<>();
+                        }
+                    }
+                }
+                if (rows.size() > 0) {
+                    InsertTask task = new InsertTask(rows, ver, service);
+                    taskExecutor.execute(task);
+                    rows = new ArrayList<>();
+                }
+                wb.close();
+                for (;;) {
+                    int count = taskExecutor.getActiveCount();
+                    LOG.log(Level.INFO, "Active Threads : {0} Queue size:{1}", new Object[]{count, taskExecutor.getThreadPoolExecutor().getQueue().size()});
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    if (count == 0) {
+                        break;
+                    }
+                }
+                //Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with null ver");
+                //service.cleanupRawWithNullVer();
+                //Logger.getLogger(ImportTab.class.getName()).log(Level.INFO, "cleanup raw with wrong ver");
+                //service.cleanupRawWithWrongVer(ver);
+            } catch (IOException ex) {
+                Logger.getLogger(ImportTab.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        @Component
+        @Scope("prototype")
+        private class InsertTask implements Runnable {
+
+            private final List<Object[]> rows;
+            private final DBService service;
+            private final String ver;
+
+            public InsertTask(List<Object[]> rows, String ver, DBService service) {
+                this.rows = rows;
+                this.service = service;
+                this.ver = ver;
+            }
+
+            @Override
+            public void run() {
+                service.updateRuoffRawStrings(rows, ver);
             }
 
         }

@@ -63,6 +63,7 @@ import org.esn.esobase.model.GSpreadSheetsQuestEndTip;
 import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.NPC_SEX;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  *
@@ -93,6 +94,10 @@ public class GoogleDocsService {
     private static final String COLLECTIBLE_DESCRIPTION_SPREADSHEET_ID = "1KA8lECC8ZkzSHMYWtgGSMaJZYV-1LD2lmEA3JY6FyfE";
     private static final String LOADSCREEN_SPREADSHEET_ID = "1D4chSmA19Uk-Dnyk3gcxAb9mvJOkcI9X_RyIJirPobw";
     private static final String TAMRIELTRADECENTRE_SPREADSHEET_ID = "17KOYWHbFTQvl7g7hdhuHK7Zy8PWOjZaqXMTw0Dzo2yU";
+
+    private static final Pattern npcNameRowPattern = Pattern.compile("^TTC_NPC_.*$");
+    private static final Pattern itemSetRowPattern = Pattern.compile("^ItemSet.+$");
+    private static final Pattern traderLocationRowPattern = Pattern.compile("^TraderLocation.+$");
 
     public List<GSpreadSheetsPlayerPhrase> getPlayerPhrases() {
         List<GSpreadSheetsPlayerPhrase> phrases = new ArrayList<>();
@@ -3269,7 +3274,7 @@ public class GoogleDocsService {
         }
     }
 
-    public void updateTTCNpcTranslations(DBService service) {
+    public void updateTTCTranslations(DBService service) {
         try {
             Credential authorize = authorize();
             SpreadsheetService spreadsheetService = new SpreadsheetService("esn-eso-base");
@@ -3284,91 +3289,337 @@ public class GoogleDocsService {
                 }
             }
 
-            Pattern npcNameRowPattern = Pattern.compile("^TTC_NPC_.*$");
             List<WorksheetEntry> worksheets = entry.getWorksheets();
             for (WorksheetEntry wse : worksheets) {
-                if (wse.getTitle().getPlainText().equals("Addon Strings")) {
-                    for (int i = 2; i < wse.getRowCount(); i++) {
-                        URL cellFeedUrl = new URI(wse.getCellFeedUrl().toString()
-                                + "?min-row=" + i + "&max-row=" + i + "&min-col=1&max-col=7").toURL();
-                        CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
-                        List<CellEntry> entries = feedc.getEntries();
-                        String nameEn = null;
-                        EsoRawString npcNameRaw = null;
-                        GSpreadSheetsNpcName npcName = null;
-                        boolean hasDe = false;
-                        boolean hasFr = false;
-                        boolean hasRu = false;
-                        boolean hasJp = false;
-                        for (CellEntry cellEntry : entries) {
-                            Cell cell = cellEntry.getCell();
-                            String value = cell.getValue();
-                            if (cell.getCol() == 1) {
-                                Matcher npcNameMatcher = npcNameRowPattern.matcher(value);
-                                if (npcNameMatcher.matches()) {
-                                    Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "npc match");
-                                } else {
-                                    break;
-                                }
-                            }
-                            if (cell.getCol() == 2) {
-                                nameEn = value;
-                                npcNameRaw = service.getNpcRaw(nameEn);
-                                npcName = service.getNpc(nameEn);
-                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "npc: " + nameEn);
-                                if (npcNameRaw == null) {
-                                    break;
-                                }
-                            }
-                            if (cell.getCol() == 4) {
-                                hasDe = true;
-                                cellEntry.changeInputValueLocal(npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                                cellEntry.update();
-                            }
-                            if (cell.getCol() == 5) {
-                                hasFr = true;
-                                cellEntry.changeInputValueLocal(npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                                cellEntry.update();
-                            }
-                            if (cell.getCol() == 6) {
-                                hasJp = true;
-                                cellEntry.changeInputValueLocal(npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                                cellEntry.update();
-                            }
-                            if (cell.getCol() == 7) {
-                                hasRu = true;
-                                cellEntry.changeInputValueLocal(npcName.getTextRu().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                                cellEntry.update();
-                            }
-                        }
-                        if (!hasRu && npcNameRaw != null) {
-
-                            CellEntry cellEntry = new CellEntry(i, 7, npcName.getTextRu().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            feedc.insert(cellEntry);
-                        }
-                        if (!hasDe && npcNameRaw != null) {
-
-                            CellEntry cellEntry = new CellEntry(i, 4, npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            feedc.insert(cellEntry);
-                        }
-                        if (!hasFr && npcNameRaw != null) {
-
-                            CellEntry cellEntry = new CellEntry(i, 5, npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            feedc.insert(cellEntry);
-                        }
-                        if (!hasJp && npcNameRaw != null) {
-
-                            CellEntry cellEntry = new CellEntry(i, 6, npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            feedc.insert(cellEntry);
-                        }
-
+                ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+                taskExecutor.initialize();
+                taskExecutor.setCorePoolSize(2);
+                taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+//                if (wse.getTitle().getPlainText().equals("Addon Strings")) {
+//                    for (int i = 2; i < wse.getRowCount(); i++) {
+//                        taskExecutor.execute(new UpdateNpcNameTask(wse, i, spreadsheetService, service));
+//                    }
+//                }
+                if (wse.getTitle().getPlainText().equals("Web Site Strings")) {
+//                    for (int i = 251; i < wse.getRowCount(); i++) {
+//                        taskExecutor.execute(new UpdateItemSetNameTask(wse, i, spreadsheetService, service));
+//                    }
+                    for (int i = 856; i < wse.getRowCount(); i++) {
+                        taskExecutor.execute(new UpdateTraderLocationTask(wse, i, spreadsheetService, service));
                     }
-
                 }
             }
         } catch (Exception ex) {
             Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private class UpdateNpcNameTask implements Runnable {
+
+        private final WorksheetEntry wse;
+        private final int i;
+        private final SpreadsheetService spreadsheetService;
+        private final DBService service;
+
+        public UpdateNpcNameTask(WorksheetEntry wse, int i, SpreadsheetService spreadsheetService, DBService service) {
+            this.wse = wse;
+            this.i = i;
+            this.spreadsheetService = spreadsheetService;
+            this.service = service;
+        }
+
+        @Override
+        public void run() {
+            try {
+                URL cellFeedUrl = new URI(wse.getCellFeedUrl().toString()
+                        + "?min-row=" + i + "&max-row=" + i + "&min-col=1&max-col=7").toURL();
+                CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
+                List<CellEntry> entries = feedc.getEntries();
+                String nameEn = null;
+                EsoRawString npcNameRaw = null;
+                boolean hasDe = false;
+                boolean hasFr = false;
+                boolean hasRu = false;
+                boolean hasJp = false;
+                for (CellEntry cellEntry : entries) {
+                    try {
+                        Cell cell = cellEntry.getCell();
+                        String value = cell.getValue();
+                        if (cell.getCol() == 1) {
+                            Matcher npcNameMatcher = npcNameRowPattern.matcher(value);
+                            if (npcNameMatcher.matches()) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "npc match");
+                            } else {
+                                break;
+                            }
+                        } else if (cell.getCol() == 2) {
+                            nameEn = value;
+                            npcNameRaw = service.getNpcRaw(nameEn);
+                            Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "npc: " + nameEn);
+                            if (npcNameRaw == null) {
+                                break;
+                            }
+                        } else if (cell.getCol() == 7) {
+                            hasRu = true;
+                            cellEntry.changeInputValueLocal(npcNameRaw.getTextRuoff().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            cellEntry.update();
+                        } else if (cell.getCol() == 4) {
+                            hasDe = true;
+                            cellEntry.changeInputValueLocal(npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            cellEntry.update();
+                        } else if (cell.getCol() == 5) {
+                            hasFr = true;
+                            cellEntry.changeInputValueLocal(npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            cellEntry.update();
+                        } else if (cell.getCol() == 6) {
+                            hasJp = true;
+                            cellEntry.changeInputValueLocal(npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            cellEntry.update();
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                try {
+                    if (!hasRu && npcNameRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 7, npcNameRaw.getTextRuoff().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasDe && npcNameRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 4, npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasFr && npcNameRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 5, npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasJp && npcNameRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 6, npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                        feedc.insert(cellEntry);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
+
+    private class UpdateItemSetNameTask implements Runnable {
+
+        private final WorksheetEntry wse;
+        private final int i;
+        private final SpreadsheetService spreadsheetService;
+        private final DBService service;
+
+        public UpdateItemSetNameTask(WorksheetEntry wse, int i, SpreadsheetService spreadsheetService, DBService service) {
+            this.wse = wse;
+            this.i = i;
+            this.spreadsheetService = spreadsheetService;
+            this.service = service;
+        }
+
+        @Override
+        public void run() {
+            try {
+                URL cellFeedUrl = new URI(wse.getCellFeedUrl().toString()
+                        + "?min-row=" + i + "&max-row=" + i + "&min-col=1&max-col=7").toURL();
+                CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
+                List<CellEntry> entries = feedc.getEntries();
+                String nameEn = null;
+                EsoRawString itemSetRaw = null;
+                boolean hasDe = false;
+                boolean hasFr = false;
+                boolean hasRu = false;
+                boolean hasJp = false;
+                for (CellEntry cellEntry : entries) {
+                    try {
+                        Cell cell = cellEntry.getCell();
+                        String value = cell.getValue();
+                        if (cell.getCol() == 1) {
+                            Matcher npcNameMatcher = itemSetRowPattern.matcher(value);
+                            if (npcNameMatcher.matches()) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "itemSetMatch: '" + value + "'");
+                            } else {
+                                break;
+                            }
+                        } else if (cell.getCol() == 2) {
+                            nameEn = value;
+                            itemSetRaw = service.getItemSetRaw(nameEn.trim());
+
+                            if (itemSetRaw == null) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "not found: '" + nameEn + "'");
+                                break;
+                            } else {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "found: " + nameEn);
+                            }
+                        } else if (cell.getCol() == 7 && !cell.getValue().equals(rs(itemSetRaw.getTextRuoff()))) {
+                            hasRu = true;
+                            cellEntry.changeInputValueLocal(rs(itemSetRaw.getTextRuoff()));
+                            cellEntry.update();
+                        } else if (cell.getCol() == 4 && !cell.getValue().equals(rs(itemSetRaw.getTextDe()))) {
+                            hasDe = true;
+                            cellEntry.changeInputValueLocal(rs(itemSetRaw.getTextDe()));
+                            cellEntry.update();
+                        } else if (cell.getCol() == 5 && !cell.getValue().equals(rs(itemSetRaw.getTextFr()))) {
+                            hasFr = true;
+                            cellEntry.changeInputValueLocal(rs(itemSetRaw.getTextFr()));
+                            cellEntry.update();
+                        } else if (cell.getCol() == 6 && !cell.getValue().equals(rs(itemSetRaw.getTextJp()))) {
+                            hasJp = true;
+                            cellEntry.changeInputValueLocal(rs(itemSetRaw.getTextJp()));
+                            cellEntry.update();
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                try {
+                    if (!hasRu && itemSetRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 7, rs(itemSetRaw.getTextRuoff()));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasDe && itemSetRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 4, rs(itemSetRaw.getTextDe()));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasFr && itemSetRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 5, rs(itemSetRaw.getTextFr()));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasJp && itemSetRaw != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 6, rs(itemSetRaw.getTextJp()));
+                        feedc.insert(cellEntry);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
+
+    private class UpdateTraderLocationTask implements Runnable {
+
+        private final WorksheetEntry wse;
+        private final int i;
+        private final SpreadsheetService spreadsheetService;
+        private final DBService service;
+
+        public UpdateTraderLocationTask(WorksheetEntry wse, int i, SpreadsheetService spreadsheetService, DBService service) {
+            this.wse = wse;
+            this.i = i;
+            this.spreadsheetService = spreadsheetService;
+            this.service = service;
+        }
+
+        @Override
+        public void run() {
+            try {
+                URL cellFeedUrl = new URI(wse.getCellFeedUrl().toString()
+                        + "?min-row=" + i + "&max-row=" + i + "&min-col=1&max-col=7").toURL();
+                CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
+                List<CellEntry> entries = feedc.getEntries();
+                String name = null;
+                EsoRawString location1 = null;
+                EsoRawString location2 = null;
+                boolean hasDe = false;
+                boolean hasFr = false;
+                boolean hasRu = false;
+                boolean hasJp = false;
+                for (CellEntry cellEntry : entries) {
+                    try {
+                        Cell cell = cellEntry.getCell();
+                        String value = cell.getValue();
+                        if (cell.getCol() == 1) {
+                            Matcher npcNameMatcher = traderLocationRowPattern.matcher(value);
+                            if (npcNameMatcher.matches()) {
+                                //Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "traderLocationMatch: '" + value + "'");
+                            } else {
+                                break;
+                            }
+                        } else if (cell.getCol() == 2) {
+                            name = value;
+                            String n[] = value.split(":");
+                            location1 = service.getLocationRaw(n[0].trim());
+                            location2 = service.getLocationRaw(n[1].trim());
+
+                            if (location1 == null || location2 == null) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "not found: '" + name + "'");
+                                break;
+                            } else {
+                                //Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "found: " + name);
+                                //Logger.getLogger(GoogleDocsService.class.getName()).log(Level.INFO, "will be: " + rs(location1.getTextRuoff()) + ": " + rs(location2.getTextRuoff()));
+
+                                break;
+                            }
+                        } else if (cell.getCol() == 7 && !cell.getValue().equals(rs(location1.getTextRuoff()) + ": " + rs(location2.getTextRuoff()))) {
+                            hasRu = true;
+                            cellEntry.changeInputValueLocal(rs(location1.getTextRuoff()) + ": " + rs(location2.getTextRuoff()));
+                            cellEntry.update();
+                        }
+//                        else if (cell.getCol() == 4 && !cell.getValue().equals(rs(location1.getTextDe()) + ": " + rs(location2.getTextDe()))) {
+//                            hasDe = true;
+//                            cellEntry.changeInputValueLocal(rs(location1.getTextDe()) + ": " + rs(location2.getTextDe()));
+//                            cellEntry.update();
+//                        } else if (cell.getCol() == 5 && !cell.getValue().equals(rs(location1.getTextFr()) + ": " + rs(location2.getTextFr()))) {
+//                            hasFr = true;
+//                            cellEntry.changeInputValueLocal(rs(location1.getTextFr()) + ": " + rs(location2.getTextFr()));
+//                            cellEntry.update();
+//                        } else if (cell.getCol() == 6 && !cell.getValue().equals(rs(location1.getTextJp()) + ": " + rs(location2.getTextJp()))) {
+//                            hasJp = true;
+//                            cellEntry.changeInputValueLocal(rs(location1.getTextJp()) + ": " + rs(location2.getTextJp()));
+//                            cellEntry.update();
+//                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                try {
+                    if (!hasRu && location1 != null && location2 != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 7, rs(location1.getTextRuoff()) + ": " + rs(location2.getTextRuoff()));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasDe && location1 != null && location2 != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 4, rs(location1.getTextDe()) + ": " + rs(location2.getTextDe()));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasFr && location1 != null && location2 != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 5, rs(location1.getTextFr()) + ": " + rs(location2.getTextFr()));
+                        feedc.insert(cellEntry);
+                    }
+                    if (!hasJp && location1 != null && location2 != null) {
+
+                        CellEntry cellEntry = new CellEntry(i, 6, rs(rs(location1.getTextJp()) + ": " + rs(location2.getTextJp())));
+                        feedc.insert(cellEntry);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
+
+    private String rs(String in) {
+        return in.replace("^Nn{1}x{2}", "").replace("^Mla{1}n{2}", "").replace("^Ma{1}n{2}", "").replace("^Fn{1}x{2}", "").replace("^Mx{1}n{2}", "").replace("^Fa{1}n{2}", "").replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", "").replace("^pfd", "").replace("^pm", "").replace("^M", "").replace("^F", "");
     }
 
     private static Credential authorize() throws Exception {
