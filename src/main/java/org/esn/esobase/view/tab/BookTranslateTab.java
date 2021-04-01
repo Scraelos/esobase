@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import org.esn.esncomboextension.NoAutcompleteComboBoxExtension;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.BookSpecification;
 import org.esn.esobase.model.Book;
@@ -207,9 +206,6 @@ public class BookTranslateTab extends VerticalLayout {
         this.addComponent(bookContentLayout);
         this.bookListlayout.setHeight(105f, Unit.PIXELS);
         this.setExpandRatio(bookContentLayout, 1f);
-        new NoAutcompleteComboBoxExtension(locationTable);
-        new NoAutcompleteComboBoxExtension(subLocationTable);
-        new NoAutcompleteComboBoxExtension(translatorBox);
         LoadFilters();
     }
 

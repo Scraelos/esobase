@@ -27,17 +27,18 @@ import org.esn.esobase.model.lib.DAO;
  */
 @Entity
 @Table(indexes = {
-    @Index(columnList = "spreadSheetsNpcPhrase_id", unique = false)
-    ,@Index(columnList = "spreadSheetsPlayerPhrase_id", unique = false)
-    ,@Index(columnList = "spreadSheetsQuestName_id", unique = false)
-    ,@Index(columnList = "spreadSheetsQuestDescription_id", unique = false)
-    ,@Index(columnList = "spreadSheetsQuestDirection_id", unique = false)
-    ,@Index(columnList = "spreadSheetsJournalEntry_id", unique = false)
-    ,@Index(columnList = "spreadSheetsItemName_id", unique = false)
-    ,@Index(columnList = "spreadSheetsItemDescription_id", unique = false)
-    ,@Index(columnList = "book_id", unique = false)
-    ,@Index(columnList = "bookName_id", unique = false)
-    ,@Index(columnList = "status", unique = false)})
+    @Index(columnList = "spreadSheetsNpcPhrase_id", unique = false),
+    @Index(columnList = "spreadSheetsPlayerPhrase_id", unique = false),
+    @Index(columnList = "spreadSheetsQuestName_id", unique = false),
+    @Index(columnList = "spreadSheetsQuestDescription_id", unique = false),
+    @Index(columnList = "spreadSheetsQuestDirection_id", unique = false),
+    @Index(columnList = "spreadSheetsJournalEntry_id", unique = false),
+    @Index(columnList = "spreadSheetsItemName_id", unique = false),
+    @Index(columnList = "spreadSheetsItemDescription_id", unique = false),
+    @Index(columnList = "book_id", unique = false),
+    @Index(columnList = "bookName_id", unique = false),
+    @Index(columnList = "status", unique = false),
+    @Index(columnList = "author_id", unique = false)})
 public class TranslatedText extends DAO {
 
     @Id

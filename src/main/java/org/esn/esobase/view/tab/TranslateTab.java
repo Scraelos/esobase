@@ -34,7 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.esn.esncomboextension.NoAutcompleteComboBoxExtension;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.LocationSpecification;
 import org.esn.esobase.data.specification.NpcSpecification;
@@ -289,11 +288,6 @@ public class TranslateTab extends VerticalLayout {
         this.npcListlayout.setHeight(105f, Unit.PIXELS);
         this.setExpandRatio(npcContentLayout, 1f);
         LoadFilters();
-        new NoAutcompleteComboBoxExtension(questTable);
-        new NoAutcompleteComboBoxExtension(locationTable);
-        new NoAutcompleteComboBoxExtension(subLocationTable);
-        new NoAutcompleteComboBoxExtension(npcTable);
-        new NoAutcompleteComboBoxExtension(translatorBox);
     }
 
     private void LoadFilters() {

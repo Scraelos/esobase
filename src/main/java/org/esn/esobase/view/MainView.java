@@ -35,6 +35,7 @@ import org.esn.esobase.view.tab.TranslateTab;
 import org.esn.esobase.view.tab.UserStatisticsTab;
 import org.esn.esobase.view.tab.UsersTab;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 
@@ -204,8 +205,10 @@ public class MainView extends Panel implements View, Command {
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event) {
-        User principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        loginLabel.setCaption(principal.getUsername());
+        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User) {
+            User principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            loginLabel.setCaption(principal.getUsername());
+        }
     }
 
     private void openSearchInCatalogs() {

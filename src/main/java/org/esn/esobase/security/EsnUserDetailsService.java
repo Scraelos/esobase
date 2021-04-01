@@ -15,11 +15,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author scraelos
  */
+@Service
 public class EsnUserDetailsService implements UserDetailsService {
 
     @Autowired
@@ -27,8 +29,6 @@ public class EsnUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String string) throws UsernameNotFoundException {
-        service.createRoles();
-        service.createDefaultAdminUser();
         SysAccount account = service.getAccount(string);
         ArrayList<GrantedAuthority> authoritys = new ArrayList<GrantedAuthority>();
         for (SysAccountRole role : account.getRoles()) {

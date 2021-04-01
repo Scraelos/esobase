@@ -64,11 +64,13 @@ import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.NPC_SEX;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author scraelos
  */
+@Service
 public class GoogleDocsService {
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");

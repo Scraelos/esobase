@@ -5,41 +5,35 @@
  */
 package org.esn.esobase.service;
 
-import java.io.IOException;
 import java.util.List;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.beanutils.BeanComparator;
+import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.SearchService;
 import org.esn.esobase.model.EsoRawString;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  *
  * @author scraelos
  */
-public class SearchInCatalogsServlet extends HttpServlet {
+@Controller
+@RequestMapping("searchservlet")
+public class SearchInCatalogsServlet {
 
     @Autowired
     SearchService service;
+    @Autowired
+    DBService dservice;
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this,
-                config.getServletContext());
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-        String requestString = req.getParameter("searchtext");
+    @GetMapping(produces = "text/plain")
+    public @ResponseBody
+    String getSearch(@RequestParam(name = "searchtext") String requestString) {
         if (requestString != null && requestString.trim().length() > 2) {
             List<EsoRawString> searchInCatalogs = service.searchInRawRuoff(requestString, Boolean.FALSE);
             JSONArray resultList = new JSONArray();
@@ -69,14 +63,14 @@ public class SearchInCatalogsServlet extends HttpServlet {
                 o.put("tableName", tableName);
                 resultList.put(o);
             }
-            resp.setContentType("text/plain; charset=UTF-8");
             StringBuilder responseBuilder = new StringBuilder();
             responseBuilder.append("parseResponse(").append(resultList.toString()).append(");");
-            resp.getWriter().print(responseBuilder.toString());
+            return responseBuilder.toString();
         } else {
-            resp.sendError(502, "Bad Request");
+            return "";
         }
 
     }
 
+    
 }

@@ -674,7 +674,7 @@ public class DirectTableEditTab extends VerticalLayout {
         } else {
             translatedTextSpecification.setTranslationType(null);
         }
-        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> service.getTranslatedTextRepository().findAll(translatedTextSpecification, new PageRequest(
+        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> service.getTranslatedTextRepository().findAll(translatedTextSpecification, PageRequest.of(
                 firstRow / PAGESIZE,
                 PAGESIZE,
                 sortAscending ? Sort.Direction.ASC : Sort.Direction.DESC,

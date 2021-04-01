@@ -8,12 +8,14 @@ package org.esn.esobase.data;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
  * @author scraelos
  */
+@Service
 public class TableUpdateService {
 
     @PersistenceContext

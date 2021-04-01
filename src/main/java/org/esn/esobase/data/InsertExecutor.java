@@ -6,17 +6,19 @@
 package org.esn.esobase.data;
 
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author guest
  */
-public class InsertExecutor extends ThreadPoolTaskExecutor{
+@Service
+public class InsertExecutor extends ThreadPoolTaskExecutor {
 
     public InsertExecutor() {
         this.setCorePoolSize(4);
         this.setMaxPoolSize(8);
         this.setWaitForTasksToCompleteOnShutdown(true);
     }
-    
+
 }

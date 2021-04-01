@@ -39,12 +39,14 @@ import org.esn.esobase.model.GSpreadSheetsQuestName;
 import org.esn.esobase.model.GSpreadSheetsQuestStartTip;
 import org.esn.esobase.model.TesDictionary;
 import org.esn.esobase.model.TranslatedEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
  * @author scraelos
  */
+@Service
 public class DictionaryService {
 
     @PersistenceContext
@@ -84,7 +86,7 @@ public class DictionaryService {
             Predicate where = null;
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(cb.or(cb.like(cb.lower(root.get("textEn")), text.toLowerCase()),cb.like(cb.lower(root.get("textRu")), text.toLowerCase())));
+            predicates.add(cb.or(cb.like(cb.lower(root.get("textEn")), text.toLowerCase()), cb.like(cb.lower(root.get("textRu")), text.toLowerCase())));
             if (!predicates.isEmpty() && predicates.size() > 1) {
                 where = cb.and(predicates.toArray(new Predicate[predicates.size()]));
             } else if (!predicates.isEmpty()) {
@@ -102,17 +104,17 @@ public class DictionaryService {
     @Transactional
     public void insertDictionaryStrings(List<Object[]> rows) {
         for (Object[] row : rows) {
-            
-                Query insertQ = em.createNativeQuery("insert into tesdictionary (id,texten,textru,description,game) values (nextval('hibernate_sequence'),:texten,:textru,:description,:game)");
-                insertQ.setParameter("texten", row[0]);
-                insertQ.setParameter("textru", row[1]);
-                insertQ.setParameter("description", row[2]);
-                insertQ.setParameter("game", row[3]);
-                insertQ.executeUpdate();
+
+            Query insertQ = em.createNativeQuery("insert into tesdictionary (id,texten,textru,description,game) values (nextval('hibernate_sequence'),:texten,:textru,:description,:game)");
+            insertQ.setParameter("texten", row[0]);
+            insertQ.setParameter("textru", row[1]);
+            insertQ.setParameter("description", row[2]);
+            insertQ.setParameter("game", row[3]);
+            insertQ.executeUpdate();
 
         }
     }
-    
+
     @Transactional
     public void cleanupDictionaryStrings() {
         Query updateQ = em.createNativeQuery("delete from tesdictionary");

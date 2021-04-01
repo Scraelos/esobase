@@ -12,12 +12,14 @@ import javax.persistence.Query;
 import org.esn.esobase.model.GSpreadSheetsItemName;
 import org.esn.esobase.model.ItemSubType;
 import org.esn.esobase.model.ItemType;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
  * @author scraelos
  */
+@Service
 public class ItemInfoImportService {
 
     @PersistenceContext

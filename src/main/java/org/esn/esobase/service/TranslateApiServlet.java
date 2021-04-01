@@ -5,17 +5,9 @@
  */
 package org.esn.esobase.service;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.NoResultException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.esn.esobase.data.SysAccountService;
 import org.esn.esobase.data.repository.GSpreadSheetsNpcPhraseRepository;
 import org.esn.esobase.data.repository.GSpreadSheetsPlayerPhraseRepository;
@@ -29,13 +21,21 @@ import org.esn.esobase.model.TranslatedText;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  *
  * @author scraelos
  */
-public class TranslateApiServlet extends HttpServlet {
+@Controller
+@RequestMapping("translateapi")
+public class TranslateApiServlet {
+
+    private static final Logger LOG = Logger.getLogger(TranslateApiServlet.class.getName());
 
     @Autowired
     private SysAccountService sysAccountService;
@@ -46,38 +46,28 @@ public class TranslateApiServlet extends HttpServlet {
     @Autowired
     private TranslatedTextRepository translatedTextRepository;
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this,
-                config.getServletContext());
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @GetMapping(produces = "application/json")
+    public @ResponseBody
+    String req(@RequestParam(name = "apikey") String apiKey,
+            @RequestParam(name = "req") String reqTypeString,
+            @RequestParam(name = "id") String idString,
+            @RequestParam(name = "text", required = false) String text) {
+        JSONObject result = new JSONObject();
         try {
-            req.setCharacterEncoding("UTF-8");
-            JSONObject result = new JSONObject();
-            String apiKey = req.getParameter("apikey");
             SysAccount user = sysAccountService.getAccountByApi(apiKey);
             if (!user.getRoles().contains(new SysAccountRole(3L))) {
                 throw new Exception("access denied");
             }
-            String reqTypeString = req.getParameter("req");
             REQUEST_TYPE requestType = REQUEST_TYPE.valueOf(reqTypeString);
 
-            String npcPhraseIdString;
             Long npcPhraseId;
             GSpreadSheetsNpcPhrase npcPhrase;
-            String text;
-            String playerPhraseIdString;
             Long playerPhraseId;
             GSpreadSheetsPlayerPhrase playerPhrase;
             switch (requestType) {
                 case getPlayerPhraseInfo:
-                    playerPhraseIdString = req.getParameter("id");
-                    playerPhraseId = Long.valueOf(playerPhraseIdString);
-                    playerPhrase = playerPhraseRepository.findOne(playerPhraseId);
+                    playerPhraseId = Long.valueOf(idString);
+                    playerPhrase = playerPhraseRepository.getOne(playerPhraseId);
                     result.put("id", playerPhrase.getId());
                     result.put("textEn", playerPhrase.getTextEn());
                     result.put("textRu", playerPhrase.getTextRu());
@@ -106,9 +96,8 @@ public class TranslateApiServlet extends HttpServlet {
                     }
                     break;
                 case getNpcPhraseInfo:
-                    npcPhraseIdString = req.getParameter("id");
-                    npcPhraseId = Long.valueOf(npcPhraseIdString);
-                    npcPhrase = npcPhraseRepository.findOne(npcPhraseId);
+                    npcPhraseId = Long.valueOf(idString);
+                    npcPhrase = npcPhraseRepository.getOne(npcPhraseId);
                     result.put("id", npcPhrase.getId());
                     result.put("textEn", npcPhrase.getTextEn());
                     result.put("textRu", npcPhrase.getTextRu());
@@ -137,10 +126,8 @@ public class TranslateApiServlet extends HttpServlet {
                     }
                     break;
                 case editTranslation:
-                    String translationIdString = req.getParameter("id");
-                    Long translationId = Long.valueOf(translationIdString);
-                    TranslatedText tt = translatedTextRepository.findOne(translationId);
-                    text = req.getParameter("text");
+                    Long translationId = Long.valueOf(idString);
+                    TranslatedText tt = translatedTextRepository.getOne(translationId);
                     tt.setText(text);
                     tt.setChangeTime(new Date());
                     tt.setStatus(TRANSLATE_STATUS.EDITED);
@@ -148,11 +135,9 @@ public class TranslateApiServlet extends HttpServlet {
                     result.put("result", Boolean.TRUE);
                     break;
                 case newNpcPhraseTranslation:
-                    npcPhraseIdString = req.getParameter("id");
-                    npcPhraseId = Long.valueOf(npcPhraseIdString);
-                    npcPhrase = npcPhraseRepository.findOne(npcPhraseId);
+                    npcPhraseId = Long.valueOf(idString);
+                    npcPhrase = npcPhraseRepository.getOne(npcPhraseId);
                     TranslatedText npcTranslatedText = new TranslatedText();
-                    text = req.getParameter("text");
                     npcTranslatedText.setText(text);
                     npcTranslatedText.setAuthor(user);
                     npcTranslatedText.setStatus(TRANSLATE_STATUS.EDITED);
@@ -162,11 +147,9 @@ public class TranslateApiServlet extends HttpServlet {
                     result.put("result", Boolean.TRUE);
                     break;
                 case newPlayerPhraseTranslation:
-                    playerPhraseIdString = req.getParameter("id");
-                    playerPhraseId = Long.valueOf(playerPhraseIdString);
-                    playerPhrase = playerPhraseRepository.findOne(playerPhraseId);
+                    playerPhraseId = Long.valueOf(idString);
+                    playerPhrase = playerPhraseRepository.getOne(playerPhraseId);
                     TranslatedText playerTranslatedText = new TranslatedText();
-                    text = req.getParameter("text");
                     playerTranslatedText.setText(text);
                     playerTranslatedText.setAuthor(user);
                     playerTranslatedText.setStatus(TRANSLATE_STATUS.EDITED);
@@ -177,11 +160,10 @@ public class TranslateApiServlet extends HttpServlet {
                     break;
             }
 
-            resp.setContentType("text/plain; charset=UTF-8");
-            resp.getWriter().print(result.toString());
+            return result.toString();
         } catch (Exception ex) {
-            Logger.getLogger(GetBooksServlet.class.getName()).log(Level.SEVERE, null, ex);
-            resp.sendError(502, "Bad Request");
+            LOG.info(ex.getMessage());
+            return result.toString();
         }
     }
 

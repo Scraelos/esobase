@@ -12,7 +12,6 @@ import com.vaadin.v7.ui.Field;
 import com.vaadin.v7.ui.TableFieldFactory;
 import com.vaadin.v7.ui.TextArea;
 import org.esn.esobase.data.repository.GSpreadSheetsWithDeprecated;
-import org.esn.esobase.data.specification.GSpreadSheetEntitySpecification;
 import org.esn.esobase.model.GSpreadSheetEntity;
 import org.esn.esobase.security.SpringSecurityHelper;
 import org.springframework.data.domain.PageRequest;
@@ -66,7 +65,7 @@ public class GspreadSheetTable extends MTable implements RefreshableGrid {
     }
 
     public void Load() {
-        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> repository.findAll(specification, new PageRequest(
+        SortableLazyList lazyList = new SortableLazyList<>((int firstRow, boolean sortAscending, String property) -> repository.findAll(specification, PageRequest.of(
                 firstRow / pageSize,
                 pageSize,
                 sortAscending ? Sort.Direction.ASC : Sort.Direction.DESC,

@@ -38,7 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.esn.esncomboextension.NoAutcompleteComboBoxExtension;
 import org.esn.esobase.data.DBService;
 import org.esn.esobase.data.specification.QuestDirectionSpecification;
 import org.esn.esobase.data.specification.QuestItemSpecification;
@@ -653,9 +652,6 @@ public class QuestTranslateTab extends VerticalLayout {
         this.setExpandRatio(tabSheet, 1f);
         GridScrollExtension stepsScrollExtension = new GridScrollExtension(stepsGrid);
         GridScrollExtension itemsScrollExtension = new GridScrollExtension(itemsGrid);
-        new NoAutcompleteComboBoxExtension(locationTable);
-        new NoAutcompleteComboBoxExtension(questTable);
-        new NoAutcompleteComboBoxExtension(translatorBox);
         LoadFilters();
     }
 

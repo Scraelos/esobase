@@ -19,12 +19,14 @@ import org.esn.esobase.model.EsoRawString;
 import org.esn.esobase.model.GSpreadSheetEntity;
 import org.esn.esobase.model.GSpreadSheetsNpcName;
 import org.esn.esobase.model.NPC_SEX;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
  * @author scraelos
  */
+@Service
 public class SearchService {
 
     @PersistenceContext
