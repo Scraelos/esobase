@@ -3297,15 +3297,15 @@ public class GoogleDocsService {
                 taskExecutor.initialize();
                 taskExecutor.setCorePoolSize(2);
                 taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
-//                if (wse.getTitle().getPlainText().equals("Addon Strings")) {
-//                    for (int i = 2; i < wse.getRowCount(); i++) {
-//                        taskExecutor.execute(new UpdateNpcNameTask(wse, i, spreadsheetService, service));
-//                    }
-//                }
+                if (wse.getTitle().getPlainText().equals("Addon Strings")) {
+                    for (int i = 2; i < wse.getRowCount(); i++) {
+                        taskExecutor.execute(new UpdateNpcNameTask(wse, i, spreadsheetService, service));
+                    }
+                }
                 if (wse.getTitle().getPlainText().equals("Web Site Strings")) {
-//                    for (int i = 251; i < wse.getRowCount(); i++) {
-//                        taskExecutor.execute(new UpdateItemSetNameTask(wse, i, spreadsheetService, service));
-//                    }
+                    for (int i = 251; i < wse.getRowCount(); i++) {
+                        taskExecutor.execute(new UpdateItemSetNameTask(wse, i, spreadsheetService, service));
+                    }
                     for (int i = 856; i < wse.getRowCount(); i++) {
                         taskExecutor.execute(new UpdateTraderLocationTask(wse, i, spreadsheetService, service));
                     }
