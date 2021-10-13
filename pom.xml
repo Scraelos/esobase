@@ -19,7 +19,7 @@
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vaadin.version>8.13.0</vaadin.version>
+        <vaadin.version>8.14.1</vaadin.version>
         <vaadin.plugin.version>8.13.0</vaadin.plugin.version>
         <vaadin-spring.version>3.2.1</vaadin-spring.version>
         <org.vaadin.spring.version>0.0.7.RELEASE</org.vaadin.spring.version>
