@@ -3292,11 +3292,12 @@ public class GoogleDocsService {
             }
 
             List<WorksheetEntry> worksheets = entry.getWorksheets();
+            ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+            taskExecutor.initialize();
+            taskExecutor.setCorePoolSize(2);
+            taskExecutor.setMaxPoolSize(2);
+            taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
             for (WorksheetEntry wse : worksheets) {
-                ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-                taskExecutor.initialize();
-                taskExecutor.setCorePoolSize(2);
-                taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
                 if (wse.getTitle().getPlainText().equals("Addon Strings")) {
                     for (int i = 2; i < wse.getRowCount(); i++) {
                         taskExecutor.execute(new UpdateNpcNameTask(wse, i, spreadsheetService, service));
@@ -3333,6 +3334,8 @@ public class GoogleDocsService {
         @Override
         public void run() {
             try {
+                int sleep = 1000;
+
                 URL cellFeedUrl = new URI(wse.getCellFeedUrl().toString()
                         + "?min-row=" + i + "&max-row=" + i + "&min-col=1&max-col=7").toURL();
                 CellFeed feedc = spreadsheetService.getFeed(cellFeedUrl, CellFeed.class);
@@ -3362,50 +3365,119 @@ public class GoogleDocsService {
                                 break;
                             }
                         } else if (cell.getCol() == 7) {
+                            String newVal = npcNameRaw.getTextRuoff().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", "");
                             hasRu = true;
-                            cellEntry.changeInputValueLocal(npcNameRaw.getTextRuoff().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            cellEntry.update();
+                            try {
+                                if (value == null || !value.equals(newVal)) {
+                                    cellEntry.changeInputValueLocal(newVal);
+                                    cellEntry.update();
+                                    Thread.sleep(sleep);
+                                }
+                            } catch (com.google.gdata.util.ServiceException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         } else if (cell.getCol() == 4) {
+                            String newVal = npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", "");
                             hasDe = true;
-                            cellEntry.changeInputValueLocal(npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            cellEntry.update();
+                            try {
+                                if (value == null || !value.equals(newVal)) {
+                                    cellEntry.changeInputValueLocal(newVal);
+                                    cellEntry.update();
+                                    Thread.sleep(sleep);
+                                }
+                            } catch (com.google.gdata.util.ServiceException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         } else if (cell.getCol() == 5) {
+                            String newVal = npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", "");
                             hasFr = true;
-                            cellEntry.changeInputValueLocal(npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            cellEntry.update();
+                            try {
+                                if (value == null || !value.equals(newVal)) {
+                                    cellEntry.changeInputValueLocal(newVal);
+                                    cellEntry.update();
+                                    Thread.sleep(sleep);
+                                }
+                            } catch (com.google.gdata.util.ServiceException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         } else if (cell.getCol() == 6) {
+                            String newVal = npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", "");
                             hasJp = true;
-                            cellEntry.changeInputValueLocal(npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                            cellEntry.update();
+                            try {
+                                if (value == null || !value.equals(newVal)) {
+                                    cellEntry.changeInputValueLocal(newVal);
+                                    cellEntry.update();
+                                    Thread.sleep(sleep);
+                                }
+                            } catch (com.google.gdata.util.ServiceException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                     } catch (Exception ex) {
                         Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
                 try {
-                    if (!hasRu && npcNameRaw != null) {
-
-                        CellEntry cellEntry = new CellEntry(i, 7, npcNameRaw.getTextRuoff().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                        feedc.insert(cellEntry);
+                    try {
+                        if (!hasRu && npcNameRaw != null) {
+                            CellEntry cellEntry = new CellEntry(i, 7, npcNameRaw.getTextRuoff().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                            Thread.sleep(sleep);
+                        }
+                    } catch (com.google.gdata.util.ServiceException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    if (!hasDe && npcNameRaw != null) {
+                    try {
+                        if (!hasDe && npcNameRaw != null) {
 
-                        CellEntry cellEntry = new CellEntry(i, 4, npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                        feedc.insert(cellEntry);
+                            CellEntry cellEntry = new CellEntry(i, 4, npcNameRaw.getTextDe().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                            Thread.sleep(sleep);
+                        }
+                    } catch (com.google.gdata.util.ServiceException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    if (!hasFr && npcNameRaw != null) {
+                    try {
+                        if (!hasFr && npcNameRaw != null) {
 
-                        CellEntry cellEntry = new CellEntry(i, 5, npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                        feedc.insert(cellEntry);
+                            CellEntry cellEntry = new CellEntry(i, 5, npcNameRaw.getTextFr().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                            Thread.sleep(sleep);
+                        }
+                    } catch (com.google.gdata.util.ServiceException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    if (!hasJp && npcNameRaw != null) {
+                    try {
+                        if (!hasJp && npcNameRaw != null) {
 
-                        CellEntry cellEntry = new CellEntry(i, 6, npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
-                        feedc.insert(cellEntry);
+                            CellEntry cellEntry = new CellEntry(i, 6, npcNameRaw.getTextJp().toLowerCase().replace("^m", "").replace("^f", "").replace("^u", "").replace("^n", ""));
+                            feedc.insert(cellEntry);
+                            Thread.sleep(sleep);
+                        }
+                    } catch (com.google.gdata.util.ServiceException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } catch (Exception ex) {
                     Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
+                Thread.sleep(100);
             } catch (Exception ex) {
                 Logger.getLogger(GoogleDocsService.class.getName()).log(Level.SEVERE, null, ex);
             }

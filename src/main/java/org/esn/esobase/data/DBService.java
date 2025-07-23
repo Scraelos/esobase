@@ -8526,7 +8526,7 @@ public class DBService {
         nameTableids.add(51188660L);
         nameTableids.add(191999749L);
         nameTableids.add(33425332L);
-        TypedQuery<EsoRawString> rq = em.createQuery("select r from EsoRawString r where lower(textEn) like :name and textEn!=textRuoff and aid in(:ids) order by cid asc", EsoRawString.class);
+        TypedQuery<EsoRawString> rq = em.createQuery("select r from EsoRawString r where lower(textEn) like :name and textEn!=textRuoff and aid in(:ids) order by LENGTH(textEn) asc,cid asc", EsoRawString.class);
         rq.setParameter("name", name + "%");
         rq.setParameter("ids", nameTableids);
         List<EsoRawString> rawResultList = rq.getResultList();

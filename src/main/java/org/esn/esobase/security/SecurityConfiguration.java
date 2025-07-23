@@ -60,6 +60,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 // Configure the login page.
                 .and().formLogin().loginPage(LOGIN_URL).permitAll().loginProcessingUrl(LOGIN_PROCESSING_URL)
                 .failureUrl(LOGIN_FAILURE_URL)
+                .defaultSuccessUrl("/", true)
                 // Configure logout
                 .and().logout().logoutUrl("/j_spring_security_logout").logoutSuccessUrl(LOGOUT_SUCCESS_URL).clearAuthentication(true)
                 .and().rememberMe().rememberMeParameter("remember-me").key(rememberMeKey);
